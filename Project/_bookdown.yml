@@ -1,0 +1,17 @@
+book_filename: "dsfba_hw3_report"
+
+before_chapter_script: "scripts/setup.R"
+
+# new_session: yes
+
+rmd_files: [
+  "index.Rmd",
+  "report/introduction.Rmd",
+  "report/business-understanding.Rmd",
+  "report/eda-I.Rmd",
+  "report/eda-II.Rmd",
+  "report/model.Rmd",
+  "report/evaluation.Rmd",
+  "report/conclusion.Rmd",
+  "report/references.Rmd"
+]

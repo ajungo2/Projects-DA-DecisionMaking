@@ -1,0 +1,10 @@
+# Exploratory data analysis
+
+## Data Description 
+
+| Level by Group| Level   |
+| :------------:|:-------:|
+| Group1        |  0-2    |
+| Group2        |  3-4	  |
+| Group3        |  5-8    |
+

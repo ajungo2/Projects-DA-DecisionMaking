@@ -1,0 +1,26 @@
+--- 
+title: "Project...."
+author: "Maura, Rollini and Andrea, Jungo"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+site: bookdown::bookdown_site
+output: bookdown::html_document2
+documentclass: book
+bibliography: [references.bib, packages.bib]
+biblio-style: apalike
+
+link-citations: yes
+---
+
+# Basic instructions
+
+For this assignment, we will work with real data that include observations with historical credit applicants who is rated as **Good** or **Bad** credit (encoded as 1 and 0 respectively in the response variable). The goal is obtain a model that may be used to determine if new applicants present a good or bad credit risk.
+For being able to do so, We will apply the CRISP-DM model and communicate the results in this report.
+
+There are a few milestones for our final project:
+
+
+| Date       | Assignment    |
+| :--------- |:-------------:|
+| December 18| Report        |
+| December 18| Presentation  |
+
