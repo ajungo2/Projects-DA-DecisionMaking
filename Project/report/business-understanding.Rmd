@@ -46,6 +46,8 @@ knitr::include_graphics(here::here("data/assess.gif"))
 
 The proposed mining goal for this analysis is to obtain a **model** which show a good or bad output regarding the risk of given them the requested credit when entering information about certain variables. This algorithm need to have a high accuracy, highlighting a negative impact of a false positive over a false negative.
 
+**MISSING:Include the exploratory data GOALS**
+
 ## Produce project plan
 
 Include an schedule + detailed plan..... (REMAINING)

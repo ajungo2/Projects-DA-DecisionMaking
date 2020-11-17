@@ -68,6 +68,8 @@ library(corrplot)
 library(ggcorrplot)
 library(DataExplorer)
 library(inspectdf)
+library(summarytools)
+
 
 knitr::opts_chunk$set(
   comment = "#>",
