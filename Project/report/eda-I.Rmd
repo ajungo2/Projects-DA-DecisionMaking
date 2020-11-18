@@ -121,41 +121,42 @@ psych::describeBy(data, data$RESPONSE)
 
 ```
 
+### 
 
 As we see in the table show earlier, all the values are integers and there is not any missing value. In addition, we can see some inconsistencies of the variables with the initial description, that we will explain in following.
 
-| Variable        | Description              | Inconsistencies   |
-| :--------------:|:-------------------------|:-------|
-| CHK_ACCT        |  C: 0, 1, 2, 3    | X  |
-| DURATION        |  Numerical        | X  |
-| HISTORY         |  C: 0, 1, 2, 3, 4 | X  |
-| NEW_CAR         |  B: 0, 1          | X  |
-| USED_CAR        |  B: 0, 1	        | X  |
-| FURNITURE       |  B: 0, 1          | X  |
-| RADIO.TV        |  B: 0, 1          | X  |
-| EDUCATION       |  B: 0, 1          | ✔: Acoording to the description we should have a binary variable and the data show -1 |
-| RETRAINING      |  B: 0, 1          | X  |
-| AMOUNT          |  Numerical        | X  |
-| SAV_ACCT        |  C: 0, 1, 2, 3, 4 | X  |
-| EMPLOYMENT      |  C: 0, 1, 2, 3, 4 | X  |
-| INSTALL_RATE    |  Numerical        | X  |
-| MALE_DIV        |  B: 0, 1          | X  |
-| MALE_SINGLE	    |  B: 0, 1          | X  |
-| MALE_MAR_WID    |  B: 0, 1          | X  |
-| CO-APPLICANT    |  B: 0, 1          | X  |
-| GUARANTOR       |  B: 0, 1          | X  |
-| PRESENT_RESIDENT|  C: 0, 1, 2, 3    | ✔: Acoording to the description we should 3 categories instead of 4 shown by the data|
-| REAL_ESTATE     |  B: 0, 1          | X  |
-| PROP_UNKN_NONE  |  B: 0, 1          | X  |
-| AGE             |  Numerical        | ✔: Identify outliers, the age should not go up to 125 years |
-| OTHER_INSTALL   |  B: 0, 1          | X  |
-| RENT            |  B: 0, 1          | X  |
-| OWN_RES         |  B: 0, 1          | X  |
-| NUM_CREDITS     |  Numerical        | X  |
-| JOB             |  C: 0, 1, 2, 3    | X  |
-| NUM_DEPENDENTS  |  Numerical        | X  |
-| TELEPHONE       |  B: 0, 1          | X  |
-| FOREIGN         |  B: 0, 1          | X  |
+| Variable   | Description   | Inconsistencies   |
+| :---------:|:--------------|:-------|
+| CHK_ACCT   |  C: 0, 1, 2, 3    | X  |
+| DURATION |  Numerical    | X  |
+| HISTORY |  C: 0, 1, 2, 3, 4 | X  |
+| NEW_CAR  |  B: 0, 1  | X  |
+| USED_CAR |  B: 0, 1	  | X  |
+| FURNITURE |  B: 0, 1    | X  |
+| RADIO.TV  |  B: 0, 1   | X  |
+| EDUCATION |  B: 0, 1   | ✔: Acoording to the description we should have a binary variable and the data show -1 |
+| RETRAINING  |  B: 0, 1| X  |
+| AMOUNT      |  Numerical | X  |
+| SAV_ACCT    |  C: 0, 1, 2, 3, 4 | X  |
+| EMPLOYMENT  |  C: 0, 1, 2, 3, 4 | X  |
+| INSTALL_RATE |  Numerical| X  |
+| MALE_DIV |  B: 0, 1 | X  |
+| MALE_SINGLE	|  B: 0, 1 | X  |
+| MALE_MAR_WID |  B: 0, 1 | X  |
+| CO-APPLICANT |  B: 0, 1 | X  |
+| GUARANTOR   |  B: 0, 1 | X  |
+| PRESENT_RESIDENT|  C: 0, 1, 2, 3| ✔: Acoording to the description we should 3 categories instead of 4 shown by the data|
+| REAL_ESTATE |  B: 0, 1| X  |
+| PROP_UNKN_NONE  |  B: 0, 1| X  |
+| AGE|  Numerical| ✔: Identify outliers, the age should not go up to 125 years |
+| OTHER_INSTALL|  B: 0, 1| X  |
+| RENT |  B: 0, 1| X  |
+| OWN_RES |  B: 0, 1| X  |
+| NUM_CREDITS|  Numerical| X  |
+| JOB |  C: 0, 1, 2, 3| X  |
+| NUM_DEPENDENTS  |  Numerical| X  |
+| TELEPHONE  |  B: 0, 1| X  |
+| FOREIGN    |  B: 0, 1| X  |
 
 Then, for the 3 inconsistencies found before, We have established the following hypothesis and solutions.
 
@@ -331,7 +332,7 @@ In general, the VIF is no high enough to eliminate the variable.
 
 ## Verify data quality
 
-For being able to do so, we stablish 4 questions that we will address during the resolution of this step. They are the following:
+For being able to do so, we stablish 3 questions that we will address during the resolution of this step. They are the following:
 
 1) Is the data complete (does it cover all the cases required)? 
 2) Is it correct or does it contain errors?
@@ -377,9 +378,12 @@ inspect_types(data[,-32])
 
 ### 
 
-| Question | Answer|
-| :------- :|:------------------|
-| 1| Yes, all the columns and rows contains information. | 
-| 2 | No, they contain some errors. They were found in data description and exploratory and are the following: <br /> 1) The variable Education show a not binary output. <br /> 2) The variable PRESENT_RESIDENT have more categories of was mention in the description <br /> 3) the variable AGE is out of range. <br /> 4) AMOUNT, DURANTION, AGE are the variables with more quantity of outliers.|
-| 3 | No, there is any missing values in the data. |
+Below you will find the answer of the 3 questions:
+
+
+| Question    | Answer       | 
+| :----------:|:--------------|
+| 1           | Yes, all the columns and rows contains information. | 
+| 2           | No, they contain some errors. They were found in data description and exploratory and are the following: <br /> 1) The variable Education show a not binary output. <br /> 2) The variable PRESENT_RESIDENT have more categories of was mention in the description <br /> 3) the variable AGE is out of range. <br /> 4) AMOUNT, DURANTION, AGE are the variables with more quantity of outliers. | 
+| 1           | No, there is any missing values in the data. | 
 
