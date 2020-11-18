@@ -30,8 +30,8 @@ Through this point we will take in consideration some assumptions and make the l
 |     Assess  | List    |
 | :---------  |:-------------:|
 | Assumptions | 1) The team members have all the required skills. <br /> 2) The data is real.  |
-| Requirements| 1) Boundaries of the work: identify the best model among at least 5   <br /> 2) Submit a report with our findings. <br /> 3) FJFJF.  |
-| Constraints | 1) We have about 7 weeks to complete the analysis. <br /> 2) The size of the data set.<br /> 3) Limited input variables |
+| Requirements| 1) Boundaries of the work: identify the best model among at least 5 <br /> 2) Submit a report with our findings. <br /> 3) FJFJF.  |
+| Constraints | 1) We have about 7 weeks to complete the analysis. <br /> 2) The size of the data set. <br /> 3) Limited input variables |
 
 ```{r, include=FALSE, echo=FALSE, fig.cap="A caption", out.width = '50%'}
 
