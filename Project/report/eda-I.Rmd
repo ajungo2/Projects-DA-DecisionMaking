@@ -17,7 +17,6 @@ library(dplyr)
 library(stringi)
 library(stringr)
 library(ggplot2)
-library(tidyverse)
 library(knitr)
 library(broom)
 library(modelr)
@@ -71,7 +70,7 @@ colnames(data)[colnames(data)=="CO.APPLICANT"] <- "CO-APPLICANT"
 
 In this point, we will examine the gross properties of the adquire data. Let's start checking the stucture and size of it. As you can see below, there is 1000 rows and 32 variables of which the first column list all the observations taken, 30 columns the inputvariables and, the last one, the output variables that answer if the person represent a high risk (the credit is rejected) or not (the credit is accepted).
 
-```{r, echo=TRUE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 dim(data)
 ```
 
@@ -87,8 +86,14 @@ Overview of the dataset (1000 observations):
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
 library(summarytools)
-summarydata<- dfSummary(data, plain.ascii = FALSE, style = "grid", 
-          graph.magnif = 0.75, valid.col = FALSE, tmp.img.dir = "/tmp")
+#summarydata<- dfSummary(data, plain.ascii = FALSE, 
+#                        style = 'grid', graph.magnif = 0.75,
+#                        valid.col = FALSE, tmp.img.dir = "/tmp")
+
+
+summarydata<- print(dfSummary(data, valid.col = FALSE, 
+                              graph.magnif = 0.75),       
+                              max.tbl.height = 300, method = "render")
 
 summarydata
 
@@ -111,7 +116,6 @@ data %>%
 #### Description by output variable
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-
 
 psych::describeBy(data, data$RESPONSE)
 
@@ -188,23 +192,27 @@ show_plot(x, text_labels = TRUE,
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=4}
 
 library(explore)
-data[,-1] %>% explore_all(target = RESPONSE)
+
+data[,-1] %>% 
+  explore_all(target = RESPONSE) + theme_bw()
 
 ```
 
 
 ### 
 
-Regarding the last charts, it is very difficult to indentify patterns in the data.
+Regarding the last charts, we have the following observations:
+
+- It is very difficult to indentify patterns in the data.
+- In the second one, histogram by response variable, we are able to see the proportion within the positives and negatives answers applications. 
 
 ### {.tabset .tabset-fade .tabset-pills}
 
-Overview of the dataset without any modification.
-Note: a detailed description of each variable can be found in the appendix
+Consider that the graphs are an overview of the dataset without any modification.
 
 #### Boxplot without standarization
 
-```{r, echo=FALSE, fig.asp=2}
+```{r, echo=FALSE, fig.asp=2, message=FALSE, warning=FALSE}
 
 ggplot(data = stack(data[,-1]), aes(x = ind, y = values)) +
        stat_boxplot(geom = "errorbar", # Bigotes
@@ -223,7 +231,7 @@ ggplot(data = stack(data[,-1]), aes(x = ind, y = values)) +
 
 #### Boxplot with standarization
 
-```{r, echo=FALSE, fig.asp=2}
+```{r, echo=FALSE, fig.asp=2, message=FALSE, warning=FALSE}
 
 library(dplyr)
 library(matrixStats)
@@ -257,53 +265,96 @@ ggplot(data = stack(dataStand[,-1]), aes(x = ind, y = values)) +
 ```
 
 
-
 #### Boxplot with standarization by output
 
-```{r, echo=FALSE }
+```{r, echo=FALSE , message=FALSE, warning=FALSE}
 
-plot_boxplot(dataStand[,c(-1)], by= 'RESPONSE',  ncol = 2,
-             title = "Side-by-side boxplots")+ theme_bw()
+plot_boxplot(dataStand[,c(-1)], by= 'RESPONSE',  
+             ncol = 2,  ggtheme =theme_bw(), 
+             title = "Side-by-side boxplots",
+             geom_boxplot_args = list("outlier.color" = "red"))
+
 
 ```
-
 
 ### 
 
-As you see, it is easier to compare when we apply the standarization on the numerical variables and, in addition, we were able to identify some outliers, but still, we do not find any pattern or variable that stand out in comparison with the others.
+As you see before, when we compare without any standarization, we were not able to see any pattern. If we go deeper, in the second chart, with an standarization, we could identify some outliers, show as red dots, but still any special characteristic. Finally, we group each input variable by the output variable "response", now, some variables stand out more. Our first observations show in the following table: 
 
-```{r, echo=FALSE, fig.asp=1.2}
+| Boxplot                | Observation       |
+| :---------------------:|:------------------|
+| Without standarization |  Very difficult to identify any pattern.| 
+| With standarization    |  The *amount variable* is the one with the most quantity of outliers, for the remaining there is not a drastic number of them. | 
+| By response            |  The variables which stand out more are: CHK_ACCT and EMPLOYMENT. We can observe that each box by group are different from each other. | 
+
+### {.tabset .tabset-fade .tabset-pills}
+
+Now, we will give a look to the importance of each variable and we will evaluate 2 point:
+
+- Multicollinearity
+- Correlation
+
+#### Multicollinearity
+
+
+```{r, echo=FALSE, , message=FALSE, warning=FALSE}
+
+library(caret)  
+
+# Build the model
+model1 <- lm(RESPONSE ~., data = data)
+car::vif(model1)
+
+```
+
+
+#### Correlation
+
+```{r, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
 
 plot_correlation(data, type= 'c', 
                  cor_args = list( 'use' = 'complete.obs'))        
+
 ```
 
-**Here we should made an multiculinearity analysis** for check the most important variables and the ones which bring the same information, we should discard them....
+### 
+
+Our first observations about the chart shown before are in the following table: 
+
+
+| Anylisis          | Observation       |
+| :----------------:|:------------------|
+| Multicollinearity | There is one variable which VIF is higher from 5: OWN_RES | 
+| Correlation       | This correlation graph proof what was found in the Multicollinearity analysis. | 
+
 
 ## Verify data quality
 
-Examine the quality of the data, addressing questions such as: 
+For being able to do so, we stablish 4 questions that we will address during the resolution of this step. They are the following:
 
 1) Is the data complete (does it cover all the cases required)? 
-
-2) Is it correct or does it contain errors and if there are errors how common are they? 
-
-3) Are there missing values in the data? If so how are they represented,
-
-4) where do they occur and how common are they?
+2) Is it correct or does it contain errors?
+3) Are there missing values in the data? If so how are they represented?
 
 
+### {.tabset .tabset-fade .tabset-pills}
 
-```{r, echo=FALSE}
+
+#### Boxplot without standarization
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 introduce(data[,-32])
-plot_intro(data[,-32])
+plot_intro(data[,-32], title ="XXXX", 
+           ggtheme =theme_bw(), 
+           theme_config=theme(legend.position="bottom"))
 
 
 ```
 
+#### Missing Values
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
 
 nrows<-nrow(data)
 n.missing<-rowSums(is.na(data))
@@ -311,29 +362,28 @@ sum(n.missing > 0)/nrows
 n.complete<-sum(complete.cases(data))
 n.complete/nrows
 
-plot_missing(data[,-32])
+a<- plot_missing(data[,-32], title ="XXXX", 
+           ggtheme =theme_bw(), 
+           theme_config=theme(legend.position="bottom"))
+
+#Inspect the NA values
+
+#inspect_na(data[,-32])
+inspect_types(data[,-32])
+
 
 ```
 
-
+#### Columns types
 
 ```{r, echo=FALSE}
 
 #inspect the types of the variables
-
 x<-inspect_types(data[,-32])
 
-show_plot(x, col_palette=2)
-
-#Inspect the NA values
-
-x<-inspect_na(data[,-32])
 show_plot(x, col_palette=5)
 
-
 ```
-
-
 
 
 
