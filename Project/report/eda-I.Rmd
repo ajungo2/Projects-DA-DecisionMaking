@@ -1,0 +1,389 @@
+# Data Understanding
+
+Going forward with the anaylisis, the goal in the second step is to have a first perception of the information bring by the data and create hypotheses about them. For being able to do so, we will develop the following points:
+
+## Collect initial data
+
+The dataset was delivered together with the description of the task and is in *csv format*. It contains 1000 observations 1 by row, 30 input variables and 1 out variable. 
+In addition to the dataset, we seek for more information in videos in youtube where we were mainly intended to familiarize with the operation by itself and, hence, indeep more into the variables that we consider that bring more information. 
+
+```{r, echo=FALSE, include=FALSE}
+
+#to delete all the library (they are already include in the introduction)
+
+library(tidyverse)
+library(here)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(knitr)
+library(broom)
+library(modelr)
+library(forcats)
+library(ggrepel)
+library(lubridate)
+library(gridExtra)
+library(kableExtra)
+library(scales)
+library(magrittr)
+library(readxl)
+library (openxlsx) #for reading the excel
+library(rworldmap)
+library(ggforce)
+library(mapdata)
+library(maps)
+library(ggpmisc)
+library(xts)
+library(gridExtra)
+library(grid)
+library(lattice)
+library(reshape2)
+library(plyr)
+library(RColorBrewer)
+library(DT)
+library(Hmisc)  
+library(tidyquant)
+library(ggthemes)
+library(RColorBrewer)
+library(corrplot)
+library(psych)
+library(GGally)
+library(corrr)
+library(corrplot)
+library(ggcorrplot)
+library(DataExplorer)
+library(inspectdf)
+
+#data:
+data<-read.csv2(here::here("data/GermanCredit.csv"), dec=".", header=T)
+
+#names of the columns 
+colnames(data)[colnames(data)=="OBS."] <- "OBS#"
+colnames(data)[colnames(data)=="RATIO.TV"] <- "RATIO/TV"
+colnames(data)[colnames(data)=="MALE_MAR_or_WID"] <- "MALE_MAR_WID"
+colnames(data)[colnames(data)=="CO.APPLICANT"] <- "CO-APPLICANT"
+
+```
+
+## Describe data
+
+In this point, we will examine the gross properties of the adquire data. Let's start checking the stucture and size of it. As you can see below, there is 1000 rows and 32 variables of which the first column list all the observations taken, 30 columns the inputvariables and, the last one, the output variables that answer if the person represent a high risk (the credit is rejected) or not (the credit is accepted).
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+dim(data)
+```
+
+Now, let's give a look to the summary and the structe of the data, including their 
+statistical characteristics, for example, minimum, mean, maximum, so on. 
+
+### {.tabset .tabset-fade .tabset-pills}
+
+Overview of the dataset (1000 observations):  
+
+#### Summary
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+library(summarytools)
+#summarydata<- dfSummary(data, plain.ascii = FALSE, 
+#                        style = 'grid', graph.magnif = 0.75,
+#                        valid.col = FALSE, tmp.img.dir = "/tmp")
+
+
+summarydata<- print(dfSummary(data, valid.col = FALSE, 
+                              graph.magnif = 0.75),       
+                              max.tbl.height = 300, method = "render")
+
+summarydata
+
+```
+
+#### Output variable: yes / no
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+data %>% 
+  ggplot(aes(x = RESPONSE)) + 
+  geom_bar(aes(fill = factor(RESPONSE))) + 
+  labs(color = "", fill = "", x = "RESPONSE", y = "count", 
+       title = "xxxxx", subtitle = "xxxx", 
+       caption = "xxxxxxxx") + 
+  theme_bw()
+
+```
+
+#### Description by output variable
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+psych::describeBy(data, data$RESPONSE)
+
+```
+
+### 
+
+As we see in the table show earlier, all the values are integers and there is not any missing value. In addition, we can see some inconsistencies of the variables with the initial description, that we will explain in following.
+
+| Variable   | Description   | Inconsistencies   |
+| :---------:|:--------------|:-------|
+| CHK_ACCT   |  C: 0, 1, 2, 3    | X  |
+| DURATION |  Numerical    | X  |
+| HISTORY |  C: 0, 1, 2, 3, 4 | X  |
+| NEW_CAR  |  B: 0, 1  | X  |
+| USED_CAR |  B: 0, 1	  | X  |
+| FURNITURE |  B: 0, 1    | X  |
+| RADIO.TV  |  B: 0, 1   | X  |
+| EDUCATION |  B: 0, 1   | ✔: Acoording to the description we should have a binary variable and the data show -1 |
+| RETRAINING  |  B: 0, 1| X  |
+| AMOUNT      |  Numerical | X  |
+| SAV_ACCT    |  C: 0, 1, 2, 3, 4 | X  |
+| EMPLOYMENT  |  C: 0, 1, 2, 3, 4 | X  |
+| INSTALL_RATE |  Numerical| X  |
+| MALE_DIV |  B: 0, 1 | X  |
+| MALE_SINGLE	|  B: 0, 1 | X  |
+| MALE_MAR_WID |  B: 0, 1 | X  |
+| CO-APPLICANT |  B: 0, 1 | X  |
+| GUARANTOR   |  B: 0, 1 | X  |
+| PRESENT_RESIDENT|  C: 0, 1, 2, 3| ✔: Acoording to the description we should 3 categories instead of 4 shown by the data|
+| REAL_ESTATE |  B: 0, 1| X  |
+| PROP_UNKN_NONE  |  B: 0, 1| X  |
+| AGE|  Numerical| ✔: Identify outliers, the age should not go up to 125 years |
+| OTHER_INSTALL|  B: 0, 1| X  |
+| RENT |  B: 0, 1| X  |
+| OWN_RES |  B: 0, 1| X  |
+| NUM_CREDITS|  Numerical| X  |
+| JOB |  C: 0, 1, 2, 3| X  |
+| NUM_DEPENDENTS  |  Numerical| X  |
+| TELEPHONE  |  B: 0, 1| X  |
+| FOREIGN    |  B: 0, 1| X  |
+
+Then, for the 3 inconsistencies found before, We have established the following hypothesis and solutions.
+
+- EDUCATION: there was an error in the registration of the information and the -1 must be replaced by 1.
+- PRESENT_RESIDENT: Again, there was an error in the registration of the information and the register was made in years instead of the category.
+- AGE: Here it is clear that we have some outliers, we should limit the age to 75.
+
+It is also important to mention that the output variables show in 70% that the credit is accepted and in 30% rejected, which can later bias the prediction.
+
+## Explore data
+
+In this section, we will go deeper into the data and look for patterns or relationships between variables. For being able to do that we will develop an histogram to check the distribution of our data for each variable.
+
+### {.tabset .tabset-fade .tabset-pills}
+
+Overview of the dataset without any modification.
+Note: a detailed description of each variable can be found in the appendix
+
+#### Histogram
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=2}
+
+x<-inspect_num(data[,-32])
+show_plot(x, text_labels = TRUE, 
+          alpha = 0.05, high_cardinality = 0,
+          plot_layout = NULL,  col_palette=3, 
+          plot_type = "bar", label_thresh = 0.1) + theme_bw()
+
+```
+
+
+#### Histogram by answer
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=4}
+
+library(explore)
+
+data[,-1] %>% 
+  explore_all(target = RESPONSE) + theme_bw()
+
+```
+
+
+### 
+
+Regarding the last charts, we have the following observations:
+
+- It is very difficult to indentify patterns in the data.
+- In the second one, histogram by response variable, we are able to see the proportion within the positives and negatives answers applications. 
+
+### {.tabset .tabset-fade .tabset-pills}
+
+Consider that the graphs are an overview of the dataset without any modification.
+
+#### Boxplot without standarization
+
+```{r, echo=FALSE, fig.asp=2, message=FALSE, warning=FALSE}
+
+ggplot(data = stack(data[,-1]), aes(x = ind, y = values)) +
+       stat_boxplot(geom = "errorbar", # Bigotes
+                    width = 0.2) +
+       geom_boxplot(fill = "#4271AE", colour = "#1F3552", # Colores
+                    alpha = 0.9, outlier.colour = "red") +
+       scale_y_continuous(name = "Values") +  # Etiqueta de la variable continua
+       scale_x_discrete(name = "Variables") +        # Etiqueta de los grupos
+       ggtitle("Boxplot without standarization") +   # Título del plot
+       theme(axis.line = element_line(colour = "black", # Personalización del tema
+                                      size = 0.25))+
+      coord_flip() +theme_bw()
+
+
+```
+
+#### Boxplot with standarization
+
+```{r, echo=FALSE, fig.asp=2, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(matrixStats)
+
+meanbycol<- colMeans(data)
+sdbycol<- as.vector(colSds(as.matrix(data[sapply(data, is.numeric)])))
+
+dataStand<- data %>% 
+                    rowwise()%>% 
+                    mutate(DURATION= (DURATION- meanbycol[3])/(sdbycol[3]),
+                             AMOUNT = (AMOUNT- meanbycol[11])/(sdbycol[11]),
+                             INSTALL_RATE = (INSTALL_RATE- meanbycol[14])/(sdbycol[14]),
+                             AGE = (AGE- meanbycol[23])/(sdbycol[23]),
+                             NUM_CREDITS = (NUM_CREDITS - meanbycol[27])/(sdbycol[27]),
+                             NUM_DEPENDENTS= (NUM_DEPENDENTS- meanbycol[29])/(sdbycol[29]) )
+
+dataStand<- as.data.frame(dataStand)
+
+ggplot(data = stack(dataStand[,-1]), aes(x = ind, y = values)) +
+       stat_boxplot(geom = "errorbar", # Bigotes
+                    width = 0.2) +
+       geom_boxplot(fill = "#4271AE", colour = "#1F3552", # Colores
+                    alpha = 0.9, outlier.colour = "red") +
+       scale_y_continuous(name = "Values") +  # Etiqueta de la variable continua
+       scale_x_discrete(name = "Variables") +        # Etiqueta de los grupos
+       ggtitle("Boxplot with standarization") +   # Título del plot
+       theme(axis.line = element_line(colour = "black", # Personalización del tema
+                                      size = 0.25))+
+      coord_flip() + theme_bw()
+        
+```
+
+
+#### Boxplot with standarization by output
+
+```{r, echo=FALSE , message=FALSE, warning=FALSE}
+
+plot_boxplot(dataStand[,c(-1)], by= 'RESPONSE',  
+             ncol = 2,  ggtheme =theme_bw(), 
+             title = "Side-by-side boxplots",
+             geom_boxplot_args = list("outlier.color" = "red"))
+
+
+```
+
+### 
+
+As you see before, when we compare without any standarization, we were not able to see any pattern. If we go deeper, in the second chart, with an standarization, we could identify some outliers, show as red dots, but still any special characteristic. Finally, we group each input variable by the output variable "response", now, some variables stand out more. In the following table, you will find our principal observations. 
+
+| Boxplot                | Observation       |
+| :---------------------:|:------------------|
+| Without standarization |  Very difficult to identify any pattern.| 
+| With standarization    |  The *amount variable* is the one with the most quantity of outliers, for the remaining there is not a drastic number of them. | 
+| By response            |  The variables which stand out more are: CHK_ACCT and EMPLOYMENT. We can observe that each box by group are different between each other. | 
+
+### {.tabset .tabset-fade .tabset-pills}
+
+Now, we will give a look to the importance of each variable and we will evaluate 2 point:
+
+- Multicollinearity
+- Correlation
+
+#### Multicollinearity
+
+
+```{r, echo=FALSE, , message=FALSE, warning=FALSE}
+
+library(caret)  
+
+# Build the model
+model1 <- lm(RESPONSE ~., data = data)
+car::vif(model1)
+
+```
+
+
+#### Correlation
+
+```{r, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
+
+plot_correlation(data, type= 'c', 
+                 cor_args = list( 'use' = 'complete.obs'))        
+
+```
+
+### 
+
+Our first observations about the chart shown before are in the following table: 
+
+
+| Anylisis          | Observation       |
+| :----------------:|:------------------|
+| Multicollinearity | There is one variable which VIF is higher from 5: OWN_RES | 
+| Correlation       | This correlation graph proof what was found in the Multicollinearity analysis. |
+
+In general, the VIF is no high enough to eliminate the variable. 
+
+## Verify data quality
+
+For being able to do so, we stablish 3 questions that we will address during the resolution of this step. They are the following:
+
+1) Is the data complete (does it cover all the cases required)? 
+2) Is it correct or does it contain errors?
+3) Are there missing values in the data? If so how are they represented?
+
+
+### {.tabset .tabset-fade .tabset-pills}
+
+
+#### Boxplot without standarization
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+introduce(data[,-32])
+plot_intro(data[,-32], title ="XXXX", 
+           ggtheme =theme_bw(), 
+           theme_config=theme(legend.position="bottom"))
+
+
+```
+
+#### Missing Values
+
+```{r, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
+
+nrows<-nrow(data)
+n.missing<-rowSums(is.na(data))
+sum(n.missing > 0)/nrows
+n.complete<-sum(complete.cases(data))
+n.complete/nrows
+
+a<- plot_missing(data[,-32], title ="XXXX", 
+           ggtheme =theme_bw(), 
+           theme_config=theme(legend.position="bottom"))
+
+#Inspect the NA values
+
+#inspect_na(data[,-32])
+inspect_types(data[,-32])
+
+
+```
+
+### 
+
+Below you will find the answer of the 3 questions:
+
+
+| Question    | Answer       | 
+| :----------:|:--------------|
+| 1           | Yes, all the columns and rows contains information. | 
+| 2           | No, they contain some errors. They were found in data description and exploratory and are the following: <br /> 1) The variable Education show a not binary output. <br /> 2) The variable PRESENT_RESIDENT have more categories of was mention in the description <br /> 3) the variable AGE is out of range. <br /> 4) AMOUNT, DURANTION, AGE are the variables with more quantity of outliers. | 
+| 1           | No, there is any missing values in the data. | 
+

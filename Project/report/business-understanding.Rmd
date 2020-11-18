@@ -1,0 +1,53 @@
+# Business understanding
+
+The goal of this phase is to understand the project objetives and what is needed for being able to achieve them, then translate this into a data mining problem definition which include a designed plan for analysis and aplication step by step.  
+
+## Determine business objectives
+
+In general, the banking business have two main goals: 
+
+- The first, to offer variety of products or services that answer to individual and business customers needs; 
+- The second, and the one most important for this project, collect payments from the products provided to their clients with the goal of generating incomes for shareholders.
+
+Both objectives generate an organic balance operation between the customers needs and the gains that the company requires for its operation. But in this analysis, we will focus on dimish the risk of the second goal, in other words, a better forecast of which client decrease the likelihood of risk. 
+
+```{r, echo=FALSE, fig.cap="A caption", out.width = '50%'}
+
+library(here)
+library(knitr)
+#we take this picture from here: 
+#https://grupoasal.es/la-poliza-de-credito-para-el-anticipo-de-facturas/
+
+knitr::include_graphics(here::here("data/GoalCredit.jpg"))
+
+```
+
+## Assess situation
+
+Through this point we will take in consideration some assumptions and make the list of the Requirements and constraints that the proyect could have.
+
+
+|     Assess  | List    |
+| :---------  |:-------------:|
+| Assumptions | 1) The team members have all the required skills. <br /> 2) The data is real.  |
+| Requirements| 1) Boundaries of the work: identify the best model among at least 5 <br /> 2) Submit a report with our findings. <br /> 3) FJFJF.  |
+| Constraints | 1) We have about 7 weeks to complete the analysis. <br /> 2) The size of the data set. <br /> 3) Limited input variables |
+
+```{r, include=FALSE, echo=FALSE, fig.cap="A caption", out.width = '50%'}
+
+library(here)
+library(knitr)
+
+knitr::include_graphics(here::here("data/assess.gif"))
+
+```
+
+## Determine data mining goals
+
+The proposed mining goal for this analysis is to obtain a **model** which show a good or bad output regarding the risk of given them the requested credit when entering information about certain variables. This algorithm need to have a high accuracy, highlighting a negative impact of a false positive over a false negative.
+
+**MISSING:Include the exploratory data GOALS**
+
+## Produce project plan
+
+Include an schedule + detailed plan..... (REMAINING)
