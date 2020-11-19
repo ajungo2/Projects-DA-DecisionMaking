@@ -1,2 +1,336 @@
 # Exploratory data analysis
 
+```{r data upload}
+
+data<-read.csv2(here::here("data/GermanCredit.csv"), dec=".", header=T)
+
+```
+
+### Collect additional data 
+=> not needed / not relevant for us, right? 
+
+## Clean data
+
+| Task | Raise the data quality to the level required by the selected analysis 
+techniques. This may involve selection of clean subsets of the data, the 
+insertion of suitable defaults or more ambitious techniques such as the 
+estimation of missing data by modeling. | | Output | Describe what decisions and
+actions were taken to address the data quality problems reported during the 
+verify data quality task of the data understanding phase. Transformations of the
+data for cleaning purposes and the possible impact on the analysis results 
+should be considered. |
+
+
+### Reconsider how to deal with observed type of noise 
+
+We will consider hw to correct the inconsistencies we have found, which are on three different variables, namely:
+
+- EDUCATION: there was an error in the registration of the information and the -1 must be replaced by 1.
+- PRESENT_RESIDENT: Again, there was an error in the registration of the information and the register was made in years instead of the category.
+- AGE: Here it is clear that we have some outliers, we should limit the age to 75.
+
+We have already decided how to correct them, hence we will move on to that direction. 
+
+### Correct, remove or ignore noise 
+
+```{r noise correction}
+
+#EDUCATION
+data %<>% 
+  mutate(EDUCATION = replace(EDUCATION, EDUCATION == -1, 1))
+
+#PRESENT_RESIDENT 
+data %<>% 
+  mutate(PRESENT_RESIDENT = PRESENT_RESIDENT - 1)
+
+```
+
+### Decide how to deal with special values and their meaning 
+
+This is specifically for the case of AGE. As already previously said, we believe that the 125 age is an error, hence we will disgard it. 
+
+```{r age correction}
+
+#AGE
+data %<>% 
+  filter(AGE < 76)
+
+```
+
+
+## Construct data
+
+| Task |This task includes constructive data preparation operations such as the 
+production of derived attributes, entire new records or transformed values for 
+existing attributes. | | Output | Derived attributes are new attributes that are
+constructed from one or more existing attributes in the same record. Examples: 
+area = length * width. </br> Describe the creation of completely new records. 
+Example: create records for customers who made no purchase during the past year.
+There was no reason to have such records in the raw data, but for modeling 
+purposes it might make sense to explicitly represent the fact that certain 
+customers made zero purchases.|
+
+
+### Check available constuction mechanisms 
+
+We could create the sex variable thanks to the MALE_DIV, MALE_SINGLE and MALE_MAR_WID variables. 
+
+This variable will take value 1 if the person is male, and value 0 if it is female. 
+
+```{r male creation}
+
+data %<>% 
+  mutate(SEX_MALE = ifelse((MALE_DIV | MALE_SINGLE | MALE_MAR_or_WID) == 1, 1, 0)) 
+
+```
+
+#### Exploration of new variable 
+
+We will now explore a bit the new variable we have created. 
+
+```{r EDA SEX_MALE}
+
+#Respesentation of SEX_MALE per value
+data %>% 
+  ggplot(aes(SEX_MALE)) + 
+  geom_bar(aes(fill = factor(SEX_MALE))) + theme(legend.position = "none") 
+
+#Representation of output variable in terms of SEX_MALE
+data %>% 
+  ggplot(aes(RESPONSE)) + 
+  geom_bar(aes(fill = factor(SEX_MALE)), position = "dodge")+ 
+  labs(color = "", fill = "SEX_MALE", x = "RESPONSE", y = "count") + 
+  theme_bw()
+
+#Count of negative values for SEX_MALE (hence, of women)
+data %>% 
+  filter(SEX_MALE == 0) %>% 
+  summarise(count = length(SEX_MALE))
+
+```
+
+We can see that we have more observation with a positive value for the SEX_MALE variable, meaning that there are more men than women in the dataset. 
+
+We can see a difference on the positive value for the response having a male rather than a female, but this could also be due to the fact that the presence of male is higher with respect to women. 
+
+We have 309 women vs. 691 men.
+
+The correlation with the output variable is `r cor(data$SEX_MALE, data$RESPONSE)`.
+
+### Collide variables 
+
+We could try to merge variables into a new one, so that instead of having multiple dummy variables, we have a factor variables with multiple levels. 
+
+Variables that could be merged:
+- Purpose of credit: NEW_CAR, USED_CAR, FURNITURE, RADIO/TV, EDUCATION, RETRAINING
+- Property: REAL_ESTATE, PROP_UNKN_NONE
+- Residence: RENT, OWN_RES 
+
+
+#### Purpose 
+Let's start with the purpose of credit. 
+
+This variable will take the following values:
+1 = the purpose for the credit was a new car
+2 = the purpose for the credit was a used car
+3 = the purpose for the credit was funriture
+4 = the purpose for the credit was a radio or a television 
+5 = the purpose for the credit was to increase eductation 
+6 = the purpose for the credit was a retraining 
+0 = the purpose for the credit was something else 
+
+```{r purpose creation}
+
+data %<>% 
+  mutate(PURPOSE = ifelse(NEW_CAR == 1, 1, ifelse(USED_CAR == 1, 2, ifelse(FURNITURE == 1, 3, ifelse(RADIO.TV == 1, 4, ifelse(EDUCATION == 1, 5, ifelse(RETRAINING == 1, 6, 0))))))) %>% 
+  mutate(PURPOSE = as.factor(PURPOSE))
+
+```
+
+Let's have a look at the new variable, in terms of number of observation per level and its link to the response variable. 
+
+```{r EDA PURPOSE} 
+
+data %>% 
+  ggplot(aes(PURPOSE)) + geom_bar(aes(fill = PURPOSE)) + scale_fill_discrete(name = "PURPOSE", labels = c("OTHER", "NEW_CAR", "USED_CAR", "FURNITURE", "RADIO/TV", "EDUCATION", "RETRAINING"))
+
+data %>% 
+  ggplot(aes(RESPONSE)) + 
+  geom_bar(aes(fill = factor(PURPOSE)), position = "dodge") + labs(x = "RESPONSE", y = "count") +  scale_fill_discrete(name = "PURPOSE", labels = c("OTHER", "NEW_CAR", "USED_CAR", "FURNITURE", "RADIO/TV", "EDUCATION", "RETRAINING")) + theme_bw()
+
+data %>% 
+  group_by(PURPOSE) %>% 
+  summarise(count = count(PURPOSE))
+```
+
+#### Property 
+
+Now we will create the property variable. 
+
+This variable will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
+
+<!-- WHY THEY ARE NOT COMPLEMENTARY THESE TWO VARIABLES? -->
+
+```{r property creation}
+
+data %<>% 
+  mutate(PROPERTY = as.factor(ifelse(REAL_ESTATE == 1, 1, ifelse(PROP_UNKN_NONE == 1, 2, 0))))
+
+```
+
+Let's have a look at the new variable in terms of number of observations per level and if there is a difference of occurences given the output variables. 
+
+```{r EDA PROPERTY}
+
+data %>% 
+ggplot(aes(PROPERTY)) + geom_bar(aes(fill = PROPERTY)) + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE"))
+
+data %>% 
+  ggplot(aes(RESPONSE)) + geom_bar(aes(fill = PROPERTY), position = "dodge") + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE"))
+
+data %>% 
+  group_by(PROPERTY) %>% 
+  summarise(count = count(PROPERTY))
+```
+
+We can clearly see that the majority of the observations does not have a clear value for the property, being equal to 0 (563 compared to the 282 of REAL_ESTATE and 154 of PROP_UNKN_NONE).
+
+<!-- WHY THERE ARE SO MANY OBSERVATIONS ON THE 0 VALUE? SHOULDN'T THEY BE COMPLEMENTARY AS SOMEONE EITHER HAS A PROPERTY OR NOT?? -->
+
+If we consider the response, we cannot really see a difference from the person having a real estate or not having a property and having a credit rejected, while if they have a real estate it is more probable that they will get the credit compared to those who have not. Indeed, the correlation of the variable with the output is `r cor(as.numeric(data$PROPERTY), data$RESPONSE)`. 
+
+
+#### Residence 
+
+Now let's create the last variable: residence. 
+
+This variable will take value 1 if the person is renting, value 2 if the person is owning their own residence and value 0 otherwise. 
+
+<!-- ONCE AGAIN WHY ARE THESE TWO VARIABLES NOT COMPLEMENTARY? -->
+
+```{r residence creation}
+
+data %<>% 
+  mutate(RESIDENCE = as.factor(ifelse(RENT == 1, 1, ifelse(OWN_RES == 1, 2, 0))))
+
+```
+
+
+And let's explore the new variable a little bit, in terms of number of observations per level and if there is a difference in the possibility to get a credit given this variable. 
+
+```{r RESIDENCE EDA}
+
+data %>% 
+  ggplot(aes(RESIDENCE)) + geom_bar(aes(fill = RESIDENCE)) + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))
+
+data %>% 
+  ggplot(aes(RESPONSE)) + geom_bar(aes(fill = RESIDENCE), position = "dodge") + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))
+ 
+data %>% 
+  group_by(RESIDENCE) %>% 
+  summarise(count = count(RESIDENCE))
+```
+
+Here, we can see that the majority of the people in the sample do own their own residence (712 observations, compared to the 108 of other and 179 of renting). 
+
+Comparing it to the response variable, we can see that owning the residence seems to have an impact on the possibility to get the credit, while renting seems not to have a major impact. Indeed, the correlation with the output variable is `r cor(as.numeric(data$RESIDENCE), data$RESPONSE)`. 
+
+## Select data 
+
+We decided to put this part here specially, as we needed to make some transfromation and some analysis before being able to select the data. 
+
+
+| Task | Decide on the data to be used for analysis. Criteria include relevance 
+to the data mining goals, quality and technical constraints such as limits on 
+data volume or data types. Note that data selection covers selection of 
+attributes (columns) as well as selection of records (rows) in a table. | | 
+Output | List the data to be included/excluded and the reasons for these 
+decisions.|
+
+### Perform significance and correlation tests to decide what to include 
+
+```{r correlation, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
+
+cor(data[2:30], data$RESPONSE) %>% as.data.frame() %>% arrange(V1)
+
+```
+We can see that, in general, the correlation between the output variable and the explanatory variable is not particularly high, having a maximum of 0.35 with CHECK_ACC and a minimum of -0.21 with DURATION. 
+
+```{r significance}
+
+lm <- lm(RESPONSE ~ ., data = data[2:32])
+summary(lm)
+
+```
+
+Given the signifcance of the variable by running a simple linear regression model, we believe that the most important variables are CHK_ACCOUNT, DURATION, HISTORY, NEW_CAR, EDUCATION, AMOUNT, SAV_ACCOUNT, INSTALL_RATE, EMPLOYMENT, MALE_SINGLE, GUARANTOR, PROP_UNKN_NONE, OTHER_INSTALL, FOREIGN and  TELEPHONE, which are in line with the correlation we have found before. We could choose to use only these variables, but we prefer to keep then and to perform a variable selection in terms of the different models that we will use in the next chapter. 
+
+
+### Reconsider data seleciton criteria in light of experiences of data quality, data exploration
+
+<!-- Do we need to further select the variables already in chapter 2??  -->
+
+
+### Selecting variables we created and discard others 
+
+```{r selection}
+
+data_sel <- data %>% 
+  select(CHK_ACCT, DURATION, HISTORY, PURPOSE, AMOUNT, SAV_ACCT, EMPLOYMENT, INSTALL_RATE, SEX_MALE, MALE_DIV, MALE_SINGLE, MALE_MAR_or_WID, CO.APPLICANT, GUARANTOR, PRESENT_RESIDENT, PROPERTY, AGE, OTHER_INSTALL, RESIDENCE, NUM_CREDITS, JOB, RESPONSE)
+
+```
+
+
+#### Scale variables 
+
+```{r scale}
+
+#scale basic dataframe
+data_scale <- as.data.frame(scale(data[2:32]))
+
+#select integer variables from selected df 
+data_sel %<>% mutate_if(is.factor, as.integer) 
+data_sel_scale <- scale(data_sel) %>% as.data.frame()
+
+```
+
+<!-- HERE I DON'T KNOW IF WE SHOULD KEEP THE FACTORS AS SUCH AND INTEGRATE THEM LATER IN THE DATASET -->
+
+```{r linear regression with data selected}
+
+lm_sel <- lm(RESPONSE ~., data = data_sel_scale)
+
+summary(lm_sel)
+
+```
+
+Here the most important variables seem to be CHK_ACCT, DURATION, HISTORY, AMOUNT, SAV_ACCT, INSTALL_RATE, GUARANTOR, OTHER_INSTALL and NUM_CREDITS, given that they are the ones that are significant in the model. 
+
+We could choose to include only these variables in the analysis, but we prefer to keep all of them and do a selection in the modelling part depending on the different models that we will use. 
+
+## Integrate data
+
+| Task | These are methods whereby information is combined from multiple tables 
+or records to create new records or values. | | Output | Merging tables refers 
+to joining together two or more tables that have different information about the
+same objects. </br> Merged data also covers aggregations. Aggregation refers to 
+operations where new values are computed by summarizing together information 
+from multiple records and/or tables.|
+
+
+<!-- SHOULD WE RATHER KEEP THE FACTORS AS FACTORS AND INTEGRATE THEM IN THE DATASET AS FACTORS? -->
+
+## Format data
+
+| Task | Formatting transformations refer to primarily syntactic modifications 
+made to the data that do not change its meaning, but might be required by the 
+modeling tool. | | Output | Some tools have requirements on the order of the 
+attributes, such as the first field being a unique identifier for each record or
+the last field being the outcome field the model is to predict. It might be 
+important to change the order of the records in the dataset. Perhaps the 
+modeling tool requires that the records be sorted according to the value of the 
+outcome attribute.  Additionally, there are purely syntactic changes made to 
+satisfy the requirements of the specific modeling tool.|
+
+No need, as we discarded those that were needed to be renamed. 
+

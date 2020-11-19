@@ -1,6 +1,6 @@
 # Business understanding
 
-The goal of this phase is to understand the project objetives and what is needed for being able to achieve them, then translate this into a data mining problem definition which include a designed plan for analysis and aplication step by step.  
+The goal of this phase is to understand the project objetives and what is needed to being able to achieve them, then translate this into a data mining problem definition which include a designed plan for analysis and aplication step by step.  
 
 ## Determine business objectives
 
