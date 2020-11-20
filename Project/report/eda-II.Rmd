@@ -6,8 +6,8 @@ data<-read.csv2(here::here("data/GermanCredit.csv"), dec=".", header=T)
 
 ```
 
-### Collect additional data 
-=> not needed / not relevant for us, right? 
+<!-- ### Collect additional data  -->
+<!-- => not needed / not relevant for us, right?  -->
 
 ## Clean data
 
@@ -23,7 +23,7 @@ should be considered. |
 
 ### Reconsider how to deal with observed type of noise 
 
-We will consider hw to correct the inconsistencies we have found, which are on three different variables, namely:
+We will consider how to correct the inconsistencies we have found, which are on three different variables, namely:
 
 - EDUCATION: there was an error in the registration of the information and the -1 must be replaced by 1.
 - PRESENT_RESIDENT: Again, there was an error in the registration of the information and the register was made in years instead of the category.
@@ -93,19 +93,13 @@ We will now explore a bit the new variable we have created.
 #Respesentation of SEX_MALE per value
 data %>% 
   ggplot(aes(SEX_MALE)) + 
-  geom_bar(aes(fill = factor(SEX_MALE))) + theme(legend.position = "none") 
+  geom_bar(aes(fill = factor(SEX_MALE))) + theme(legend.position = "none")  + geom_label(stat = 'count', aes(label =..count..)) 
 
 #Representation of output variable in terms of SEX_MALE
 data %>% 
   ggplot(aes(RESPONSE)) + 
   geom_bar(aes(fill = factor(SEX_MALE)), position = "dodge")+ 
-  labs(color = "", fill = "SEX_MALE", x = "RESPONSE", y = "count") + 
-  theme_bw()
-
-#Count of negative values for SEX_MALE (hence, of women)
-data %>% 
-  filter(SEX_MALE == 0) %>% 
-  summarise(count = length(SEX_MALE))
+  labs(color = "", fill = "SEX_MALE", x = "RESPONSE", y = "count") 
 
 ```
 
@@ -152,24 +146,45 @@ Let's have a look at the new variable, in terms of number of observation per lev
 ```{r EDA PURPOSE} 
 
 data %>% 
-  ggplot(aes(PURPOSE)) + geom_bar(aes(fill = PURPOSE)) + scale_fill_discrete(name = "PURPOSE", labels = c("OTHER", "NEW_CAR", "USED_CAR", "FURNITURE", "RADIO/TV", "EDUCATION", "RETRAINING"))
+  ggplot(aes(PURPOSE)) + geom_bar(aes(reorder(PURPOSE, -table(PURPOSE)[PURPOSE]), fill = PURPOSE)) + scale_fill_discrete(name = "PURPOSE", labels = c("OTHER", "NEW_CAR", "USED_CAR", "FURNITURE", "RADIO/TV", "EDUCATION", "RETRAINING")) + geom_label(stat = 'count', aes(label =..count..)) 
 
 data %>% 
   ggplot(aes(RESPONSE)) + 
   geom_bar(aes(fill = factor(PURPOSE)), position = "dodge") + labs(x = "RESPONSE", y = "count") +  scale_fill_discrete(name = "PURPOSE", labels = c("OTHER", "NEW_CAR", "USED_CAR", "FURNITURE", "RADIO/TV", "EDUCATION", "RETRAINING")) + theme_bw()
 
-data %>% 
-  group_by(PURPOSE) %>% 
-  summarise(count = count(PURPOSE))
 ```
 
 #### Property 
 
 Now we will create the property variable. 
 
-This variable will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
+We will start by looking at if the two variables that we want to use (namely, REAL_ESTATE and PROP_UNKN_NONE) are connected and hence it makes sense to put them together. 
 
-<!-- WHY THEY ARE NOT COMPLEMENTARY THESE TWO VARIABLES? -->
+In order to do so, we will perform a chi-squared independence test. The Chi-square test examines whether rows and columns of a contingency table are statistically significantly associated.
+
+Null hypothesis (H0): the row and the column variables of the contingency table are independent.
+Alternative hypothesis (H1): row and column variables are dependent
+For each cell of the table, we have to calculate the expected value under null hypothesis.
+
+This calculated Chi-square statistic is compared to the critical value (obtained from statistical tables) with df=(r−1)(c−1)
+degrees of freedom and p = 0.05.
+
+r is the number of rows in the contingency table
+c is the number of column in the contingency table
+
+If the calculated Chi-square statistic is greater than the critical value, then we must conclude that the row and the column variables are not independent of each other. This implies that they are significantly associated.
+
+(http://www.sthda.com/english/wiki/chi-square-test-of-independence-in-r)
+
+```{r chi-square test property}
+
+chisq.test(data$REAL_ESTATE, data$PROP_UNKN_NONE)
+
+```
+
+We can see that the two variables are statistically significantly associated, as the p-value is really low, almost equal to 0.
+
+We can conclude that it makes sense to merge the two variables into one factor variable, which will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
 
 ```{r property creation}
 
@@ -183,30 +198,33 @@ Let's have a look at the new variable in terms of number of observations per lev
 ```{r EDA PROPERTY}
 
 data %>% 
-ggplot(aes(PROPERTY)) + geom_bar(aes(fill = PROPERTY)) + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE"))
+ggplot(aes(PROPERTY)) + geom_bar(aes(fill = PROPERTY)) + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE")) + geom_label(stat = 'count', aes(label =..count..))  
 
 data %>% 
   ggplot(aes(RESPONSE)) + geom_bar(aes(fill = PROPERTY), position = "dodge") + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE"))
 
-data %>% 
-  group_by(PROPERTY) %>% 
-  summarise(count = count(PROPERTY))
 ```
 
 We can clearly see that the majority of the observations does not have a clear value for the property, being equal to 0 (563 compared to the 282 of REAL_ESTATE and 154 of PROP_UNKN_NONE).
-
-<!-- WHY THERE ARE SO MANY OBSERVATIONS ON THE 0 VALUE? SHOULDN'T THEY BE COMPLEMENTARY AS SOMEONE EITHER HAS A PROPERTY OR NOT?? -->
 
 If we consider the response, we cannot really see a difference from the person having a real estate or not having a property and having a credit rejected, while if they have a real estate it is more probable that they will get the credit compared to those who have not. Indeed, the correlation of the variable with the output is `r cor(as.numeric(data$PROPERTY), data$RESPONSE)`. 
 
 
 #### Residence 
 
-Now let's create the last variable: residence. 
+Now let's look at the third variable we wish to know if it is needed to be created. 
 
-This variable will take value 1 if the person is renting, value 2 if the person is owning their own residence and value 0 otherwise. 
+Let's start once again by the chi-squared independence test. 
 
-<!-- ONCE AGAIN WHY ARE THESE TWO VARIABLES NOT COMPLEMENTARY? -->
+```{r chi-square residence}
+
+chisq.test(data$RENT, data$OWN_RES)
+
+```
+
+Also here, we can conclude that the two variables are statistically significantly associated, as the p-value is really low.
+
+Hence we will create the residence variable, which will take value 1 if the person is renting, value 2 if the person is owning their own residence and value 0 otherwise. 
 
 ```{r residence creation}
 
@@ -221,14 +239,11 @@ And let's explore the new variable a little bit, in terms of number of observati
 ```{r RESIDENCE EDA}
 
 data %>% 
-  ggplot(aes(RESIDENCE)) + geom_bar(aes(fill = RESIDENCE)) + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))
+  ggplot(aes(RESIDENCE)) + geom_bar(aes(fill = RESIDENCE)) + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))+ geom_label(stat = 'count', aes(label =..count..)) 
 
 data %>% 
   ggplot(aes(RESPONSE)) + geom_bar(aes(fill = RESIDENCE), position = "dodge") + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))
- 
-data %>% 
-  group_by(RESIDENCE) %>% 
-  summarise(count = count(RESIDENCE))
+
 ```
 
 Here, we can see that the majority of the people in the sample do own their own residence (712 observations, compared to the 108 of other and 179 of renting). 
@@ -236,9 +251,6 @@ Here, we can see that the majority of the people in the sample do own their own 
 Comparing it to the response variable, we can see that owning the residence seems to have an impact on the possibility to get the credit, while renting seems not to have a major impact. Indeed, the correlation with the output variable is `r cor(as.numeric(data$RESIDENCE), data$RESPONSE)`. 
 
 ## Select data 
-
-We decided to put this part here specially, as we needed to make some transfromation and some analysis before being able to select the data. 
-
 
 | Task | Decide on the data to be used for analysis. Criteria include relevance 
 to the data mining goals, quality and technical constraints such as limits on 
@@ -254,6 +266,7 @@ decisions.|
 cor(data[2:30], data$RESPONSE) %>% as.data.frame() %>% arrange(V1)
 
 ```
+
 We can see that, in general, the correlation between the output variable and the explanatory variable is not particularly high, having a maximum of 0.35 with CHECK_ACC and a minimum of -0.21 with DURATION. 
 
 ```{r significance}
@@ -265,11 +278,16 @@ summary(lm)
 
 Given the signifcance of the variable by running a simple linear regression model, we believe that the most important variables are CHK_ACCOUNT, DURATION, HISTORY, NEW_CAR, EDUCATION, AMOUNT, SAV_ACCOUNT, INSTALL_RATE, EMPLOYMENT, MALE_SINGLE, GUARANTOR, PROP_UNKN_NONE, OTHER_INSTALL, FOREIGN and  TELEPHONE, which are in line with the correlation we have found before. We could choose to use only these variables, but we prefer to keep then and to perform a variable selection in terms of the different models that we will use in the next chapter. 
 
+## Integrate data
 
-### Reconsider data seleciton criteria in light of experiences of data quality, data exploration
+| Task | These are methods whereby information is combined from multiple tables 
+or records to create new records or values. | | Output | Merging tables refers 
+to joining together two or more tables that have different information about the
+same objects. </br> Merged data also covers aggregations. Aggregation refers to 
+operations where new values are computed by summarizing together information 
+from multiple records and/or tables.|
 
-<!-- Do we need to further select the variables already in chapter 2??  -->
-
+Here we integrate the variables we created in the dataset and we discard the ones we used to create them, so that we avoid the problem of multicollinearity. 
 
 ### Selecting variables we created and discard others 
 
@@ -280,45 +298,6 @@ data_sel <- data %>%
 
 ```
 
-
-#### Scale variables 
-
-```{r scale}
-
-#scale basic dataframe
-data_scale <- as.data.frame(scale(data[2:32]))
-
-#select integer variables from selected df 
-data_sel %<>% mutate_if(is.factor, as.integer) 
-data_sel_scale <- scale(data_sel) %>% as.data.frame()
-
-```
-
-<!-- HERE I DON'T KNOW IF WE SHOULD KEEP THE FACTORS AS SUCH AND INTEGRATE THEM LATER IN THE DATASET -->
-
-```{r linear regression with data selected}
-
-lm_sel <- lm(RESPONSE ~., data = data_sel_scale)
-
-summary(lm_sel)
-
-```
-
-Here the most important variables seem to be CHK_ACCT, DURATION, HISTORY, AMOUNT, SAV_ACCT, INSTALL_RATE, GUARANTOR, OTHER_INSTALL and NUM_CREDITS, given that they are the ones that are significant in the model. 
-
-We could choose to include only these variables in the analysis, but we prefer to keep all of them and do a selection in the modelling part depending on the different models that we will use. 
-
-## Integrate data
-
-| Task | These are methods whereby information is combined from multiple tables 
-or records to create new records or values. | | Output | Merging tables refers 
-to joining together two or more tables that have different information about the
-same objects. </br> Merged data also covers aggregations. Aggregation refers to 
-operations where new values are computed by summarizing together information 
-from multiple records and/or tables.|
-
-
-<!-- SHOULD WE RATHER KEEP THE FACTORS AS FACTORS AND INTEGRATE THEM IN THE DATASET AS FACTORS? -->
 
 ## Format data
 
