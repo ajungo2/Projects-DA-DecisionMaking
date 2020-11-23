@@ -55,8 +55,10 @@ library(ggcorrplot)
 library(DataExplorer)
 library(inspectdf)
 
+#data<-read.csv2(here::here("GermanCredit.csv"), dec=".", header=T)
 #data:
 data<-read.csv2(here::here("data/GermanCredit.csv"), dec=".", header=T)
+
 
 #names of the columns 
 colnames(data)[colnames(data)=="OBS."] <- "OBS#"
@@ -187,7 +189,6 @@ show_plot(x, text_labels = TRUE,
 
 ```
 
-
 #### Histogram by answer
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=4}
@@ -199,11 +200,11 @@ data[,-1] %>%
 
 ```
 
-
 ### 
 
 Regarding the last charts, we have the following observations:
 
+- We can see that the numerical variable have a normal distribution asymmetric to the right (Skewed (Non-Normal) Right), possible because we have a more significant lower bound.
 - It is very difficult to indentify patterns in the data.
 - In the second one, histogram by response variable, we are able to see the proportion within the positives and negatives answers applications. 
 
@@ -211,66 +212,22 @@ Regarding the last charts, we have the following observations:
 
 Consider that the graphs are an overview of the dataset without any modification.
 
-#### Boxplot without standarization
+#### Boxplot
 
-```{r, echo=FALSE, fig.asp=2, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
-ggplot(data = stack(data[,-1]), aes(x = ind, y = values)) +
-       stat_boxplot(geom = "errorbar", # Bigotes
-                    width = 0.2) +
-       geom_boxplot(fill = "#4271AE", colour = "#1F3552", # Colores
-                    alpha = 0.9, outlier.colour = "red") +
-       scale_y_continuous(name = "Values") +  # Etiqueta de la variable continua
-       scale_x_discrete(name = "Variables") +        # Etiqueta de los grupos
-       ggtitle("Boxplot without standarization") +   # Título del plot
-       theme(axis.line = element_line(colour = "black", # Personalización del tema
-                                      size = 0.25))+
-      coord_flip() +theme_bw()
-
+par(mfrow=c(3,3))
+for (i in 1:length(data)) {
+        boxplot(data[,i], horizontal = TRUE, pars=list(outcol="red"), 
+                main=names(data[i]), type="l")}
 
 ```
 
-#### Boxplot with standarization
-
-```{r, echo=FALSE, fig.asp=2, message=FALSE, warning=FALSE}
-
-library(dplyr)
-library(matrixStats)
-
-meanbycol<- colMeans(data)
-sdbycol<- as.vector(colSds(as.matrix(data[sapply(data, is.numeric)])))
-
-dataStand<- data %>% 
-                    rowwise()%>% 
-                    mutate(DURATION= (DURATION- meanbycol[3])/(sdbycol[3]),
-                             AMOUNT = (AMOUNT- meanbycol[11])/(sdbycol[11]),
-                             INSTALL_RATE = (INSTALL_RATE- meanbycol[14])/(sdbycol[14]),
-                             AGE = (AGE- meanbycol[23])/(sdbycol[23]),
-                             NUM_CREDITS = (NUM_CREDITS - meanbycol[27])/(sdbycol[27]),
-                             NUM_DEPENDENTS= (NUM_DEPENDENTS- meanbycol[29])/(sdbycol[29]) )
-
-dataStand<- as.data.frame(dataStand)
-
-ggplot(data = stack(dataStand[,-1]), aes(x = ind, y = values)) +
-       stat_boxplot(geom = "errorbar", # Bigotes
-                    width = 0.2) +
-       geom_boxplot(fill = "#4271AE", colour = "#1F3552", # Colores
-                    alpha = 0.9, outlier.colour = "red") +
-       scale_y_continuous(name = "Values") +  # Etiqueta de la variable continua
-       scale_x_discrete(name = "Variables") +        # Etiqueta de los grupos
-       ggtitle("Boxplot with standarization") +   # Título del plot
-       theme(axis.line = element_line(colour = "black", # Personalización del tema
-                                      size = 0.25))+
-      coord_flip() + theme_bw()
-        
-```
-
-
-#### Boxplot with standarization by output
+#### Boxplot by output
 
 ```{r, echo=FALSE , message=FALSE, warning=FALSE}
 
-plot_boxplot(dataStand[,c(-1)], by= 'RESPONSE',  
+plot_boxplot(data[,c(-1)], by= 'RESPONSE',  
              ncol = 2,  ggtheme =theme_bw(), 
              title = "Side-by-side boxplots",
              geom_boxplot_args = list("outlier.color" = "red"))
@@ -280,13 +237,20 @@ plot_boxplot(dataStand[,c(-1)], by= 'RESPONSE',
 
 ### 
 
-As you see before, when we compare without any standarization, we were not able to see any pattern. If we go deeper, in the second chart, with an standarization, we could identify some outliers, show as red dots, but still any special characteristic. Finally, we group each input variable by the output variable "response", now, some variables stand out more. In the following table, you will find our principal observations. 
+In the following table, you will find our principal observations. 
 
-| Boxplot                | Observation       |
-| :---------------------:|:------------------|
-| Without standarization |  Very difficult to identify any pattern.| 
-| With standarization    |  The *amount variable* is the one with the most quantity of outliers, for the remaining there is not a drastic number of them. | 
-| By response            |  The variables which stand out more are: CHK_ACCT and EMPLOYMENT. We can observe that each box by group are different between each other. | 
+| Boxplot          | Observation       |
+| :---------------:|:------------------|
+| Of each variable | We indentify that some variable could be mutually exclusive between them. We can evaluate the formation of the following groups: <br /> 1) Agroupation of the varibles purpose of the credit <br /> 2) Agroupation of the male variable as a categorical one. <br /> 3) Agroupation of the REAL_ESTATE and PROP_UNKN_NONE as a categorical one. <br /> 4) Agroupation of the RENT and OWN_RES as a categorical one. |
+| plot by response | The variables which stand out more are: CHK_ACCT and EMPLOYMENT. We can observe that each box by group are different between each other. | 
+
+Additionally, we could identify some outliers, show as red dots and, as you can see in the second chart, the input variables cluster by the outvariable variable show that there are some features that bring more information than others.   
+
+**key definitions:** 
+
+1) *Real property includes the physical property (physical land, structures and resources attached to it) of the real estate, but it expands its definition to include other types of ownerships as rights. Meaning that we can have properties without real state (PROP_UNKN_NONE =0 & REAL_ESTATE=0)*
+2) *For the RENT and OWN_RES variable, we can 3 cases 1-0 , 0-1 and 0-0 because there exist the possible that the person who apply for the loan do not owns the residence and either is in charge of any rents.*
+
 
 ### {.tabset .tabset-fade .tabset-pills}
 
@@ -320,7 +284,7 @@ plot_correlation(data, type= 'c',
 
 ### 
 
-Our first observations about the chart shown before are in the following table: 
+Our observations about the chart shown before are in the following table: 
 
 
 | Anylisis          | Observation       |
@@ -342,7 +306,7 @@ For being able to do so, we stablish 3 questions that we will address during the
 ### {.tabset .tabset-fade .tabset-pills}
 
 
-#### Boxplot without standarization
+#### Description dataset
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -385,5 +349,48 @@ Below you will find the answer of the 3 questions:
 | :----------:|:--------------|
 | 1           | Yes, all the columns and rows contains information. | 
 | 2           | No, they contain some errors. They were found in data description and exploratory and are the following: <br /> 1) The variable Education show a not binary output. <br /> 2) The variable PRESENT_RESIDENT have more categories of was mention in the description <br /> 3) the variable AGE is out of range. <br /> 4) AMOUNT, DURANTION, AGE are the variables with more quantity of outliers. | 
-| 1           | No, there is any missing values in the data. | 
+| 3           | No, there is any missing values in the data. | 
 
+In addittion, we are going to anaylise if the agroupation mention in the boxplot for each variable is possible, for being able to do so, we are going to apply the **Chi-Square Test** for measure independence between them. Next, we are going to explain the steps taking for each analysis: 
+
+**1) Variables: REAL_ESTATE and PROP_UNKN_NONE**
+
+First, we stablish the hypotheses:
+
+$$H_ {0}: \ The \ REAL \ ESTATE \ and \ PROP \ UNKN \ NONE \ are \ independent \ variables.$$
+
+against the bilateral alternative: 
+
+$$H_ {1}: \ They \ are \ not \ independent.$$
+
+For the $X^2$ test to be valid, the following conditions must be accomplish:
+
+1) The sampling method is random
+2) Categorical variables
+3) Size: All levels have more than 5 expected events.
+
+*Assuptions*: Significance level of **0.05**
+*Clarifications*: The P-value is the probability that a chi-square statistic having X degrees of freedom is more extreme than $X^2$. 
+
+Finally, we are going to accept or reject the hypotheses checking the P-value. If the P-value is less than the significance level stablish earlier, hence, we cannot accept the null hypothesis. Thus, we conclude that there is a relationship between the variables.
+
+**2) RENT and OWN_RES**
+
+First, we stablish the hypotheses:
+
+$$H_ {0}: \ The \ RENT \ and \ OWN \ RES \ are \ independent \ variables.$$
+
+against the bilateral alternative: 
+
+$$H_ {1}: \ They \ are \ not \ independent.$$
+
+For the $X^2$ test to be valid, the following conditions must be accomplish:
+
+1) The sampling method is random
+2) Categorical variables
+3) Size: All levels have more than 5 expected events.
+
+*Assuptions*: Significance level of **0.05**
+*Clarifications*: The P-value is the probability that a chi-square statistic having X degrees of freedom is more extreme than $X^2$. 
+
+Finally, we are going to accept or reject the hypotheses checking the P-value. If the P-value is less than the significance level stablish earlier, hence, we cannot accept the null hypothesis. Thus, we conclude that there is a relationship between the variables.
