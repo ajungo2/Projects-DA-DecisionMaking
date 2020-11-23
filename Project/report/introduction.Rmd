@@ -68,6 +68,11 @@ library(corrplot)
 library(ggcorrplot)
 library(DataExplorer)
 library(inspectdf)
+library(caret)
+library(MASS)
+library(rpart)
+library(mda)
+library(randomForest)
 library(summarytools)
 
 

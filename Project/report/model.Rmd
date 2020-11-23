@@ -1,2 +1,431 @@
 # Model 
 
+## Selecting modelling technique 
+
+The modelling technique that we will be using are the following:
+ 
+- Logistic regression models 
+  - GLM
+- Decision trees 
+ - CART 
+- Discriminate analysis 
+  - LDA
+  - QDA 
+  - MDA
+  - FDA 
+- Random forest
+- XGBoost
+
+## Generate test design
+
+We start by creating a training and test set based on the data, this will be done by dividing it in a randomly selection into the two subsets, with 75% of the data in the training and the remaining 25% in the test.
+
+```{r test and training sets}
+
+#so that we always have the same division
+set.seed(2311)
+#creation of the index to divide the data in the two subsets
+val_index<-createDataPartition(data_sel$RESPONSE, p=0.75, list=FALSE)
+#training dataset
+TrainData<-data_sel[val_index,]
+#test dataset
+TestData <- data_sel[-val_index,]
+
+```
+
+
+```{r confusion matrix draw function}
+
+draw_confusion_matrix <- function(cm) {
+
+  layout(matrix(c(1,1,2)))
+  par(mar=c(2,2,2,2))
+  plot(c(100, 345), c(300, 450), type = "n", xlab="", ylab="", xaxt='n', yaxt='n')
+  title('CONFUSION MATRIX', cex.main=2)
+
+  # create the matrix 
+  rect(150, 430, 240, 370, col='#3F97D0')
+  text(195, 435, 'Class1', cex=1.2)
+  rect(250, 430, 340, 370, col='#F7AD50')
+  text(295, 435, 'Class2', cex=1.2)
+  text(125, 370, 'Predicted', cex=1.3, srt=90, font=2)
+  text(245, 450, 'Actual', cex=1.3, font=2)
+  rect(150, 305, 240, 365, col='#F7AD50')
+  rect(250, 305, 340, 365, col='#3F97D0')
+  text(140, 400, 'Class1', cex=1.2, srt=90)
+  text(140, 335, 'Class2', cex=1.2, srt=90)
+
+  # add in the cm results 
+  res <- as.numeric(cm$table)
+  text(195, 400, res[1], cex=1.6, font=2, col='white')
+  text(195, 335, res[2], cex=1.6, font=2, col='white')
+  text(295, 400, res[3], cex=1.6, font=2, col='white')
+  text(295, 335, res[4], cex=1.6, font=2, col='white')
+
+  # add in the specifics 
+  plot(c(100, 0), c(100, 0), type = "n", xlab="", ylab="", main = "DETAILS", xaxt='n', yaxt='n')
+  text(10, 85, names(cm$byClass[1]), cex=1.2, font=2)
+  text(10, 70, round(as.numeric(cm$byClass[1]), 3), cex=1.2)
+  text(30, 85, names(cm$byClass[2]), cex=1.2, font=2)
+  text(30, 70, round(as.numeric(cm$byClass[2]), 3), cex=1.2)
+  text(50, 85, names(cm$byClass[5]), cex=1.2, font=2)
+  text(50, 70, round(as.numeric(cm$byClass[5]), 3), cex=1.2)
+  text(70, 85, names(cm$byClass[6]), cex=1.2, font=2)
+  text(70, 70, round(as.numeric(cm$byClass[6]), 3), cex=1.2)
+  text(90, 85, names(cm$byClass[7]), cex=1.2, font=2)
+  text(90, 70, round(as.numeric(cm$byClass[7]), 3), cex=1.2)
+
+  # add in the accuracy information 
+  text(30, 35, names(cm$overall[1]), cex=1.5, font=2)
+  text(30, 20, round(as.numeric(cm$overall[1]), 3), cex=1.4)
+  text(70, 35, names(cm$overall[2]), cex=1.5, font=2)
+  text(70, 20, round(as.numeric(cm$overall[2]), 3), cex=1.4)
+}  
+
+```
+
+Firstly, we need to standardize the data, as the variables have different scales. We will normlize the continuous variables. 
+
+```{r scaling}
+
+#selecting only the continuous variables to scale them
+data_scale <- data_sel %>% select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% scale() %>% as.data.frame()
+#recreating the other variables to add them back to the dataset of the scaled ones 
+data_scale %<>% mutate(
+  OBS = data_sel$OBS,
+  CHK_ACCT = data_sel$CHK_ACCT,
+  HISTORY = data_sel$HISTORY,
+  PURPOSE = data_sel$PURPOSE,
+  SAV_ACCT = data_sel$SAV_ACCT,
+  EMPLOYMENT = data_sel$EMPLOYMENT,
+  SEX_MALE = data_sel$SEX_MALE,
+  MALE_SINGLE = data_sel$MALE_SINGLE,
+  MALE_MAR_WID = data_sel$MALE_MAR_WID,
+  CO_APPLICANT = data_sel$CO_APPLICANT,
+  GUARANTOR = data_sel$GUARANTOR,
+  PRESENT_RESIDENT = data_sel$PRESENT_RESIDENT,
+  PROPERTY = data_sel$PROPERTY,
+  OTHER_INSTALL = data_sel$OTHER_INSTALL,
+  RESIDENCE = data_sel$RESIDENCE,
+  JOB = data_sel$JOB, 
+  RESPONSE = data_sel$RESPONSE
+)
+
+#reordering variable in the dataset
+data_scale %<>% select(OBS,CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,PRESENT_RESIDENT,PROPERTY,AGE,OTHER_INSTALL,RESIDENCE,NUM_CREDITS,JOB,RESPONSE)
+
+```
+
+
+```{r test and training sets}
+
+#so that we always have the same division
+set.seed(2311)
+#creation of the index to divide the data in the two subsets
+val_index<-createDataPartition(data_scale$RESPONSE, p=0.75, list=FALSE)
+#training dataset
+TrainData<-as.data.frame(data_scale[val_index,])
+#test dataset
+TestData <- data_scale[-val_index,]
+
+```
+
+
+Let's start with the first model. 
+
+## Build models 
+### Logistic Regressions
+#### GLM
+##### Definition
+We will start by giving a definition of this model. 
+
+> Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, although many more complex extensions exist. In regression analysis, logistic regression (or logit regression) is estimating the parameters of a logistic model (a form of binary regression). 
+(https://en.wikipedia.org/wiki/Logistic_regression)
+
+
+##### Fitting the model 
+Now we will fit the logistic regression on the training dataset.
+
+```{r glm-model}
+
+set.seed(1234)
+glm.fit <- glm(RESPONSE ~., data = TrainData, family = binomial)
+summary(glm.fit)
+temp <- summary(glm.fit)$coeff[-1,4] < 0.05 
+temp %<>% as.data.frame()  
+kable(temp, caption = "Significance of variable")
+rm(temp)
+
+```
+
+Here, we can see that the variables that take the highest importance and that are statistically significant for the model are: DURATION, AMOUNT, INSTALL_RATE, CHK_ACCT, HISTORY, the second level of PURPOSE (hence USED_CAR?), SAV_ACCT, MALE_SINGLE, GUARANTOR, OTHER_INSTALL. 
+
+```{r glm coef}
+
+coef(glm.fit) 
+
+```
+
+If we look at the coeffiecient of the different variables we can conclude that DURATION, AMOUNT, INSTALL_RATE and OTHER_INSTALL have a negative effect on the output, meaning that if they increase (in case of duration and amount) or if they are positive (in the case of install_rate and other_install), the probability of having a positive response will decrease, while CHK_ACCT, HISTORY, PURPOSE2,SAV_ACCT, MALE_SINGLE and GUARANTOR have a positive effect on the prediction of the response, meaning that the more they increase (for chk_acct, sav_acct) or if they are positive (for the other variables), the probability of having RESPONSE = 1 will increase. 
+
+##### Predictions and confusion matrix 
+
+```{r predictions}
+
+#probability given the model
+glm.probs <- predict(glm.fit, newdata = TestData, type = "response")
+#use a cut of 0.5 to give the prediction
+glm.pred <- ifelse(glm.probs > 0.5, 1, 0)
+
+```
+
+This are the predictions for the RESPONSE variable, given the glm model. We use them and a thershold of 0.5 to determine the prediction, whether the person we examine will get a credit (RESPONE = 1), or not (RESPONSE = 0).
+
+Then, with the prediction we can build the confusion matrix. 
+
+
+```{r confusion matrix}
+
+confusionMatrix(as.factor(glm.pred), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(glm.pred), as.factor(TestData$RESPONSE))
+
+draw_confusion_matrix(cm)
+
+```
+
+We are more interested in the false prediction of negative outcomes, as it would mean a loss for the company, rather than a false prediction of a positive outcome, hence we will look at the specificity rather than the sensitivity. Here we can see the the prediction of negative values is quite high (above 80% of the time when an element is predicted as negative it if truly negative) and also if it is negative it will be predicted as such. 
+
+However, this can be said to be like this because of the unbalance of the data set. 
+
+```{r balancing dataset}
+
+data_sel %>% select(RESPONSE) %>% group_by(RESPONSE) %>% count()
+
+```
+
+We can see that actually the data is unbalanced but on the other side, indeed we have more instances taking a positive value than the opposite. Hence, we believe that it is not necessary to control for the balanced dataset and redo the analysis. 
+
+
+
+### Decision Trees
+#### CART
+##### Definition
+
+> A Classification And Regression Tree (CART), is a predictive model, which explains how an outcome variable's values can be predicted based on other values. A CART output is a decision tree where each fork is a split in a predictor variable and each end node contains a prediction for the outcome variable.
+
+(source: https://wiki.q-researchsoftware.com/wiki/Machine_Learning_-_Classification_And_Regression_Trees_(CART))
+
+##### Fitting the model 
+
+```{r cart}
+
+ct.fit <- rpart(RESPONSE ~., method = "class", data = TrainData, control = rpart.control(minsplit = 4, cp = 1e-05), model = TRUE)
+ summary(ct.fit)
+
+```
+
+```{r pruning cart}
+
+plotcp(ct.fit)
+ct.prune <- prune(ct.fit, cp=0.01)
+summary(ct.prune)
+
+plot(ct.prune, uniform = TRUE)
+text(ct.prune, cex = 0.4, use.n = TRUE, all = TRUE)
+```
+
+##### Predictions and confusion matrix 
+
+```{r prediction cart}
+
+ct.pred <- predict(ct.prune, newdata = TestData, type = "class")
+
+```
+
+
+```{r confusion matric cart}
+
+confusionMatrix(as.factor(ct.pred), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(ct.pred), as.factor(TestData$RESPONSE))
+draw_confusion_matrix(cm)
+
+```
+### Discriminate analysis 
+#### LDA 
+
+##### Definition
+We start by giving the definition of the model. 
+
+> The Latent Dirichlet allocation (LDA) is a generative statistical model that allows sets of observations to be explained by unobserved groups that explain why some parts of the data are similar.
+
+
+##### Fitting the model
+```{r lda model}
+
+lda.fit <- lda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+lda.fit
+
+```
+
+##### Predictions and confusion matrix 
+
+
+```{r lda predictions}
+
+lda.pred <- predict(lda.fit, newdata = TestData)
+lda.class <- lda.pred$class
+
+```
+
+```{r confusion matrix lda}
+
+confusionMatrix(as.factor(lda.class), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(lda.class), as.factor(TestData$RESPONSE))
+
+draw_confusion_matrix(cm)
+```
+ 
+#### QDA 
+##### Definition
+
+> Quadratic Discriminant Analysis is little bit more flexible than LDA, in the sense that it does not assumes the equality of variance/covariance. In other words, for QDA the covariance matrix can be different for each class.
+
+(source: http://www.sthda.com/english/articles/36-classification-methods-essentials/146-discriminant-analysis-essentials-in-r/)
+
+##### Fitting the model 
+
+```{r fit qda}
+
+qda.fit <- qda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+qda.fit
+
+```
+
+##### Predictions and confusion matrix 
+
+```{r lda predictions}
+
+qda.pred <- predict(qda.fit, newdata = TestData)
+qda.class <- qda.pred$class
+
+```
+
+```{r confusion matrix lda}
+
+confusionMatrix(as.factor(qda.class), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(qda.class), as.factor(TestData$RESPONSE))
+
+draw_confusion_matrix(cm)
+
+``` 
+ 
+#### MDA 
+##### Definition
+
+> For Mixture Discriminant Analysis, there are classes, and each class is assumed to be a Gaussian mixture of subclasses, where each data point has a probability of belonging to each class. Equality of covariance matrix, among classes, is still assumed.
+
+(source: http://www.sthda.com/english/articles/36-classification-methods-essentials/146-discriminant-analysis-essentials-in-r/)
+
+##### Fitting the model 
+
+```{r fit qda}
+
+mda.fit <- mda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+mda.fit
+
+```
+
+##### Predictions and confusion matrix 
+
+```{r lda predictions}
+
+mda.pred <- predict(mda.fit, newdata = TestData)
+mda.class <- mda.pred$class
+
+```
+
+```{r confusion matrix lda}
+
+confusionMatrix(as.factor(mda.class), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(mda.class), as.factor(TestData$RESPONSE))
+
+draw_confusion_matrix(cm)
+```  
+
+
+#### FDA 
+##### Definition
+
+> Flexible Discriminant Analysis is a flexible extension of LDA that uses non-linear combinations of predictors such as splines. FDA is useful to model multivariate non-normality or non-linear relationships among variables within each group, allowing for a more accurate classification.
+
+(source: http://www.sthda.com/english/articles/36-classification-methods-essentials/146-discriminant-analysis-essentials-in-r/)
+
+##### Fitting the model 
+
+```{r fit qda}
+
+fda.fit <- mda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+fda.fit
+
+```
+
+##### Predictions and confusion matrix 
+
+```{r lda predictions}
+
+fda.pred <- predict(fda.fit, newdata = TestData)
+fda.class <- fda.pred$class
+
+```
+
+```{r confusion matrix lda}
+
+confusionMatrix(as.factor(fda.class), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(fda.class), as.factor(TestData$RESPONSE))
+
+draw_confusion_matrix(cm)
+```  
+
+
+
+
+### Random Forest
+#### Model name
+##### Definition
+
+> Random forests or random decision forests are an ensemble learning method for classification, regression and other tasks that operate by constructing a multitude of decision trees at training time and outputting the class that is the mode of the classes (classification) or mean/average prediction (regression) of the individual trees. 
+
+(source: https://en.wikipedia.org/wiki/Random_forest)
+
+##### Fitting the model 
+
+```{r random forest fit}
+
+rf.fit <- randomForest(RESPONSE ~., TrainData, ntree = 500, mtry = 4, importance = TRUE, replace = FALSE)
+
+```
+
+##### Predictions and confusion matrix 
+
+```{r results rf}
+
+print(rf.fit)
+importance(rf.fit) 
+
+```
+
+
+```{r rf prediction}
+
+rf.pred <- predict(rf.fit, newdata = TestData, type = "class")
+rf.pred <- ifelse(rf.pred < 0.5, 0, 1)
+```
+
+
+```{r rf confusion matrix}
+
+confusionMatrix(as.factor(rf.pred), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(rf.pred), as.factor(TestData$RESPONSE))
+draw_confusion_matrix(cm)
+
+```
