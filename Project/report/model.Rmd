@@ -3,29 +3,31 @@
 ## Selecting modelling technique 
 
 The modelling technique that we will be using are the following:
- 
-- Logistic regression models 
-  - GLM
-- Decision trees 
- - CART 
-- Discriminate analysis 
-  - LDA
-  - QDA 
-  - MDA
-  - FDA 
-- Random forest
-- XGBoost
 
+
+| n°  | Model                      | Function in R |
+|:---:|:---------------------------|:--------------|
+|  1  | Logistic regression models |    GLM        |
+|  2  | Decision trees             |   CART        |
+|  3  | Discriminate analysis      | 1) lda <br /> 2) qda <br /> 3) mda <br /> 4) fda |
+|  4  | Random forest              |  randomForest |
+|  5  | XGBoost                    |    xgboost    |
+
+ 
 ## Generate test design
 
 We start by creating a training and test set based on the data, this will be done by dividing it in a randomly selection into the two subsets, with 75% of the data in the training and the remaining 25% in the test.
 
 ```{r test and training sets}
 
+#library(caret)
+
 #so that we always have the same division
 set.seed(2311)
+
 #creation of the index to divide the data in the two subsets
 val_index<-createDataPartition(data_sel$RESPONSE, p=0.75, list=FALSE)
+
 #training dataset
 TrainData<-data_sel[val_index,]
 #test dataset
@@ -63,7 +65,8 @@ draw_confusion_matrix <- function(cm) {
   text(295, 335, res[4], cex=1.6, font=2, col='white')
 
   # add in the specifics 
-  plot(c(100, 0), c(100, 0), type = "n", xlab="", ylab="", main = "DETAILS", xaxt='n', yaxt='n')
+  plot(c(100, 0), c(100, 0), type = "n", xlab="", ylab="", 
+       main = "DETAILS", xaxt='n', yaxt='n')
   text(10, 85, names(cm$byClass[1]), cex=1.2, font=2)
   text(10, 70, round(as.numeric(cm$byClass[1]), 3), cex=1.2)
   text(30, 85, names(cm$byClass[2]), cex=1.2, font=2)
@@ -89,8 +92,14 @@ Firstly, we need to standardize the data, as the variables have different scales
 ```{r scaling}
 
 #selecting only the continuous variables to scale them
-data_scale <- data_sel %>% select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% scale() %>% as.data.frame()
+
+data_scale <- data_sel %>% 
+                select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% 
+                scale() %>%  #normalization
+                as.data.frame()
+
 #recreating the other variables to add them back to the dataset of the scaled ones 
+
 data_scale %<>% mutate(
   OBS = data_sel$OBS,
   CHK_ACCT = data_sel$CHK_ACCT,
@@ -112,7 +121,10 @@ data_scale %<>% mutate(
 )
 
 #reordering variable in the dataset
-data_scale %<>% select(OBS,CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,PRESENT_RESIDENT,PROPERTY,AGE,OTHER_INSTALL,RESIDENCE,NUM_CREDITS,JOB,RESPONSE)
+data_scale %<>% 
+  select(OBS,CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,
+         INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,
+         PRESENT_RESIDENT,PROPERTY,AGE,OTHER_INSTALL,RESIDENCE,NUM_CREDITS,JOB,RESPONSE)
 
 ```
 
@@ -121,10 +133,14 @@ data_scale %<>% select(OBS,CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMP
 
 #so that we always have the same division
 set.seed(2311)
+
 #creation of the index to divide the data in the two subsets
-val_index<-createDataPartition(data_scale$RESPONSE, p=0.75, list=FALSE)
+val_index<-createDataPartition(data_scale$RESPONSE, 
+                               p=0.75, list=FALSE)
+
 #training dataset
 TrainData<-as.data.frame(data_scale[val_index,])
+
 #test dataset
 TestData <- data_scale[-val_index,]
 
@@ -134,27 +150,42 @@ TestData <- data_scale[-val_index,]
 Let's start with the first model. 
 
 ## Build models 
-### Logistic Regressions
+
+### 1) Logistic Regressions
+
 #### GLM
+
 ##### Definition
+
 We will start by giving a definition of this model. 
 
 > Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, although many more complex extensions exist. In regression analysis, logistic regression (or logit regression) is estimating the parameters of a logistic model (a form of binary regression). 
 (https://en.wikipedia.org/wiki/Logistic_regression)
 
-
 ##### Fitting the model 
+
 Now we will fit the logistic regression on the training dataset.
 
-```{r glm-model}
+```{r glm-model, echo=FALSE, warning=FALSE, message=FALSE}
 
+#Same division
 set.seed(1234)
+
+#model
 glm.fit <- glm(RESPONSE ~., data = TrainData, family = binomial)
+#check outputs
 summary(glm.fit)
-temp <- summary(glm.fit)$coeff[-1,4] < 0.05 
+
+#check which variable brings more information--> high coefficient = bring high information
+temp <- summary(glm.fit)$coeff[-1,4] < 0.05
+
+#condition: yes or not
 temp %<>% as.data.frame()  
+
 kable(temp, caption = "Significance of variable")
-rm(temp)
+
+#remove variable temp
+rm(temp) 
 
 ```
 
@@ -174,6 +205,7 @@ If we look at the coeffiecient of the different variables we can conclude that D
 
 #probability given the model
 glm.probs <- predict(glm.fit, newdata = TestData, type = "response")
+
 #use a cut of 0.5 to give the prediction
 glm.pred <- ifelse(glm.probs > 0.5, 1, 0)
 
@@ -205,10 +237,10 @@ data_sel %>% select(RESPONSE) %>% group_by(RESPONSE) %>% count()
 
 We can see that actually the data is unbalanced but on the other side, indeed we have more instances taking a positive value than the opposite. Hence, we believe that it is not necessary to control for the balanced dataset and redo the analysis. 
 
-
-
 ### Decision Trees
+
 #### CART
+
 ##### Definition
 
 > A Classification And Regression Tree (CART), is a predictive model, which explains how an outcome variable's values can be predicted based on other values. A CART output is a decision tree where each fork is a split in a predictor variable and each end node contains a prediction for the outcome variable.
@@ -219,19 +251,69 @@ We can see that actually the data is unbalanced but on the other side, indeed we
 
 ```{r cart}
 
-ct.fit <- rpart(RESPONSE ~., method = "class", data = TrainData, control = rpart.control(minsplit = 4, cp = 1e-05), model = TRUE)
- summary(ct.fit)
+#library(rpart)
+#library(rpart.plot)
+ct.fit <- rpart(RESPONSE ~., method = "class",  
+                data = TrainData, #the training data
+                control = rpart.control(minsplit = 4, 
+                cp = 1e-05) , model = TRUE)
+
+summary(ct.fit)
 
 ```
 
-```{r pruning cart}
 
+```{r pruning cart, echo=FALSE}
+
+#cp graph
+par(pty = "s")
 plotcp(ct.fit)
-ct.prune <- prune(ct.fit, cp=0.01)
+
+#cp that minimize the tree
+bestcp <- ct.fit$cptable[which.min(ct.fit$cptable[,"xerror"]),"CP"]
+
+ct.prune <- prune(ct.fit, cp= bestcp) #before there was cp=0.01
+
 summary(ct.prune)
 
-plot(ct.prune, uniform = TRUE)
-text(ct.prune, cex = 0.4, use.n = TRUE, all = TRUE)
+#first option of graph:
+#plot(ct.prune, uniform = TRUE)
+#text(ct.prune, cex = 0.4, use.n = TRUE, all = TRUE)
+
+#second option of graph:
+rpart.plot(ct.prune, extra=104, box.palette="GnBu",
+               branch.lty=3, shadow.col="gray", nn=TRUE)
+
+
+#partition tree--> lets check later....
+
+library(parsnip)
+set.seed(123) ## For consistent jitter
+
+partition_data <- TrainData
+partition_data$RESPONSE <- as.factor(partition_data$RESPONSE)
+
+## Build our tree using parsnip (but with rpart as the model engine)
+
+t_tree <-
+  decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("classification") %>%
+  fit(RESPONSE ~ CHK_ACCT + HISTORY , data = partition_data)
+
+#install.packages("remotes")
+#remotes::install_github("grantmcdermott/parttree")
+#library(parttree)
+
+## Plot the data and model partitions
+partition_data %>%
+  ggplot(aes(x=CHK_ACCT, y=HISTORY)) + #axis to check
+  geom_jitter(aes(col=RESPONSE), alpha=0.7) +
+  geom_parttree(data = t_tree, aes(fill=RESPONSE), alpha = 0.1) +
+  theme_minimal()+
+  theme_bw()
+
+
 ```
 
 ##### Predictions and confusion matrix 
@@ -250,20 +332,32 @@ cm <- confusionMatrix(as.factor(ct.pred), as.factor(TestData$RESPONSE))
 draw_confusion_matrix(cm)
 
 ```
+
 ### Discriminate analysis 
+
 #### LDA 
 
 ##### Definition
+
 We start by giving the definition of the model. 
 
 > The Latent Dirichlet allocation (LDA) is a generative statistical model that allows sets of observations to be explained by unobserved groups that explain why some parts of the data are similar.
 
 
 ##### Fitting the model
+
 ```{r lda model}
 
+#library(MASS)
+
+#model creation
 lda.fit <- lda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+
 lda.fit
+
+#A Stacked Histogram of the LDA Values 
+#The two groups are the groups for response classes.
+#plot(lda.fit)
 
 ```
 
@@ -274,6 +368,14 @@ lda.fit
 
 lda.pred <- predict(lda.fit, newdata = TestData)
 lda.class <- lda.pred$class
+
+
+#plot the error of the predictions
+
+par(mfrow=c(1,1))
+plot(lda.pred$x[,1], lda.pred$class, col=TestData$RESPONSE+10)
+#key takeaway
+#The Predicted Group-1 and Group-2 has been colored (red and green). The mix of red and green color in each group shows the incorrect classification prediction.
 
 ```
 
@@ -286,6 +388,7 @@ draw_confusion_matrix(cm)
 ```
  
 #### QDA 
+
 ##### Definition
 
 > Quadratic Discriminant Analysis is little bit more flexible than LDA, in the sense that it does not assumes the equality of variance/covariance. In other words, for QDA the covariance matrix can be different for each class.
@@ -297,20 +400,24 @@ draw_confusion_matrix(cm)
 ```{r fit qda}
 
 qda.fit <- qda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+
 qda.fit
 
 ```
 
 ##### Predictions and confusion matrix 
 
-```{r lda predictions}
+```{r qda predictions}
 
 qda.pred <- predict(qda.fit, newdata = TestData)
 qda.class <- qda.pred$class
 
+par(mfrow=c(1,1))
+plot(qda.pred$posterior[,2], qda.pred$class, col=TestData$RESPONSE+10)
+
 ```
 
-```{r confusion matrix lda}
+```{r confusion matrix qda}
 
 confusionMatrix(as.factor(qda.class), as.factor(TestData$RESPONSE))
 cm <- confusionMatrix(as.factor(qda.class), as.factor(TestData$RESPONSE))
@@ -320,6 +427,7 @@ draw_confusion_matrix(cm)
 ``` 
  
 #### MDA 
+
 ##### Definition
 
 > For Mixture Discriminant Analysis, there are classes, and each class is assumed to be a Gaussian mixture of subclasses, where each data point has a probability of belonging to each class. Equality of covariance matrix, among classes, is still assumed.
@@ -328,8 +436,9 @@ draw_confusion_matrix(cm)
 
 ##### Fitting the model 
 
-```{r fit qda}
+```{r fit mda}
 
+#library(mda)
 mda.fit <- mda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
 mda.fit
 
@@ -337,14 +446,15 @@ mda.fit
 
 ##### Predictions and confusion matrix 
 
-```{r lda predictions}
+```{r mda predictions}
 
 mda.pred <- predict(mda.fit, newdata = TestData)
-mda.class <- mda.pred$class
+
+mda.class <- mda.pred$class #show error for me :( 
 
 ```
 
-```{r confusion matrix lda}
+```{r confusion matrix mda}
 
 confusionMatrix(as.factor(mda.class), as.factor(TestData$RESPONSE))
 cm <- confusionMatrix(as.factor(mda.class), as.factor(TestData$RESPONSE))
@@ -354,6 +464,7 @@ draw_confusion_matrix(cm)
 
 
 #### FDA 
+
 ##### Definition
 
 > Flexible Discriminant Analysis is a flexible extension of LDA that uses non-linear combinations of predictors such as splines. FDA is useful to model multivariate non-normality or non-linear relationships among variables within each group, allowing for a more accurate classification.
@@ -364,7 +475,7 @@ draw_confusion_matrix(cm)
 
 ```{r fit qda}
 
-fda.fit <- mda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+fda.fit <- fda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
 fda.fit
 
 ```
@@ -387,10 +498,10 @@ draw_confusion_matrix(cm)
 ```  
 
 
-
-
 ### Random Forest
+
 #### Model name
+
 ##### Definition
 
 > Random forests or random decision forests are an ensemble learning method for classification, regression and other tasks that operate by constructing a multitude of decision trees at training time and outputting the class that is the mode of the classes (classification) or mean/average prediction (regression) of the individual trees. 
@@ -401,24 +512,42 @@ draw_confusion_matrix(cm)
 
 ```{r random forest fit}
 
-rf.fit <- randomForest(RESPONSE ~., TrainData, ntree = 500, mtry = 4, importance = TRUE, replace = FALSE)
+#library(randomForest)
+#library(funModeling)
+
+rf.fit <- randomForest(RESPONSE ~., 
+                       TrainData, 
+                       ntree = 500, 
+                       mtry = 4, 
+                       importance = TRUE, 
+                       replace = FALSE)
 
 ```
 
 ##### Predictions and confusion matrix 
 
-```{r results rf}
+```{r results rf, fig.asp=1.5}
 
 print(rf.fit)
+
+#Variable importance analysis
+
 importance(rf.fit) 
+varImpPlot(rf.fit, main ='xxxx')
+
+#two criteria: MeanDecreaseAccuracy (rough estimate of the loss in prediction performance when that particular variable is omitted from the training set) and Mean Decrease Gini (GINI is a measure of node impurity, highest purity means that each node contains only elements of a single class. Assessing the decrease in GINI when that feature is omitted leads to an understanding of how important that feature is to split the data correctly)
 
 ```
 
 
 ```{r rf prediction}
 
+#obtain probability
 rf.pred <- predict(rf.fit, newdata = TestData, type = "class")
+
+#output of the prediction
 rf.pred <- ifelse(rf.pred < 0.5, 0, 1)
+
 ```
 
 
@@ -429,3 +558,161 @@ cm <- confusionMatrix(as.factor(rf.pred), as.factor(TestData$RESPONSE))
 draw_confusion_matrix(cm)
 
 ```
+
+
+### XGBoost 
+
+#### Model name
+
+##### Definition
+
+##### Fitting the model 
+
+```{r fit xgboost}
+
+#library(xgboost)
+#library(data.table)
+#library(mlr)
+
+
+train <- TrainData %>%
+  mutate(dataset = "train")
+
+train$RESPONSE<- as.factor(train$RESPONSE)
+
+
+test <- TestData %>%
+  mutate(dataset = "test")
+
+test$RESPONSE<- as.factor(test$RESPONSE)
+
+
+combined <- bind_rows(train, test)
+
+# Impute missing values by field type
+imp <- impute(
+  combined,
+  classes = list(
+    factor = imputeMode(),
+    integer = imputeMean(),
+    numeric = imputeMean()
+  )
+)
+combined <- imp$data
+
+# Show column summary
+summarizeColumns(combined) %>%
+  kable(digits = 2)
+
+#model works better when the explanatory features are on the same scale
+
+combined <- normalizeFeatures(combined, target = "RESPONSE")
+summarizeColumns(combined) %>%
+  kable(digits = 2)
+
+######### Convert factors to dummy variables ####################################
+
+combined <- createDummyFeatures(
+  combined, target = "RESPONSE",
+  cols = c(
+    "PURPOSE",
+    "PROPERTY",
+    "RESIDENCE"
+  )
+)
+
+summarizeColumns(combined) %>%
+  kable(digits = 2)
+
+####We split it again
+
+train <- combined %>%
+  filter(dataset == "train") %>%
+  select(-dataset)
+
+test <- combined %>%
+  filter(dataset == "test") %>%
+  select(-dataset)
+
+
+trainTask <- makeClassifTask(data = train, target = "RESPONSE", positive = 1)
+testTask <- makeClassifTask(data = test, target = "RESPONSE")
+
+#again stablish set seed
+
+set.seed(1)
+
+# Create an xgboost learner that is classification based and outputs
+# labels (as opposed to probabilities)
+
+xgb_learner <- makeLearner(
+  "classif.xgboost",
+  predict.type = "response",
+  par.vals = list(
+    objective = "binary:logistic",
+    eval_metric = "error",
+    nrounds = 100L,
+    eta=0.1
+  )
+)
+
+
+#set parameter space
+params <- makeParamSet( makeDiscreteParam("booster",values = c("gbtree","gblinear")),
+                        makeIntegerParam("max_depth",lower = 3L,upper = 10L),
+                        makeNumericParam("min_child_weight",lower = 1L,upper = 10L),
+                        makeNumericParam("subsample",lower = 0.5,upper = 1),
+                        makeNumericParam("colsample_bytree",lower = 0.5,upper = 1))
+
+#set resampling strategy
+rdesc <- makeResampleDesc("CV",stratify = T,iters=5L)
+
+
+#search strategy
+ctrl <- makeTuneControlRandom(maxit = 10L)
+
+
+```
+
+
+##### Hyper-parameter Tuning
+
+```{r xgboost tuning}
+
+mytune <- tuneParams(learner = xgb_learner, 
+                     task = trainTask, resampling = rdesc, 
+                     measures = acc, par.set = params, control = ctrl, show.info = T)
+
+mytune$y #0.7639
+
+
+#set hyperparameters
+xgb_learner_tune <- setHyperPars(xgb_learner,par.vals = mytune$x)
+
+#train model
+xgmodel <- train(learner = xgb_learner_tune,task = trainTask,)
+
+
+
+
+```
+
+
+##### Predictions 
+
+```{r xgboost predictions}
+
+xgpred <- predict(xgmodel,testTask)
+
+```
+
+
+```{r confusion matrix xgboost}
+
+confusionMatrix(xgpred$data$response,xgpred$data$truth)
+#Accuracy : 0.7711 <- better accuracy than our default xgboost model
+
+```  
+
+
+
