@@ -94,14 +94,13 @@ Firstly, we need to standardize the data, as the variables have different scales
 #selecting only the continuous variables to scale them
 
 data_scale <- data_sel %>% 
-                select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% 
+                dplyr::select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% 
                 scale() %>%  #normalization
                 as.data.frame()
 
 #recreating the other variables to add them back to the dataset of the scaled ones 
 
 data_scale %<>% mutate(
-  OBS = data_sel$OBS,
   CHK_ACCT = data_sel$CHK_ACCT,
   HISTORY = data_sel$HISTORY,
   PURPOSE = data_sel$PURPOSE,
@@ -122,7 +121,7 @@ data_scale %<>% mutate(
 
 #reordering variable in the dataset
 data_scale %<>% 
-  select(OBS,CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,
+  dplyr::select(CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,
          INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,
          PRESENT_RESIDENT,PROPERTY,AGE,OTHER_INSTALL,RESIDENCE,NUM_CREDITS,JOB,RESPONSE)
 
@@ -231,7 +230,7 @@ However, this can be said to be like this because of the unbalance of the data s
 
 ```{r balancing dataset}
 
-data_sel %>% select(RESPONSE) %>% group_by(RESPONSE) %>% count()
+data_sel %>% dplyr::select(RESPONSE) %>% group_by(RESPONSE) %>% count()
 
 ```
 
@@ -263,7 +262,7 @@ summary(ct.fit)
 ```
 
 
-```{r pruning cart, echo=FALSE}
+```{r pruning cart, echo=FALSE, fig.asp=5}
 
 #cp graph
 par(pty = "s")
@@ -281,6 +280,7 @@ summary(ct.prune)
 #text(ct.prune, cex = 0.4, use.n = TRUE, all = TRUE)
 
 #second option of graph:
+library(rpart.plot)
 rpart.plot(ct.prune, extra=104, box.palette="GnBu",
                branch.lty=3, shadow.col="gray", nn=TRUE)
 
@@ -302,8 +302,8 @@ t_tree <-
   fit(RESPONSE ~ CHK_ACCT + HISTORY , data = partition_data)
 
 #install.packages("remotes")
-#remotes::install_github("grantmcdermott/parttree")
-#library(parttree)
+remotes::install_github("grantmcdermott/parttree")
+library(parttree)
 
 ## Plot the data and model partitions
 partition_data %>%
@@ -348,10 +348,12 @@ We start by giving the definition of the model.
 
 ```{r lda model}
 
+OBS <- 1:750
+
 #library(MASS)
 
 #model creation
-lda.fit <- lda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+lda.fit <- lda(RESPONSE ~., data = TrainData[,-1], subset = OBS)
 
 lda.fit
 
@@ -399,7 +401,7 @@ draw_confusion_matrix(cm)
 
 ```{r fit qda}
 
-qda.fit <- qda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+qda.fit <- qda(RESPONSE ~., data = TrainData, subset = OBS)
 
 qda.fit
 
@@ -439,7 +441,7 @@ draw_confusion_matrix(cm)
 ```{r fit mda}
 
 #library(mda)
-mda.fit <- mda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+mda.fit <- mda(RESPONSE ~., data = TrainData, subset = OBS)
 mda.fit
 
 ```
@@ -450,14 +452,12 @@ mda.fit
 
 mda.pred <- predict(mda.fit, newdata = TestData)
 
-mda.class <- mda.pred$class #show error for me :( 
-
 ```
 
 ```{r confusion matrix mda}
 
-confusionMatrix(as.factor(mda.class), as.factor(TestData$RESPONSE))
-cm <- confusionMatrix(as.factor(mda.class), as.factor(TestData$RESPONSE))
+confusionMatrix(as.factor(mda.pred), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(mda.pred), as.factor(TestData$RESPONSE))
 
 draw_confusion_matrix(cm)
 ```  
@@ -475,7 +475,7 @@ draw_confusion_matrix(cm)
 
 ```{r fit qda}
 
-fda.fit <- fda(RESPONSE ~., data = TrainData, subset = TrainData$OBS)
+fda.fit <- fda(RESPONSE ~., data = TrainData, subset = OBS)
 fda.fit
 
 ```
@@ -485,14 +485,13 @@ fda.fit
 ```{r lda predictions}
 
 fda.pred <- predict(fda.fit, newdata = TestData)
-fda.class <- fda.pred$class
 
 ```
 
 ```{r confusion matrix lda}
 
-confusionMatrix(as.factor(fda.class), as.factor(TestData$RESPONSE))
-cm <- confusionMatrix(as.factor(fda.class), as.factor(TestData$RESPONSE))
+confusionMatrix(as.factor(fda.pred), as.factor(TestData$RESPONSE))
+cm <- confusionMatrix(as.factor(fda.pred), as.factor(TestData$RESPONSE))
 
 draw_confusion_matrix(cm)
 ```  
@@ -628,11 +627,11 @@ summarizeColumns(combined) %>%
 
 train <- combined %>%
   filter(dataset == "train") %>%
-  select(-dataset)
+  dplyr::select(-dataset)
 
 test <- combined %>%
   filter(dataset == "test") %>%
-  select(-dataset)
+  dplyr::select(-dataset)
 
 
 trainTask <- makeClassifTask(data = train, target = "RESPONSE", positive = 1)
@@ -690,7 +689,7 @@ mytune$y #0.7639
 xgb_learner_tune <- setHyperPars(xgb_learner,par.vals = mytune$x)
 
 #train model
-xgmodel <- train(learner = xgb_learner_tune,task = trainTask,)
+xgmodel <- train(learner = xgb_learner_tune,task = trainTask)
 
 
 

@@ -298,12 +298,12 @@ We will need to drop also one of the variables we used to create the SEX_MALE va
 ```{r selection}
 
 data_sel <- data %>% 
-                select(OBS., CHK_ACCT, DURATION, HISTORY, PURPOSE, 
+                dplyr::select(OBS., CHK_ACCT, DURATION, HISTORY, PURPOSE, 
                        AMOUNT, SAV_ACCT, EMPLOYMENT, INSTALL_RATE, 
                        SEX_MALE, MALE_SINGLE, MALE_MAR_or_WID, 
                        CO.APPLICANT, GUARANTOR, PRESENT_RESIDENT, 
                        PROPERTY, AGE, OTHER_INSTALL, RESIDENCE, 
-                       NUM_CREDITS, JOB, RESPONSE)
+                       NUM_CREDITS, JOB, TELEPHONE, RESPONSE)
 
 ```
 
@@ -314,6 +314,8 @@ data_sel <- data %>%
 |:-------------------------------------------|:--------------------------------------------|
 | Formatting transformations refer to primarily syntactic modifications made to the data that do not change its meaning, but might be required by the modeling tool. | Some tools have requirements on the order of the attributes, such as the first field being a unique identifier for each record or the last field being the outcome field the model is to predict. It might be important to change the order of the records in the dataset. Perhaps the modeling tool requires that the records be sorted according to the value of the outcome attribute.  Additionally, there are purely syntactic changes made to satisfy the requirements of the specific modeling tool.|
 
+
+
 We will rename some variables for an easier use.
 
 ```{r renaming}
@@ -322,4 +324,30 @@ colnames(data_sel)[colnames(data_sel)=="OBS."] <- "OBS"
 colnames(data_sel)[colnames(data_sel)=="MALE_MAR_or_WID"] <- "MALE_MAR_WID"
 colnames(data_sel)[colnames(data_sel)=="CO.APPLICANT"] <- "CO_APPLICANT"
 
+```
+
+We will change the type of the variables to factors for the dummies and the categorical variables.
+
+```{r}
+
+data_sel %<>% 
+  mutate(
+    CHK_ACCT = as.factor(CHK_ACCT),
+    HISTORY = as.factor(HISTORY),
+    SAV_ACCT = as.factor(SAV_ACCT),
+    EMPLOYMENT = as.factor(EMPLOYMENT),
+    SEX_MALE = as.factor(SEX_MALE), 
+    MALE_SINGLE = as.factor(MALE_SINGLE), 
+    MALE_MAR_WID = as.factor(MALE_MAR_WID),
+    CO_APPLICANT = as.factor(CO_APPLICANT),
+    GUARANTOR = as.factor(GUARANTOR),
+    PRESENT_RESIDENT = as.factor(PRESENT_RESIDENT), 
+    OTHER_INSTALL = as.factor(OTHER_INSTALL),
+    JOB = as.factor(JOB), 
+    TELEPHONE = as.factor(TELEPHONE),
+    RESPONSE = as.factor(RESPONSE)
+  )
+
+
+str(data_sel)
 ```
