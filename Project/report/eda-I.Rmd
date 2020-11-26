@@ -1,80 +1,21 @@
 # Data Understanding
 
-Going forward with the anaylisis, the goal in the second step is to have a first perception of the information bring by the data and create hypotheses about them. For being able to do so, we will develop the following points:
+Going forward with the anaylisis, the goal in the second step is to have a first perception of the information brought by the data and create hypotheses about them. To be able to do so, we will develop the following points:
 
 ## Collect initial data
 
-The dataset was delivered together with the description of the task and is in *csv format*. It contains 1000 observations 1 by row, 30 input variables and 1 out variable. 
+The dataset was delivered together with the description of the task and is in *csv format*. It contains 1'000 observations, 1 each row, 30 input variables and 1 output variable. 
 In addition to the dataset, we seek for more information in videos in youtube where we were mainly intended to familiarize with the operation by itself and, hence, indeep more into the variables that we consider that bring more information. 
 
-```{r, echo=FALSE, include=FALSE}
-
-#to delete all the library (they are already include in the introduction)
-
-library(tidyverse)
-library(here)
-library(dplyr)
-library(stringi)
-library(stringr)
-library(ggplot2)
-library(knitr)
-library(broom)
-library(modelr)
-library(forcats)
-library(ggrepel)
-library(lubridate)
-library(gridExtra)
-library(kableExtra)
-library(scales)
-library(magrittr)
-library(readxl)
-library (openxlsx) #for reading the excel
-library(rworldmap)
-library(ggforce)
-library(mapdata)
-library(maps)
-library(ggpmisc)
-library(xts)
-library(gridExtra)
-library(grid)
-library(lattice)
-library(reshape2)
-library(plyr)
-library(RColorBrewer)
-library(DT)
-library(Hmisc)  
-library(tidyquant)
-library(ggthemes)
-library(RColorBrewer)
-library(corrplot)
-library(psych)
-library(GGally)
-library(corrr)
-library(corrplot)
-library(ggcorrplot)
-library(DataExplorer)
-library(inspectdf)
-library(dplyr)
-
-
-#data:
-data<-read.csv2(here::here("data/GermanCredit.csv"), dec=".", header=T)
-
-
-#names of the columns 
-#colnames(data)[colnames(data)=="OBS."] <- "OBS#"
-#colnames(data)[colnames(data)=="RATIO.TV"] <- "RATIO/TV"
-#colnames(data)[colnames(data)=="MALE_MAR_or_WID"] <- "MALE_MAR_WID"
-#colnames(data)[colnames(data)=="CO.APPLICANT"] <- "CO-APPLICANT"
-
-```
 
 ## Describe data
 
-In this point, we will examine the gross properties of the adquire data. Let's start checking the stucture and size of it. As you can see below, there is 1000 rows and 32 variables of which the first column list all the observations taken, 30 columns the inputvariables and, the last one, the output variables that answer if the person represent a high risk (the credit is rejected) or not (the credit is accepted).
+In this point, we will examine the gross properties of the adquire data. Let's start checking the stucture and size of it. As you can see below, there are 1'000 rows and 32 variables. The first column identifies all the observations taken into consideration with an unique ID (a number), the 30 following columns are the input variables, while the last one is the output variable, which gives the information regarding the person is a high risk (the credit is rejected) or not (the credit is accepted).
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
+
 dim(data)
+
 ```
 
 Now, let's give a look to the summary and the structe of the data, including their 
@@ -85,20 +26,19 @@ statistical characteristics, for example, minimum, mean, maximum, so on.
 Overview of the dataset (1000 observations):  
 
 #### Summary
-
+<!-- I cannot use this one  -->
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
-library(summarytools)
 #summarydata<- dfSummary(data, plain.ascii = FALSE, 
 #                        style = 'grid', graph.magnif = 0.75,
 #                        valid.col = FALSE, tmp.img.dir = "/tmp")
 
 
-summarydata<- print(dfSummary(data, valid.col = FALSE, 
-                              graph.magnif = 0.75),       
-                              max.tbl.height = 300, method = "render")
+# summarydata<- print(dfSummary(data, valid.col = FALSE, 
+                              # graph.magnif = 0.75),       
+                              # max.tbl.height = 300, method = "render")
 
-summarydata
+# summarydata
 
 ```
 
@@ -110,11 +50,13 @@ data %>%
   ggplot(aes(x = RESPONSE)) + 
   geom_bar(aes(fill = factor(RESPONSE))) + 
   labs(color = "", fill = "", x = "RESPONSE", y = "count", 
-       title = "xxxxx", subtitle = "xxxx", 
-       caption = "xxxxxxxx") + 
+       title = "Output Variable") + 
+    geom_label(stat = 'count', aes(label =..count..)) +
   theme_bw()
 
 ```
+
+As we can see from the graph, there is the majority of the observations which have a positive value (700 against 300).
 
 #### Description by output variable
 
@@ -126,7 +68,7 @@ psych::describeBy(data, data$RESPONSE)
 
 ### 
 
-As we see in the table show earlier, all the values are integers and there is not any missing value. In addition, we can see some inconsistencies of the variables with the initial description, that we will explain in following.
+As we see in the table shown earlier, all the values are integers and there is not any missing value. In addition, we can see some inconsistencies of the variables with the initial description, that we will explain in following.
 
 | Variable   | Description   | Inconsistencies   |
 | :---------:|:--------------|:-------|
@@ -147,7 +89,7 @@ As we see in the table show earlier, all the values are integers and there is no
 | MALE_SINGLE	|  B: 0, 1 | X  |
 | MALE_MAR_WID |  B: 0, 1 | X  |
 | CO-APPLICANT |  B: 0, 1 | X  |
-| GUARANTOR   |  B: 0, 1 | X  |
+| GUARANTOR   |  B: 0, 1 |  ✔: Acoording to the description we should have a binary variable and the data show a 2 |
 | PRESENT_RESIDENT|  C: 0, 1, 2, 3| ✔: Acoording to the description we should 3 categories instead of 4 shown by the data|
 | REAL_ESTATE |  B: 0, 1| X  |
 | PROP_UNKN_NONE  |  B: 0, 1| X  |
@@ -164,19 +106,22 @@ As we see in the table show earlier, all the values are integers and there is no
 Then, for the 3 inconsistencies found before, We have established the following hypothesis and solutions.
 
 - EDUCATION: there was an error in the registration of the information and the -1 must be replaced by 1.
+- GUARANTOR: there was an error in the registration of the information and the 2 must be replaced by 1.
 - PRESENT_RESIDENT: Again, there was an error in the registration of the information and the register was made in years instead of the category.
 - AGE: Here it is clear that we have some outliers, we should limit the age to 75.
 
-It is also important to mention that the output variables show in 70% that the credit is accepted and in 30% rejected, which can later bias the prediction.
+The corrections will be made in the next section.
+
+It is also important to mention that the output variable shows in 70% that the credit is accepted and in 30% rejected, which can later bias the prediction.
 
 ## Explore data
 
-In this section, we will go deeper into the data and look for patterns or relationships between variables. For being able to do that we will develop an histogram to check the distribution of our data for each variable.
+In this section, we will go deeper into the data and look for patterns or relationships between variables. To be able to do it, we will develop an histogram to check the distribution of our data for each variable.
 
 ### {.tabset .tabset-fade .tabset-pills}
 
 Overview of the dataset without any modification.
-Note: a detailed description of each variable can be found in the appendix
+Note: a detailed description of each variable can be found in the appendix.
 
 #### Histogram
 
@@ -194,8 +139,6 @@ show_plot(x, text_labels = TRUE,
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=4}
 
-library(explore)
-
 data[,-1] %>% 
   explore_all(target = RESPONSE) + theme_bw()
 
@@ -205,9 +148,9 @@ data[,-1] %>%
 
 Regarding the last charts, we have the following observations:
 
-- We can see that the numerical variable have a normal distribution asymmetric to the right (Skewed (Non-Normal) Right), possible because we have a more significant lower bound.
+- We can see that the numerical variable have a normal distribution asymmetric to the right (Skewed (Non-Normal) Right), possibly because we have a more significant lower bound.
 - It is very difficult to indentify patterns in the data.
-- In the second one, histogram by response variable, we are able to see the proportion within the positives and negatives answers applications. 
+- In the second one, histograms by response variable, we are able to see the proportion within the positives and negatives answers applications. 
 
 ### {.tabset .tabset-fade .tabset-pills}
 
@@ -233,7 +176,6 @@ plot_boxplot(data[,c(-1)], by= 'RESPONSE',
              title = "Side-by-side boxplots",
              geom_boxplot_args = list("outlier.color" = "red"))
 
-
 ```
 
 ### 
@@ -242,37 +184,32 @@ In the following table, you will find our principal observations.
 
 | Boxplot          | Observation       |
 | :---------------:|:------------------|
-| Of each variable | We indentify that some variable could be mutually exclusive between them. We can evaluate the formation of the following groups: <br /> 1) Agroupation of the varibles purpose of the credit <br /> 2) Agroupation of the male variable as a categorical one. <br /> 3) Agroupation of the REAL_ESTATE and PROP_UNKN_NONE as a categorical one. <br /> 4) Agroupation of the RENT and OWN_RES as a categorical one. |
+| For each variable | We indentify that some variable could be mutually exclusive between them. We can evaluate the formation of the following groups: <br /> 1) Agregation of the varibles purpose of the credit <br /> 2) Agregation of the male variables as a categorical one. <br /> 3) Agregation of the REAL_ESTATE and PROP_UNKN_NONE as a categorical one. <br /> 4) Agregation of the RENT and OWN_RES as a categorical one. |
 | plot by response | The variables which stand out more are: CHK_ACCT and EMPLOYMENT. We can observe that each box by group are different between each other. | 
 
-Additionally, we could identify some outliers, show as red dots and, as you can see in the second chart, the input variables cluster by the outvariable variable show that there are some features that bring more information than others.   
+Additionally, we could identify some outliers, show as red dots and, as you can see in the second chart, the input variables clustered by the output variable show that there are some features that bring more information than others.   
 
 **key definitions:** 
 
 1) *Real property includes the physical property (physical land, structures and resources attached to it) of the real estate, but it expands its definition to include other types of ownerships as rights. Meaning that we can have properties without real state (PROP_UNKN_NONE =0 & REAL_ESTATE=0)*
-2) *For the RENT and OWN_RES variable, we can 3 cases 1-0 , 0-1 and 0-0 because there exist the possible that the person who apply for the loan do not owns the residence and either is in charge of any rents.*
-
+2) *For the RENT and OWN_RES variable, we can see that we have 3 cases: 1-0, 0-1 and 0-0 because there exists the possibility that the person who apply for the loan do not owns the residence and neither is in charge of any rent.*
 
 ### {.tabset .tabset-fade .tabset-pills}
 
-Now, we will give a look to the importance of each variable and we will evaluate 2 point:
+Now, we will give a look to the importance of each variable by evaluating 2 points:
 
 - Multicollinearity
 - Correlation
 
 #### Multicollinearity
 
-
 ```{r, echo=FALSE, , message=FALSE, warning=FALSE}
-
-library(caret)  
 
 # Build the model
 model1 <- lm(RESPONSE ~., data = data)
 car::vif(model1)
 
 ```
-
 
 #### Correlation
 
@@ -285,7 +222,7 @@ plot_correlation(data, type= 'c',
 
 ### 
 
-Our observations about the chart shown before are in the following table: 
+Our observations about the chart shown above can be found in the following table: 
 
 
 | Anylisis          | Observation       |
@@ -293,16 +230,15 @@ Our observations about the chart shown before are in the following table:
 | Multicollinearity | There is one variable which VIF is higher from 5: OWN_RES | 
 | Correlation       | This correlation graph proof what was found in the Multicollinearity analysis. |
 
-In general, the VIF is no high enough to eliminate the variable. 
+In general, the VIF is not high enough to eliminate the variable. 
 
 ## Verify data quality
 
-For being able to do so, we stablish 3 questions that we will address during the resolution of this step. They are the following:
+To be able to do so, we establish 3 questions that we will address during the resolution of this step:
 
 1) Is the data complete (does it cover all the cases required)? 
-2) Is it correct or does it contain errors?
+2) Is it correct or does it contain any error?
 3) Are there missing values in the data? If so how are they represented?
-
 
 ### {.tabset .tabset-fade .tabset-pills}
 
@@ -343,55 +279,47 @@ inspect_types(data[,-32])
 
 ### 
 
-Below you will find the answer of the 3 questions:
-
+Below you will find the answers of the 3 questions:
 
 | Question    | Answer       | 
 | :----------:|:--------------|
 | 1           | Yes, all the columns and rows contains information. | 
-| 2           | No, they contain some errors. They were found in data description and exploratory and are the following: <br /> 1) The variable Education show a not binary output. <br /> 2) The variable PRESENT_RESIDENT have more categories of was mention in the description <br /> 3) the variable AGE is out of range. <br /> 4) AMOUNT, DURANTION, AGE are the variables with more quantity of outliers. | 
-| 3           | No, there is any missing values in the data. | 
+| 2           | No, they contain some errors. They were found in data description and exploratory and are the following: <br /> 1) The variable Education shows an output that is not binary. <br /> 2) The variable PRESENT_RESIDENT have more categories than those that were mentioned in the description <br /> 3) the variable AGE is out of range. <br /> 4) AMOUNT, DURANTION, AGE are the variables with the highest quantity of outliers. | 
+| 3           | No, there is not any missing values in the data. | 
 
-In addittion, we are going to anaylise if the agroupation mention in the boxplot for each variable is possible, for being able to do so, we are going to apply the **Chi-Square Test** for measure independence between them. Next, we are going to explain the steps taking for each analysis: 
+In addition, we are going to anaylise if the agregation mentioned in the boxplot for each variable is possible, to be able to do so, we are going to apply the **Chi-Square Test** to measure the independence between them. Next, we are going to explain the steps taking for each analysis: 
 
 **1) Variables: REAL_ESTATE and PROP_UNKN_NONE**
 
-First, we stablish the hypotheses:
+First, we establish the hypotheses:
 
-$$H_ {0}: \ The \ REAL \ ESTATE \ and \ PROP \ UNKN \ NONE \ are \ independent \ variables.$$
+$$H_ {0}$$: The `REAL_ESTATE` and `PROP_UNKN_NONE` are independent variables.
 
 against the bilateral alternative: 
 
-$$H_ {1}: \ They \ are \ not \ independent.$$
+$$H_ {1}$$: They are not independent.
 
-For the $X^2$ test to be valid, the following conditions must be accomplish:
+For the $X^2$ test to be valid, the following conditions must be true:
 
 1) The sampling method is random
-2) Categorical variables
-3) Size: All levels have more than 5 expected events.
+2) The variables considered are categorical
+3) Size: all levels have more than 5 expected events.
 
 *Assuptions*: Significance level of **0.05**
-*Clarifications*: The P-value is the probability that a chi-square statistic having X degrees of freedom is more extreme than $X^2$. 
+*Clarifications*: The p-value is the probability that a chi-square statistic having X degrees of freedom is more extreme than $X^2$. 
 
-Finally, we are going to accept or reject the hypotheses checking the P-value. If the P-value is less than the significance level stablish earlier, hence, we cannot accept the null hypothesis. Thus, we conclude that there is a relationship between the variables.
+Finally, we are going to accept or reject the hypotheses checking the p-value. If the p-value is less than the significance level that we have established earlier we reject the null hypothesis. Thus, we conclude that there is a relationship between the variables.
 
 **2) RENT and OWN_RES**
 
 First, we stablish the hypotheses:
 
-$$H_ {0}: \ The \ RENT \ and \ OWN \ RES \ are \ independent \ variables.$$
+$$H_ {0}$$: The `RENT` and `OWN_RES` are independent variables.
 
 against the bilateral alternative: 
 
-$$H_ {1}: \ They \ are \ not \ independent.$$
+$$H_ {1}$$: They are not independent.
 
-For the $X^2$ test to be valid, the following conditions must be accomplish:
+Then we move on with the same process that we mentioned above.
 
-1) The sampling method is random
-2) Categorical variables
-3) Size: All levels have more than 5 expected events.
-
-*Assuptions*: Significance level of **0.05**
-*Clarifications*: The P-value is the probability that a chi-square statistic having X degrees of freedom is more extreme than $X^2$. 
-
-Finally, we are going to accept or reject the hypotheses checking the P-value. If the P-value is less than the significance level stablish earlier, hence, we cannot accept the null hypothesis. Thus, we conclude that there is a relationship between the variables.
+The analysis can be found in the next chapter.

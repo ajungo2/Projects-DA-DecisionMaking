@@ -2,9 +2,9 @@
 
 ## Our principal goal
 
-**Our main goal** is evaluate differents model and choose the best within them to determine if new applicants present a good or bad credit risk.  
+**Our main goal** is evaluate different models and choose the best within them to determine if new applicants represent a good or bad credit risk.  
 
-Under this context, we decided to use the methology named "Cross-industry standard process for data mining" (CRISP-DM), this model consists in six phases that naturally describes the data science life cycle. Below, you will find a picture that describe this process.   
+Under this context, we decided to use the methology named "Cross-industry standard process for data mining" (CRISP-DM). This model consists in six phases that naturally describes the data science life cycle. Below, you will find a picture that describe this process.   
 
 ```{r, echo=FALSE, fig.cap="A caption", out.width = '50%'}
 
@@ -20,18 +20,16 @@ knitr::include_graphics(here::here("data/CRISP-DM.png"))
 
 ## The data
 
-For this project, we will use the data provided in the course "GermanCredit.csv" which contains 1000 past credit applicants, described by 30 variables.
+For this project, we will use the data "GermanCredit.csv" provided in the course Projects in Data Analytics for Decision Making given by Professor Jacques Zuber, which contains 1'000 past credit applicants, described by 30 variables.
 
 ```{r, include=FALSE}
 
 library(tidyverse)
-library(here)
 library(dplyr)
 library(stringi)
 library(stringr)
 library(ggplot2)
 library(tidyverse)
-library(knitr)
 library(broom)
 library(modelr)
 library(forcats)
@@ -73,7 +71,11 @@ library(MASS)
 library(rpart)
 library(mda)
 library(randomForest)
-library(summarytools)
+library(explore)
+library(rpart.plot)
+library(parsnip)
+# library(funModeling)
+# library(summarytools)
 
 
 knitr::opts_chunk$set(
@@ -109,7 +111,7 @@ data<-read.csv2(here::here("data/GermanCredit.csv"), dec=".", header=T)
 
 ## Our questions
 
-In order to make a better analysis, we will ask ourselves some questions that we will try to solve through the EDA and the applied models. In other words our main question are the following:
+In order to make a better analysis, we will ask ourselves some questions that we will try to solve through the EDA and the applied models. In other words, the main questions we will try to answer with our analysis are the following:
 
 1) ?
 2) ?
