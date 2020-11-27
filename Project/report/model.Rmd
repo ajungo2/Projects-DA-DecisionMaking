@@ -674,9 +674,9 @@ Here the sensitivity is around 46%, the specificity is high (more than 90%) and 
 
 ```{r fit xgboost}
 
-#library(xgboost)
-#library(data.table)
-#library(mlr)
+library(xgboost)
+library(data.table)
+library(mlr)
 
 
 train <- TrainData %>%
