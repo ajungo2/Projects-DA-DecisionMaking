@@ -66,7 +66,7 @@ The modelling technique that we will be using are the following:
 
 ## Generate test design
 
-Firstly, we need to standardize the data, as the variables have different scales. We will normlize only the continuous variables, as the categorical and dummy variables have only few different levels.  
+Firstly, we need to standardize the data, as the variables have different scales. We will normalize only the continuous variables, as the categorical and dummy variables have only few different levels.  
 
 ```{r scaling}
 
@@ -99,6 +99,7 @@ data_scale %<>% mutate(
 )
 
 #reordering variable in the dataset
+
 data_scale %<>% 
   dplyr::select(CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,
          INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,
@@ -133,6 +134,12 @@ We can now move to the modelization. Let's start with the first model.
 
 ### 1) Logistic Regressions
 
+
+\[ Z_{i} = ln(\frac{P_{i}} {1-P_{i}}) = \beta_0+\beta_1X_1+...+\beta_nX_n \]
+
+\[ Z{i} = ln(\sum\limits_{i,j} \frac{(Observed-Expected)^2} {Expected}), \]
+
+
 #### GLM
 
 ##### Definition
@@ -142,21 +149,35 @@ We will start by giving a definition of this model.
 > Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, although many more complex extensions exist. In regression analysis, logistic regression (or logit regression) is estimating the parameters of a logistic model (a form of binary regression). 
 (https://en.wikipedia.org/wiki/Logistic_regression)
 
+To do so, we are going follow 6 steps:
+
+2) Check for class bias
+3) Create training and test samples
+4) Compute information value to find out important variables
+5) Build logit models and predict on test data
+6) Do model diagnostics
+
 ##### Fitting the model 
 
 Now we will fit the logistic regression on the training dataset.
 
 ```{r glm-model, echo=FALSE, warning=FALSE, message=FALSE}
 
+
+table(data_sel$RESPONSE) #--> there is a class bias in the data in general
+table(TrainData$RESPONSE) #--> there is a class bias in the training
+
+
 #Same division
 set.seed(1234)
 
 #model
-glm.fit <- glm(RESPONSE ~., data = TrainData, family = binomial)
+glm.fit <- glm(RESPONSE ~., data = TrainData, family = binomial(link="logit")) #family=binomial is key for classification
+
 #check outputs
 summary(glm.fit)
 
-#check which variable brings more information--> high coefficient = bring high information
+#check which variable is significance--> high coefficient = bring high information
 temp <- summary(glm.fit)$coeff[-1,4] < 0.05
 
 #condition: yes or not
@@ -188,14 +209,32 @@ Now we will get the predictions using this model. To do it, we will start by get
 ```{r predictions}
 
 #probability given the model
-glm.probs <- predict(glm.fit, newdata = TestData, type = "response")
+glm.probs <- predict(glm.fit, newdata = TestData, type = "response")  #predict give me the probability i am looking for the the binomial answer
 
 #use a cut of 0.5 to give the prediction
 glm.pred <- ifelse(glm.probs > 0.5, 1, 0)
 
+
 ```
 
 This are the predictions for the RESPONSE variable, given the glm model. We use them and a thershold of 0.5 to determine the prediction, whether the person we examine will get a credit (RESPONE = 1), or not (RESPONSE = 0).
+
+##### Model diagnosis 
+
+
+
+```{r predictions}
+
+#first lest check the variables that are not significance: Multiculinearity verification
+
+car::vif(glm.fit)
+
+
+```
+
+
+
+##### Predictions and confusion matrix 
 
 Then, with the prediction we can build the confusion matrix. 
 
@@ -672,132 +711,96 @@ Here the sensitivity is around 46%, the specificity is high (more than 90%) and 
 
 ##### Fitting the model 
 
+
 ```{r fit xgboost}
 
-library(xgboost)
-library(data.table)
-library(mlr)
+#we change everything to a factor or numerico
+
+data_xgboost <- map_df(data_sel, function(columna) {
+                  columna %>% 
+                  as.factor() %>% 
+                  as.numeric %>% 
+                  { . - 1 } })
+
+test_xgboost <- sample_frac(data_xgboost, size = 0.249)
+train_xgboost <- setdiff(data_xgboost, test_xgboost)
 
 
-train <- TrainData %>%
-  mutate(dataset = "train")
+#Convertir a DMatrix
 
-train$RESPONSE<- as.factor(train$RESPONSE)
+train_xgb_matrix <-   train_xgboost %>% 
+                            dplyr::select(- RESPONSE) %>% 
+                            as.matrix() %>% 
+                            xgb.DMatrix(data = ., label = train_xgboost$RESPONSE)
+#Convertir a DMatrix
 
+test_xgb_matrix <-  test_xgboost %>% 
+                            dplyr::select(- RESPONSE) %>% 
+                            as.matrix() %>% 
+                            xgb.DMatrix(data = ., label = test_xgboost$RESPONSE)
 
-test <- TestData %>%
-  mutate(dataset = "test")
+#####################Define the parameters##########################################
 
-test$RESPONSE<- as.factor(test$RESPONSE)
+#objective = "binary:logistic": we will train a binary classification model ;
+#max.depth = 2: the trees won’t be deep ;
+#nthread = 2: the number of cpu threads we are going to use;
+#nrounds = there will be two passes on the data, the second one will enhance the model by further reducing the difference between ground truth and prediction.
 
-
-combined <- bind_rows(train, test)
-
-# Impute missing values by field type
-imp <- impute(
-  combined,
-  classes = list(
-    factor = imputeMode(),
-    integer = imputeMean(),
-    numeric = imputeMean()
-  )
-)
-combined <- imp$data
-
-# Show column summary
-summarizeColumns(combined) %>%
-  kable(digits = 2)
-
-#model works better when the explanatory features are on the same scale
-
-combined <- normalizeFeatures(combined, target = "RESPONSE")
-summarizeColumns(combined) %>%
-  kable(digits = 2)
-
-######### Convert factors to dummy variables ####################################
-
-combined <- createDummyFeatures(
-  combined, target = "RESPONSE",
-  cols = c(
-    "PURPOSE",
-    "PROPERTY",
-    "RESIDENCE"
-  )
-)
-
-summarizeColumns(combined) %>%
-  kable(digits = 2)
-
-####We split it again
-
-train <- combined %>%
-  filter(dataset == "train") %>%
-  dplyr::select(-dataset)
-
-test <- combined %>%
-  filter(dataset == "test") %>%
-  dplyr::select(-dataset)
+set.seed(124)
+model_xgboost <- xgboost::xgboost(data = train_xgb_matrix , 
+                                    objective = "binary:logistic",
+                                    nrounds = 20, max.depth = 2, eta = 0.3, 
+                                    nthread = 2, subsample = 1)
 
 
-trainTask <- makeClassifTask(data = train, target = "RESPONSE", positive = 1)
-testTask <- makeClassifTask(data = test, target = "RESPONSE")
-
-#again stablish set seed
-
-set.seed(1)
-
-# Create an xgboost learner that is classification based and outputs
-# labels (as opposed to probabilities)
-
-xgb_learner <- makeLearner(
-  "classif.xgboost",
-  predict.type = "response",
-  par.vals = list(
-    objective = "binary:logistic",
-    eval_metric = "error",
-    nrounds = 100L,
-    eta=0.1
-  )
-)
+model_xgboost
 
 
-#set parameter space
-params <- makeParamSet( makeDiscreteParam("booster",values = c("gbtree","gblinear")),
-                        makeIntegerParam("max_depth",lower = 3L,upper = 10L),
-                        makeNumericParam("min_child_weight",lower = 1L,upper = 10L),
-                        makeNumericParam("subsample",lower = 0.5,upper = 1),
-                        makeNumericParam("colsample_bytree",lower = 0.5,upper = 1))
+####################Training & Test Error Plot ####################
+#if they are more close better the accuracy
 
-#set resampling strategy
-rdesc <- makeResampleDesc("CV",stratify = T,iters=5L)
+e <- data.frame(model_xgboost$evaluation_log)
+plot(e$iter, e$train_mlogloss, col = 'blue')
+lines(e$iter, e$test_mlogloss, col = 'red')
 
+##################### Important features###############
 
-#search strategy
-ctrl <- makeTuneControlRandom(maxit = 10L)
+imp_feature <- xgb.importance(colnames(train_xgb_matrix), model = model_xgboost)
+print(imp_feature)
+xgb.plot.importance(imp_feature)
+
+#####################Predictions with the model ##########################################
+
+predict_xgb1 <- predict(model_xgboost, test_xgb_matrix)
+#predict_xgb1 <- as.data.frame(predict_xgb1) #---> if we want to create a kagle
+xgboost.pred <- ifelse(predict_xgb1 > 0.5, 1, 0) #change the probability to binory output
+
+####################Confusion Matrix#################
+
+#bulding cm
+cm <- caret::confusionMatrix(as.factor(xgboost.pred), as.factor(TestData$RESPONSE))
+#################draw of confusion matrix
+draw_confusion_matrix(cm)
+##############vv#remove temporary element
+rm(cm)
 
 
 ```
+
 
 
 ##### Hyper-parameter Tuning
 
 ```{r xgboost tuning}
 
-mytune <- tuneParams(learner = xgb_learner, 
-                     task = trainTask, resampling = rdesc, 
-                     measures = acc, par.set = params, control = ctrl, show.info = T)
+###############################################
 
-mytune$y #0.7639
-
-
-#set hyperparameters
-xgb_learner_tune <- setHyperPars(xgb_learner,par.vals = mytune$x)
-
-#train model
-xgmodel <- train(learner = xgb_learner_tune,task = trainTask)
-
-
-
+model_xgboost_balance <- xgboost::xgboost(data = train_xgb_matrix ,
+                                          objective = "binary:logistic",
+                                          nrounds = 20, max.depth = 2, eta = 0.3, nthread = 2,
+                                          subsample = 0.5 ) ###balance
+                                    
+model_xgboost_balance
 
 ```
 
@@ -806,17 +809,116 @@ xgmodel <- train(learner = xgb_learner_tune,task = trainTask)
 
 ```{r xgboost predictions}
 
-xgpred <- predict(xgmodel,testTask)
+#####################Predictions with the model ##########################################
+
+predict_xgb1_balance <- predict(model_xgboost_balance, test_xgb_matrix)
+#predict_xgb1 <- as.data.frame(predict_xgb1) #---> if we want to create a kagle
+xgboost.pred_balance <- ifelse(predict_xgb1_balance > 0.5, 1, 0) #change the probability to binary output
 
 ```
 
 
 ```{r confusion matrix xgboost}
+####################Confusion Matrix#################
 
-confusionMatrix(xgpred$data$response,xgpred$data$truth)
-#Accuracy : 0.7711 <- better accuracy than our default xgboost model
+#bulding cm
+cm <- caret::confusionMatrix(as.factor(xgboost.pred_balance), as.factor(TestData$RESPONSE))
+#################draw of confusion matrix
+draw_confusion_matrix(cm)
+##############vv#remove temporary element
+rm(cm)
+
 
 ```  
 
+### XGBoost 
+
+#### Model name
+
+##### Definition
+
+##### Fitting the model 
+
+
+```{r fit neural}
+
+#library(neuralnet) 
+set.seed(333) 
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5)
+nn.fit <- caret::train(RESPONSE ~ ., TrainData, method='nnet', trace = FALSE, 
+                       ### Parameters for optmization
+                       ###learningrate = 0.0005, threshold = 0.005, stepmax = 1e+07, 
+                       trControl= train_params)
+
+predict_nn <- predict(nn.fit, TestData)
+
+#library(nnet)
+#library(NeuralNetTools)
+plotnet(nn.fit$finalModel, y_names = "yes/no")
+title("Graphical Representation of our Neural Network")
+
+
+####################Confusion Matrix#################
+#bulding cm
+cm <- caret::confusionMatrix(as.factor(predict_nn), as.factor(TestData$RESPONSE))
+#################draw of confusion matrix
+draw_confusion_matrix(cm)
+##############vv#remove temporary element
+rm(cm)
+
+
+```
+
+
+
+##### Hyper-parameter Tuning
+
+```{r neural tuning}
+
+###############################################
+
+set.seed(333) 
+train_params_balance <- trainControl(method = "repeatedcv", number = 10, 
+                                     repeats=5, sampling = "down" )
+
+nn.fit_balance <- caret::train(RESPONSE ~ ., TrainData, method='nnet', trace = FALSE, 
+                       ### Parameters for optmization
+                       ###learningrate = 0.0005, threshold = 0.005, stepmax = 1e+07, 
+                       trControl= train_params)
+
+```
+
+
+##### Predictions 
+
+```{r neural predictions}
+
+#####################Predictions with the model ##########################################
+
+predict_nn_balance <- predict(nn.fit_balance, TestData)
+
+#library(nnet)
+#library(NeuralNetTools)
+plotnet(nn.fit_balance$finalModel, y_names = "yes/no")
+title("Graphical Representation of our Neural Network")
+
+
+
+```
+
+
+```{r confusion matrix neural}
+####################Confusion Matrix#################
+
+####################Confusion Matrix#################
+#bulding cm
+cm <- caret::confusionMatrix(as.factor(predict_nn_balance), as.factor(TestData$RESPONSE))
+#################draw of confusion matrix
+draw_confusion_matrix(cm)
+##############vv#remove temporary element
+rm(cm)
+
+
+```  
 
 
