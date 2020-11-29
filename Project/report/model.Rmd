@@ -137,9 +137,6 @@ We can now move to the modelization. Let's start with the first model.
 
 \[ Z_{i} = ln(\frac{P_{i}} {1-P_{i}}) = \beta_0+\beta_1X_1+...+\beta_nX_n \]
 
-\[ Z{i} = ln(\sum\limits_{i,j} \frac{(Observed-Expected)^2} {Expected}), \]
-
-
 #### GLM
 
 ##### Definition
