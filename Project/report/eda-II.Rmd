@@ -20,7 +20,7 @@ We have already decided how to correct them, hence we will move on to that direc
 
 ### Correct, remove or ignore noise 
 
-We will start by correcting the noises of `EDUCATION`and `PRESENT_RESIDENT`, by simply replacing the value -1 with value 1 for the former and by changing the numbers of the categories for the latter by dimishing each value by 1, this is going to give us the true value corresponding to the description given in the data description that you can find in the appendix. 
+We will start by correcting the noises of `EDUCATION`, `GUARANTOR` and `PRESENT_RESIDENT`, by simply replacing the value -1 and 2 with value 1 for the first two and by changing the numbers of the categories for the latter by dimishing each value by 1, this is going to give us the true value corresponding to the data description that you can find in the appendix. 
 
 ```{r noise correction}
 
@@ -40,7 +40,7 @@ data %<>%
 
 ### Decide how to deal with special values and their meaning 
 
-This is specifically for the case of AGE. As already previously said, we believe that the 125 age is an error, hence we will discard it by selecting only the observation with value lower then 76 (as 75 is the second highest value).
+This is specifically for the case of AGE. As previously said, we believe that the 125 age is an error, hence we will discard it by selecting only the observation with value lower then 76 (as 75 is the second highest value).
 
 ```{r age correction}
 
@@ -66,9 +66,9 @@ As we already mentioned in the previous chapter, we will be able to create 4 dif
 
 #### Sex variable
 
-We will start by the variable describing the sex of the considered person: this variable will be created thanks to the MALE_DIV, MALE_SINGLE and MALE_MAR_WID variables, and it will be a binary variable taking value 1 if the person is male, and value 0 if it is female. 
+We will start by the variable describing the sex of the considered person: this variable will be created thanks to the `MALE_DIV`, `MALE_SINGLE` and `MALE_MAR_WID` variables, and it will be a binary taking value 1 if the person is male, and value 0 if they are female. 
 
-More specifically, if either one of the variables used to construct the new has value 1, so will the `SEX_MALE` variable, otherwise it will have value 0. 
+More specifically, if either one of the variables used to construct the new one has value 1, so will the `SEX_MALE` variable, otherwise it will have value 0. 
 
 ```{r male creation}
 
@@ -78,7 +78,7 @@ data %<>%
 
 ```
 
-We will now explore a bit the new variable we have created. 
+We will now explore a bit the new variable we have created, by looking at the number of instances for each category and how it is affected in terms of response variable. 
 
 ```{r EDA SEX_MALE}
 
@@ -97,9 +97,9 @@ data %>%
 
 ```
 
-We can see that we have more observation with a positive value for the SEX_MALE variable (690 vs. 309), meaning that there are more men than women in the dataset. 
+We can see from the first graph that we have more observation with a positive value for the SEX_MALE variable (690 vs. 309), meaning that there are more men than women in the dataset. 
 
-We can see a difference on the positive value for the response having a male rather than a female, but this could also be due to the fact that the presence of male is higher with respect to women. 
+Moreover, thanks to the second graph, we can see a difference on the positive value for the response having a male rather than a female, but this could also be due to the fact that the presence of male is higher with respect to female. 
 
 ### Collide variables 
 
@@ -117,6 +117,8 @@ This variable will take the following values:
 5 = the purpose for the credit was to increase eductation 
 6 = the purpose for the credit was a retraining 
 0 = the purpose for the credit was something else 
+
+It will be created by taking the respective value each time the dummy corresponding to one purpose takes value 1, if none of them has value 1, then the `PURPOSE`will take value 0.
 
 ```{r purpose creation}
 
@@ -154,15 +156,15 @@ data %>%
 
 ```
 
-We can see that the majority of the observations are fount in the purpose of getting a Radio or a TV, followed by a new car and then funriture, the one that is the less present is the education purpose. 
+In the first graph, we can see that the majority of the observations are found in the purpose of getting a Radio or a TV, followed by a new car and then furniture, while the one that is the less present is the education purpose. 
 
-In terms of output variable, the highest differences can be found in the Radio/TV and new car, but this could be given by the fact that they are the purposes with the highest number of observations. 
+In terms of output variable, shown in the second graph, the highest differences can be found in the Radio/TV and new car, but this could be given by the fact that they are the purposes with the highest number of observations. 
 
 #### Property 
 
 Now we will create the property variable. 
 
-We will start by looking at if the two variables that we want to use (namely, REAL_ESTATE and PROP_UNKN_NONE) are connected and hence it makes sense to put them together. 
+We will start by looking at if the two variables that we want to use (namely, `REAL_ESTATE` and `PROP_UNKN_NONE`) are connected and hence it makes sense to put them together. 
 
 In order to do so, as we previously mentioned, we will perform a chi-squared independence test. 
 
@@ -172,7 +174,7 @@ chisq.test(data$REAL_ESTATE, data$PROP_UNKN_NONE)
 
 ```
 
-We can see that the two variables are statistically significantly associated, as the p-value is really low, almost equal to 0, and hence is lower than the considered significance level of $$\alpha$$ = 5%.
+We can see that the two variables are statistically significantly associated, as the p-value is really low, almost equal to 0, and hence is lower than the considered significance level of alpha = 5%.
 
 We can conclude that it makes sense to merge the two variables into one factor variable, which will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
 
@@ -196,15 +198,15 @@ data %>%
 
 ```
 
-We can clearly see that the majority of the observations does not have a clear value for the property, being equal to 0 (563 compared to the 282 of REAL_ESTATE and 154 of PROP_UNKN_NONE).
+We can clearly see in the first graph that the majority of the observations does not have a clear value for the property, being equal to 0 (563 compared to the 282 of `REAL_ESTATE` and 154 of `PROP_UNKN_NONE`).
 
-If we consider the response, we cannot really see a difference from the person having a real estate or not having a property and having a credit rejected, while if they have a real estate it is more probable that they will get the credit compared to those who have not.
+If we consider the response, hence the second graph, we cannot really see a difference from the person having a real estate or not having a property and having a credit rejected, while if they have a real estate it is more probable that they will get the credit compared to those who have not.
 
 #### Residence 
 
 Now let's look at the third variable that we wish to know if it is needed to be created. 
 
-This variable will be created using the RENT and OWN_RES variables to describe whether a person has a residence or not. 
+This variable will be created using the `RENT` and `OWN_RES` variables to describe whether a person has a residence or not. 
 
 Let's start once again by the chi-squared independence test. 
 
@@ -214,9 +216,9 @@ chisq.test(data$RENT, data$OWN_RES)
 
 ```
 
-Also here, we can conclude that the two variables are statistically significantly associated, as the p-value is really low, especially as it is lower than the significance level we have chosen.
+Also here, we can conclude that the two variables are statistically significantly associated, as the p-value is really low, especially as it is lower than the significance level we have chosen of alpha being equal to 5%.
 
-Hence we will create the residence variable, which will take value 1 if the person is renting, value 2 if the person is owning their own residence and value 0 otherwise. 
+Hence, we will create the residence variable, which will take value 1 if the person is renting, value 2 if the person is owning their own residence and value 0 otherwise. 
 
 ```{r residence creation}
 
@@ -225,7 +227,6 @@ data %<>%
                                       ifelse(OWN_RES == 1, 2, 0))))
 
 ```
-
 
 And let's explore the new variable a little bit, in terms of number of observations per level and if there is a difference in the possibility to get a credit given this variable. 
 
@@ -239,40 +240,9 @@ data %>%
 
 ```
 
-Here, we can see that the majority of the people in the sample do own their own residence (712 observations, compared to the 108 of other and 179 who are renting). 
+In the first graph, we can see that the majority of the people in the sample do own their own residence (712 observations, compared to the 108 of other and 179 who are renting). 
 
-Comparing it to the response variable, we can see that owning the residence seems to have an impact on the possibility to get the credit, while renting seems not to have a major impact. 
-
-## Select data 
-
-| Task                                       | Output                                      | 
-|:-------------------------------------------|:--------------------------------------------|
-| Decide on the data to be used for analysis. Criteria include relevance to the data mining goals, quality and technical constraints such as limits on data volume or data types. Note that data selection covers selection of attributes (columns) as well as selection of records (rows) in a table. | List the data to be included/excluded and the reasons for these decisions.|
-
-### Perform significance and correlation tests to decide what to include 
-
-```{r correlation, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
-
-cor(data[2:30], data$RESPONSE) 
-
-```
-
-We can see that, in general, the correlation between the output variable and the explanatory variable is not particularly high, having a maximum of 0.35 with CHECK_ACC and a minimum of -0.21 with DURATION. 
-
-We could decide to select only the variables having a correlation higher than a certain absolute value, however, as the difference among the correlations is not really high, we prefer not to make a selection here, and rather leave this part for the modelling chapter and use a better process to make an eventual selection.
-
-We will have a look at the linear model and the significance of the different variables to see which are considered to be the most important ones in this case, we are looking for consistency in the results.
-
-```{r significance}
-
-lm <- lm(RESPONSE ~ ., data = data[2:32])
-summary(lm)$coeff[-1,4] < 0.05
-
-```
-
-Given the signifcance of the variable by running a simple linear regression model, we believe that the most important variables are CHK_ACCOUNT, DURATION, HISTORY, NEW_CAR, EDUCATION, AMOUNT, SAV_ACCOUNT, INSTALL_RATE, EMPLOYMENT, MALE_SINGLE, GUARANTOR, PROP_UNKN_NONE, OTHER_INSTALL, FOREIGN and  TELEPHONE, as they are the ones being significant at a level of at least 5%. This is in line with the correlation we have found before. 
-
-We could choose to use only these variables, but we prefer to keep them and to perform a variable selection in terms of the different models that we will use in the next chapter. 
+Looking at the second graph, comparing it to the response variable, we can see that owning the residence seems to have an impact on the possibility to get the credit, while renting seems not to have a major impact. 
 
 ## Integrate data
 
@@ -284,36 +254,67 @@ We could choose to use only these variables, but we prefer to keep them and to p
 
 Here we integrate the variables we created in the dataset and we discard the ones we used to create them, so that we avoid the problem of multicollinearity. 
 
-We will need to drop also one of the variables we used to create the SEX_MALE variable, to avoid multicollinearity problems. The choice is on MALE_DIV.
+We will need to drop also one of the variables we used to create the `SEX_MALE` variable, to avoid multicollinearity problems. The choice is on `MALE_DIV`.
 
-We will also drop the identifier variable (OBS.) as it is not needed in the modelling part. 
+We will also drop the identifier variable (`OBS.`) as it is not needed in the modelling part. 
 
 ```{r selection}
 
-data_sel <- data %>% 
-                dplyr::select(CHK_ACCT, DURATION, HISTORY, PURPOSE, 
-                       AMOUNT, SAV_ACCT, EMPLOYMENT, INSTALL_RATE, 
-                       SEX_MALE, MALE_SINGLE, MALE_MAR_or_WID, 
-                       CO.APPLICANT, GUARANTOR, PRESENT_RESIDENT, 
-                       PROPERTY, AGE, OTHER_INSTALL, RESIDENCE, 
-                       NUM_CREDITS, JOB, TELEPHONE, RESPONSE)
+data_sel <- data %>%
+                dplyr::select(CHK_ACCT, DURATION, HISTORY, PURPOSE,
+                       AMOUNT, SAV_ACCT, EMPLOYMENT, INSTALL_RATE,
+                       SEX_MALE, MALE_SINGLE, MALE_MAR_or_WID,
+                       CO.APPLICANT, GUARANTOR, PRESENT_RESIDENT,
+                       PROPERTY, AGE, OTHER_INSTALL, RESIDENCE,
+                       NUM_CREDITS, JOB, TELEPHONE, RESPONSE) 
 
 ```
+
+## Select data 
+
+| Task                                       | Output                                      | 
+|:-------------------------------------------|:--------------------------------------------|
+| Decide on the data to be used for analysis. Criteria include relevance to the data mining goals, quality and technical constraints such as limits on data volume or data types. Note that data selection covers selection of attributes (columns) as well as selection of records (rows) in a table. | List the data to be included/excluded and the reasons for these decisions.|
+
+To further select the data we will use the correlation and we will run a simple linear model to have a look at which are the most important variables to be selected.
+
+We start with the correlation and we use the basic dataset, because we cannot run a correlation on factor variables. 
+
+```{r correlation, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
+
+cor(data[2:30], data$RESPONSE) %>% as.data.frame() %>% dplyr::arrange(abs(V1))
+
+```
+
+We can see that, in general, the correlation between the output variable and the explanatory variable is not particularly high, having a maximum of 0.35 with `CHCK_ACC` and a minimum of -0.00306 with `PRESENTE_RESIDENT`, in absolute terms. 
+
+We could decide to select only the variables having a correlation higher than a certain absolute value, however, as the difference among the correlations is not really high, we prefer not to make a selection here, and rather leave this decision to the modelling of a simple linear regression and a choice made on the AIC.
+
+> The Akaike information criterion (AIC) is a mathematical method for evaluating how well a model fits the data it was generated from. In statistics, AIC is used to compare different possible models and determine which one is the best fit for the data.
+source: https://www.scribbr.com/statistics/akaike-information-criterion/
+
+The step function follows the idea that the variable that increases the AIC of the model the most will be discarder, up to the point in which it is not possible to decrease the AIC anymore. 
+
+### Perform significance and correlation tests to decide what to include 
+
+```{r linear model to select data}
+
+set.seed(2143)
+lm.sel <- glm(RESPONSE ~., data = data_sel)
+lm.sel <- step(lm.sel, trace = 0)
+summary(lm.sel) 
+data_sel <- lm.sel$model
+
+```
+
+Thanks to the AIC, we select the following variables: `CHK_ACCT`, `DURATION`, `HISTORY`, `PURPOSE`, `AMOUNT`, `SAV_ACCT`, `EMPLOYMENT`, `INSTALL_RATE`, `MALE_SINGLE`, `GUARANTOR`, `PROPERTY`, `OTHER_INSTALL`, `RESIDENCE`, `NUM_CREDITS` and `TELEPHONE`, as they are the most significant. It is interesting to note that there are some levels of purpose that seem to be less relevant, more specifically the only one that are statistically significant are the first and the fifth.
+Moreover, we can see that there is coherence with the variables that had the highest correlations that we calculated before, hence we will use this method to make our final selection on the data. 
 
 ## Format data
 
 | Task                                       | Output                                      | 
 |:-------------------------------------------|:--------------------------------------------|
 | Formatting transformations refer to primarily syntactic modifications made to the data that do not change its meaning, but might be required by the modeling tool. | Some tools have requirements on the order of the attributes, such as the first field being a unique identifier for each record or the last field being the outcome field the model is to predict. It might be important to change the order of the records in the dataset. Perhaps the modeling tool requires that the records be sorted according to the value of the outcome attribute.  Additionally, there are purely syntactic changes made to satisfy the requirements of the specific modeling tool.|
-
-We will rename some variables for an easier use.
-
-```{r renaming}
-
-colnames(data_sel)[colnames(data_sel)=="MALE_MAR_or_WID"] <- "MALE_MAR_WID"
-colnames(data_sel)[colnames(data_sel)=="CO.APPLICANT"] <- "CO_APPLICANT"
-
-```
 
 We will change the variables to factors for the dummies and the categorical variables, to have them corresponding to the description that has been given to us.
 
@@ -325,22 +326,18 @@ data_sel %<>%
     HISTORY = as.factor(HISTORY),
     SAV_ACCT = as.factor(SAV_ACCT),
     EMPLOYMENT = as.factor(EMPLOYMENT),
-    SEX_MALE = as.factor(SEX_MALE), 
     MALE_SINGLE = as.factor(MALE_SINGLE), 
-    MALE_MAR_WID = as.factor(MALE_MAR_WID),
-    CO_APPLICANT = as.factor(CO_APPLICANT),
     GUARANTOR = as.factor(GUARANTOR),
-    PRESENT_RESIDENT = as.factor(PRESENT_RESIDENT), 
     OTHER_INSTALL = as.factor(OTHER_INSTALL),
-    JOB = as.factor(JOB), 
     TELEPHONE = as.factor(TELEPHONE),
     RESPONSE = as.factor(RESPONSE)
   )
 
 
 str(data_sel)
+
 ```
 
-The selected dataset will hence have 999 observations of 22 different variables, 21 of which are the independent variables, 4 of which are continuous variable and the remaining are all categorical or dummy variables. The last variable is the output, which is also a dummy.
+The selected dataset will hence have 999 observations of 16 different variables, 15 of which are the independent variables, 4 of which are continuous variable (i.e.: `DURATION`,`AMOUNT`,`INSTALL_RATE` and `NUN_CREDITS`) and the remaining are all categorical or dummy variables. The first variable is the output (i.e. `RESPONSE`), which is also a dummy.
 
 We are now ready to move on with the modelling part of our analysis. 

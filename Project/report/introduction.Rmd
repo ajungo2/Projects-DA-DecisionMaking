@@ -74,6 +74,7 @@ library(randomForest)
 library(explore)
 library(rpart.plot)
 library(parsnip)
+library(xgboost)
 # library(funModeling)
 # library(summarytools)
 

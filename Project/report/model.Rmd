@@ -73,37 +73,32 @@ Firstly, we need to standardize the data, as the variables have different scales
 #selecting only the continuous variables to scale them
 
 data_scale <- data_sel %>% 
-                dplyr::select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% 
+                dplyr::select(DURATION, AMOUNT, INSTALL_RATE, NUM_CREDITS) %>% 
                 scale() %>%  #normalization
                 as.data.frame()
 
 #recreating the other variables to add them back to the dataset of the scaled ones 
 
 data_scale %<>% mutate(
+  RESPONSE = data_sel$RESPONSE,
   CHK_ACCT = data_sel$CHK_ACCT,
   HISTORY = data_sel$HISTORY,
   PURPOSE = data_sel$PURPOSE,
   SAV_ACCT = data_sel$SAV_ACCT,
   EMPLOYMENT = data_sel$EMPLOYMENT,
-  SEX_MALE = data_sel$SEX_MALE,
+  INSTALL_RATE = data_sel$INSTALL_RATE,
   MALE_SINGLE = data_sel$MALE_SINGLE,
-  MALE_MAR_WID = data_sel$MALE_MAR_WID,
-  CO_APPLICANT = data_sel$CO_APPLICANT,
   GUARANTOR = data_sel$GUARANTOR,
-  PRESENT_RESIDENT = data_sel$PRESENT_RESIDENT,
   PROPERTY = data_sel$PROPERTY,
   OTHER_INSTALL = data_sel$OTHER_INSTALL,
   RESIDENCE = data_sel$RESIDENCE,
-  JOB = data_sel$JOB, 
-  RESPONSE = data_sel$RESPONSE
+  TELEPHONE = data_sel$TELEPHONE
 )
 
 #reordering variable in the dataset
 
 data_scale %<>% 
-  dplyr::select(CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,
-         INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,
-         PRESENT_RESIDENT,PROPERTY,AGE,OTHER_INSTALL,RESIDENCE,NUM_CREDITS,JOB,RESPONSE)
+  dplyr::select(RESPONSE, CHK_ACCT, DURATION, HISTORY, PURPOSE, AMOUNT, SAV_ACCT, EMPLOYMENT, INSTALL_RATE, MALE_SINGLE, GUARANTOR, PROPERTY, OTHER_INSTALL, RESIDENCE, NUM_CREDITS, TELEPHONE)
 
 ```
 
@@ -134,9 +129,6 @@ We can now move to the modelization. Let's start with the first model.
 
 ### 1) Logistic Regressions
 
-
-\[ Z_{i} = ln(\frac{P_{i}} {1-P_{i}}) = \beta_0+\beta_1X_1+...+\beta_nX_n \]
-
 #### GLM
 
 ##### Definition
@@ -146,8 +138,12 @@ We will start by giving a definition of this model.
 > Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, although many more complex extensions exist. In regression analysis, logistic regression (or logit regression) is estimating the parameters of a logistic model (a form of binary regression). 
 (https://en.wikipedia.org/wiki/Logistic_regression)
 
-To do so, we are going follow 6 steps:
+The model of ligistic regression is the following:
 
+\[ Z_{i} = ln(\frac{P_{i}} {1-P_{i}}) = \beta_0+\beta_1X_1+...+\beta_nX_n \]
+
+To do so, we are going follow 6 steps:
+1) Fit the model
 2) Check for class bias
 3) Create training and test samples
 4) Compute information value to find out important variables
@@ -160,10 +156,8 @@ Now we will fit the logistic regression on the training dataset.
 
 ```{r glm-model, echo=FALSE, warning=FALSE, message=FALSE}
 
-
 table(data_sel$RESPONSE) #--> there is a class bias in the data in general
 table(TrainData$RESPONSE) #--> there is a class bias in the training
-
 
 #Same division
 set.seed(1234)
@@ -174,20 +168,9 @@ glm.fit <- glm(RESPONSE ~., data = TrainData, family = binomial(link="logit")) #
 #check outputs
 summary(glm.fit)
 
-#check which variable is significance--> high coefficient = bring high information
-temp <- summary(glm.fit)$coeff[-1,4] < 0.05
-
-#condition: yes or not
-temp %<>% as.data.frame()  
-
-kable(temp, caption = "Significance of variable")
-
-#remove variable temp
-rm(temp) 
-
 ```
 
-Here, we can see that the variables that take the highest importance and that are statistically significant for the model are: the second and third level of CHK_ACC, DURATION, the fourth level of HISTORY,the first level of PURPOSE, AMOUNT,the fourth level of SAV_ACCT, the second, third and fourth level of EMPLOYMENT, MALE_SINGLE (being positive), and OTHER_INSTALL (being positive).
+Here, we can see that the variables that take the highest importance and that are statistically significant for the model are: the second and third level of `CHK_ACC`, `DURATION`, the fourth level of `HISTORY`,the first level of `PURPOSE`, `AMOUNT`,the fourth level of `SAV_ACCT`, the second level of `EMPLOYMENT`, `OTHER_INSTALL` (being positive) and `TELEPHONE`.
 
 ```{r glm coef}
 
@@ -195,13 +178,19 @@ glm.fit$coefficients
 
 ```
 
-If we look at the coeffiecient of the different variables we can conclude that CHK_ACCT, HISTORY, SAV_ACCT, EMPLOYMENT and MALE_SINGLE, have a positive impact on the output, meaning that the higher is their level or if they are positive, the probability of having RESPONSE = 1 will increase. 
+If we look at the coeffiecient of the different variables we can conclude that, among the significant one that we described before, `CHK_ACCT`, `HISTORY` (all but the first level), `SAV_ACCT`, `EMPLOYMENT` and `MALE_SINGLE`, have a positive impact on the output, meaning that the higher is their level or if they are positive, the probability of having `RESPONSE` = 1 will increase. 
 
-On the other hand, DURATION, PURPOSE, AMOUNT and OTHER_INSTALL have a negative effect on the output, meaning that if they increase their level or value, or if they have a positive value (for the dummies), the probability of having a positive response will decrease.
+On the other hand, among the significant variables, `DURATION`, `PURPOSE` (all but level two and four), `AMOUNT` and `OTHER_INSTALL` have a negative effect on the output, meaning that if they increase their level or value, or if they have a positive value (for the dummies), the probability of having a positive response will decrease.
+
+The linear predictor is given by 
+$$ \eta  = - 0.1311 + 0.2353 * CHKACCT_1 + 1.1136 * CHKACCT_2  + 1.6447 * CHKACCT_3 - 0.3090 * DURATION - 0.3719 * HISTORY_1 + 0.4818 * HISTORY_2 +  0.6720 * HISTORY_3 + 1.3959 * HISTORY_4 - 0.9133 * PURPOSE_1 + 0.8385 * PURPOSE_2 - 0.0585 * PURPOSE_3 + 0.0770 * PURPOSE_4 - 0.7794 * PURPOSE_5 - 0.0920 * PURPOSE_6 - 0.3923 * AMOUNT - 0.3923 * SAVACCT_1 + 0.5117 * SAVACCT_2 + 0.7612 * SAVACCT_3 + 1.3216 * SAVACCT_4 + 0.3373 * EMPLOYMENT_1 + * 0.7197 EMPLOYMENT_2 + 1.1494 * EMPLOYMENT_3 + 0.7664 * EMPLOYMENT_4 - 0.3365 * INSTALLRATE + 0.5638 * MALESINGLE_1 + 0.9074 * GUARANTOR_1 + 0.1066 * PROPERTY_1 - 0.6069 * PROPERTY_2 - 0.5723 * OTHERINSTALL_1 - 0.8100 * RESIDENCE_1 - 0.2967 * RESIDENCE_2 - 0.1347 * NUMCREDITS + 0.4426 * TELEPHONE_1 $$
+
+To be clear, if for example the purpose variable takes value 3, only the coefficient of PURPOSE_3 will be added to the others. The same goes for each other categorical variable. For the dummies the coefficient is added only if the value is equal to 1 for the variable, otherwise no. While for the continuous variables the coefficient is multiplied by the value is recorded in the observation. 
 
 ##### Predictions and confusion matrix 
 
-Now we will get the predictions using this model. To do it, we will start by getting the probabilities of the output given the coefficients we have found by fitting the model, then we will use a cut point of 0.5 to decide whether the value will be equal to 1 (if the probability it higher than 0.5) or o (otherwise).
+Now we will get the predictions using this model. To do it, we will start by getting the probabilities of the output given the coefficients we have found by fitting the model, then we will use a cut point of 0.5 to decide whether the value will be equal to 1 (if the probability it higher than 0.5) or 0 (otherwise).
+The model basically fit the information of the new observation in the function that is given above, and then it finds a value *eta* that is then used to get the prediction of the probability of the output by doint p = 1 / (1 + eta). We use this probability to determine whether the prediciton will by 1 or 0, by taking a cut point of 0.5. 
 
 ```{r predictions}
 
@@ -211,30 +200,23 @@ glm.probs <- predict(glm.fit, newdata = TestData, type = "response")  #predict g
 #use a cut of 0.5 to give the prediction
 glm.pred <- ifelse(glm.probs > 0.5, 1, 0)
 
-
 ```
-
-This are the predictions for the RESPONSE variable, given the glm model. We use them and a thershold of 0.5 to determine the prediction, whether the person we examine will get a credit (RESPONE = 1), or not (RESPONSE = 0).
 
 ##### Model diagnosis 
 
+We can move on to the diagnosis part of our modelization process. We start by looking at the multicollinearity of the variables, to check that none of them present this problem. In order to do so, we use the VIF. 
 
-
-```{r predictions}
-
-#first lest check the variables that are not significance: Multiculinearity verification
+```{r multicollinearity check}
 
 car::vif(glm.fit)
 
-
 ```
 
-
+We can see that none of the variable present a value higher than 5, hence the problem of multicollinearity is not present here.
 
 ##### Predictions and confusion matrix 
 
 Then, with the prediction we can build the confusion matrix. 
-
 
 ```{r confusion matrix}
 
@@ -247,36 +229,11 @@ rm(cm)
 
 ```
 
-We are more interested in the false prediction of negative outcomes, as it would mean a loss for the company, rather than a false prediction of a positive outcome, hence we will look at the specificity rather than the sensitivity. Here we can see the the prediction of negative values is quite high (above 90% of the time when an element is predicted as negative it if truly negative) and also if it is negative it will be predicted as such. 
+We are more interested in the false prediction of negative outcomes, as it would mean a loss for the company, rather than a false prediction of a positive outcome, hence we will look at the specificity rather than the sensitivity. We can see that in 35 cases in which the model should have predicted a negative value, it actually predicted a postive one. Here we can see the the prediction of negative values is quite high (above 90% of the time when an element is predicted as negative it if truly negative) and also if it is negative it will be predicted as such. 
 
-We could beblieve that this is due to an unbalance of the data set, but as we have seen in the EDA, we have a dataset with a higher presence of positive value than negative, hence it would be easier for the model to predict a positive value, which is not the case. 
+We could believe that this is due to an unbalance of the data set, but as we have seen in the EDA, we have a dataset with a higher presence of positive value than negative, hence it would be easier for the model to predict a positive value, which is not the case. 
 
-We will repeat the prediciton with a selection of the model based in the AIC using the step function of R.
-
-> The Akaike information criterion (AIC) is a mathematical method for evaluating how well a model fits the data it was generated from. In statistics, AIC is used to compare different possible models and determine which one is the best fit for the data.
-source: https://www.scribbr.com/statistics/akaike-information-criterion/
-
-The step function follows the idea that the variable that increases the AIC of the model the most will be discarder, up to the point in which it is not possible to decrease the AIC anymore. 
-
-```{r glm selection}
-
-#selections based on the AIC of the model
-glm.sel <- step(glm.fit)
-#summary of selected model
-summary(glm.sel)
-#probability given the model
-glm.sel.probs <- predict(glm.sel, newdata = TestData, type = "response")
-#use a cut of 0.5 to give the prediction
-glm.sel.pred <- ifelse(glm.sel.probs > 0.5, 1, 0)
-#confusion matrix 
-cm <- confusionMatrix(as.factor(glm.sel.pred), as.factor(TestData$RESPONSE))
-#draw of confusion matrix
-draw_confusion_matrix(cm)
-#remove temporary element
-rm(cm)
-
-```
-We can see that this model is suprisingly performing worse than the previous one, as sensitivy, specificity and accuracy have all a lower value with respect to the one of the non-selected model.  
+In any case, we will repeat the prediction with a balanced training set, in order to avoid any bias. 
 
 ### Decision Trees
 
@@ -301,85 +258,83 @@ ct.fit <- rpart(RESPONSE ~., method = "class",
                 control = rpart.control(minsplit = 4, 
                 cp = 1e-05) , model = TRUE)
 
-summary(ct.fit)
+rpart.plot(ct.fit, extra=104, box.palette="GnBu",
+               branch.lty=3, shadow.col="gray", nn=TRUE)
 
 ```
 
-We will then prune the tree (meaning that we will try to discard the variables that are not important for the classificaiton of the output) by looking for the best complexity parameter. 
+We can see that the tree is quite big, meaning that there may be too many variables used in the model. However, we will move on to the predictions and the confusion matrix to be able to better assess the fit of this model. 
 
-> Pruning is a Data compression technique in machine learning and search algorithms that reduces the size of decision trees by removing sections of the tree that are uncritical and redundant to classify instances. Pruning reduces the complexity of the final classifier, and hence improves predictive accuracy by the reduction of overfitting.
-source:https://en.wikipedia.org/wiki/Decision_tree_pruning
+<!-- > Pruning is a Data compression technique in machine learning and search algorithms that reduces the size of decision trees by removing sections of the tree that are uncritical and redundant to classify instances. Pruning reduces the complexity of the final classifier, and hence improves predictive accuracy by the reduction of overfitting. -->
+<!-- source:https://en.wikipedia.org/wiki/Decision_tree_pruning -->
 
 
 ```{r pruning cart, echo=FALSE}
 
-#cp graph
-par(pty = "s")
-plotcp(ct.fit)
-
-#cp that minimize the tree
-bestcp <- ct.fit$cptable[which.min(ct.fit$cptable[,"xerror"]),"CP"]
-
-ct.prune <- prune(ct.fit, cp= bestcp) #before there was cp=0.01
-
-summary(ct.prune)
-
-#first option of graph:
-#plot(ct.prune, uniform = TRUE)
-#text(ct.prune, cex = 0.4, use.n = TRUE, all = TRUE)
-
-#second option of graph:
-rpart.plot(ct.prune, extra=104, box.palette="GnBu",
-               branch.lty=3, shadow.col="gray", nn=TRUE)
-
-
-#partition tree--> lets check later....
-set.seed(123) ## For consistent jitter
-
-partition_data <- TrainData
-partition_data$RESPONSE <- as.factor(partition_data$RESPONSE)
-
-## Build our tree using parsnip (but with rpart as the model engine)
-
-t_tree <-
-  decision_tree() %>%
-  set_engine("rpart") %>%
-  set_mode("classification") %>%
-  fit(RESPONSE ~ CHK_ACCT + HISTORY , data = partition_data)
-
-#install.packages("remotes")
-# remotes::install_github("grantmcdermott/parttree") 
-# library(parttree) not working
-
-## Plot the data and model partitions
-# partition_data %>%
-#   ggplot(aes(x=CHK_ACCT, y=HISTORY)) + #axis to check
-#   geom_jitter(aes(col=RESPONSE), alpha=0.7) +
-#   geom_parttree(data = t_tree, aes(fill=RESPONSE), alpha = 0.1) +
-#   theme_minimal()+
-#   theme_bw()
-
+# #cp graph
+# par(pty = "s")
+# plotcp(ct.fit)
+# 
+# #cp that minimize the tree
+# bestcp <- ct.fit$cptable[which.min(ct.fit$cptable[,"xerror"]),"CP"]
+# 
+# ct.prune <- prune(ct.fit, cp= bestcp) #before there was cp=0.01
+# 
+# summary(ct.prune)
+# 
+# #first option of graph:
+# #plot(ct.prune, uniform = TRUE)
+# #text(ct.prune, cex = 0.4, use.n = TRUE, all = TRUE)
+# 
+# #second option of graph:
+# rpart.plot(ct.prune, extra=104, box.palette="GnBu",
+#                branch.lty=3, shadow.col="gray", nn=TRUE)
+# 
+# 
+# #partition tree--> lets check later....
+# set.seed(123) ## For consistent jitter
+# 
+# partition_data <- TrainData
+# partition_data$RESPONSE <- as.factor(partition_data$RESPONSE)
+# 
+# ## Build our tree using parsnip (but with rpart as the model engine)
+# 
+# t_tree <-
+#   decision_tree() %>%
+#   set_engine("rpart") %>%
+#   set_mode("classification") %>%
+#   fit(RESPONSE ~ CHK_ACCT + HISTORY , data = partition_data)
+# 
+# #install.packages("remotes")
+# # remotes::install_github("grantmcdermott/parttree") 
+# # library(parttree) not working
+# 
+# ## Plot the data and model partitions
+# # partition_data %>%
+# #   ggplot(aes(x=CHK_ACCT, y=HISTORY)) + #axis to check
+# #   geom_jitter(aes(col=RESPONSE), alpha=0.7) +
+# #   geom_parttree(data = t_tree, aes(fill=RESPONSE), alpha = 0.1) +
+# #   theme_minimal()+
+# #   theme_bw()
 
 ```
 
-The pruned tree has a number of split equal to 5 and it consider the variables CHK_ACCT, HISTORY, PURPOSE, AMOUNT, NUM_CREDITS, PRESENT_RESIDENT. 
+<!-- The pruned tree has a number of split equal to 5 and it consider the variables CHK_ACCT, HISTORY, PURPOSE, AMOUNT, NUM_CREDITS, PRESENT_RESIDENT.  -->
 
-The graph that we have creted shows us how a new observation would be classified:
-1. If the CHK_ACCT is  equal to 0 or 1 go to the next node, otherwise the RESPONSE will be 1;
-2. It the HISTORY is equal to 0, 1 or 2 go the next node, otherwise REPSONSE will be 1;
-3. If PURPOSE is equal to 1 or 5 the RESPONSE will be 0, otherwise go the next node;
-4. If AMOUNT is lower than 1.7, the RESPONSE will be 0, otherwise go the next node;
-5. If DURATION is higher than 1.9 RESPONSE will 0, otherwise RESPONSE will be 1. 
+<!-- The graph that we have creted shows us how a new observation would be classified: -->
+<!-- 1. If the CHK_ACCT is  equal to 0 or 1 go to the next node, otherwise the RESPONSE will be 1; -->
+<!-- 2. It the HISTORY is equal to 0, 1 or 2 go the next node, otherwise REPSONSE will be 1; -->
+<!-- 3. If PURPOSE is equal to 1 or 5 the RESPONSE will be 0, otherwise go the next node; -->
+<!-- 4. If AMOUNT is lower than 1.7, the RESPONSE will be 0, otherwise go the next node; -->
+<!-- 5. If DURATION is higher than 1.9 RESPONSE will 0, otherwise RESPONSE will be 1.  -->
 
 ##### Predictions and confusion matrix 
 
-We will now use the two models (the basic one and the pruned one) to predict the values for the output variable and then build the confusion matrix. 
-The process will be the one described above for each observation that is presenent in the test set. 
+We will now use the model to predict the values for the output variable and then build the confusion matrix. 
 
 ```{r prediction cart}
 
 ct.pred <- predict(ct.fit, newdata = TestData, type = "class")
-ct.prune.pred <- predict(ct.prune, newdata = TestData, type = "class")
 
 ```
 
@@ -393,16 +348,9 @@ draw_confusion_matrix(cm)
 #removing temporary element
 rm(cm)
 
-#confusion matrix of pruned model
-cm <- confusionMatrix(as.factor(ct.prune.pred), as.factor(TestData$RESPONSE))
-#draw cm of pruned model
-draw_confusion_matrix(cm)
-#remove temporary element 
-rm(cm)
-
 ```
 
-We can see that here the sensitivity is really low in both cases, but is lower for the pruned model, while the specificity is higher, and it increases even more in the pruned model reaching a value above 90%, which is in any case the one in which we are the most interested. Also the accuracy increases in the pruned model. 
+We can see that here the sensitivity is really low, while the specificity is higher, reaching a value above 78%, which is in any case the one in which we are the most interested. The accuracy is around 70%. Here, in 36 cases in which the model should have given a negative value, it actually predicted a positive one, and it could cost quite a lot to the company. 
 
 ### Discriminate analysis 
 
@@ -417,7 +365,7 @@ We look now at the LDA, which is defined as:
 
 ##### Fitting the model
 
-We start by fitting the model
+We start by fitting the model, we need to create a reference for each observation to use this model, then we can fit it.
 
 ```{r lda model}
 
@@ -425,7 +373,7 @@ We start by fitting the model
 OBS <- 1:750
 
 #model creation
-lda.fit <- lda(RESPONSE ~., data = TrainData[,-1], subset = OBS)
+lda.fit <- lda(RESPONSE ~., data = TrainData, subset = OBS)
 
 lda.fit
 
@@ -435,10 +383,12 @@ plot(lda.fit)
 
 ```
 
-Hence, the linear combination of predictor variables that are used to form the decision rule is the following: 
+We can see from the graph that the model seems to be better at predictign the positive value as the mean seems to be around the value 1, while for the negative output the mean seems to be a bit lower than 0, which is the value it should take, and it is around -1.
+
+The linear combination of predictor variables that are used to form the decision rule is the following: 
 $$ RESPONSE = -0.3265 * DURATION -0.2747 * HISTORY_1 + 0.8792 * HISTORY_2 + 1.1810 * HISTORY_3 + 1.6214 * HISTORY_4 - 0.7437 * PURPOSE_1 + 0.7736 * PURPOSE_2 + 0.0172 * PURPOSE_3 + 0.2035 * PURPOSE_4 - 0.6116 * PURPOSE_5 + 0.1298 * PURPOSE_6 - 0.2579 * AMOUNT + 0.5066 * SAV_ACCT_1 + 0.7517 * SAV_ACCT_2 + 0.7778 * SAV_ACCT_3 + 1.0997 * SAV_ACCT_4 + 0.6175 * EMPLOYMENT_1 + 1.1982 * EMPLOYMENT_2 + 1.4580 * EMPLOYMENT_3 + 1.1806 * EMPLOYMENT_4 - 0.2897 * INSTALL_RATE - 0.5663 * SEX_MALE_1 + 0.9272 * MALE_SINGLE_1 + 0.5183 * MALE_MAR_WID_1 - 0.0863 * CO_APPLICANT_1 + 0.5084 * GUARANTOR_1 - 0.2437 * PRESENT_RESIDENT_-1 - 0.1913 * PRESENT_RESIDENT_0 - 0.0477 * PRESENT_RESIDENT_1 + 0.0367 * PROPERTY_1 - 0.6374 * PROPERTY_2 + 0.0502 * AGE - 0.4501 * OTHER_INSTALL_1 - 0.7509 * RESIDENCE_1 - 0.2185 * RESIDENCE_2 - 0.0703 * NUM_CREDITS - 1.0570 * JOB_1 - 1.0581 * JOB_2 - 0.8362 * JOB_3$$
 
-Each new observation will be evaluated thanks to this formula, with its information put inside of it. To be clear, if for example the purpose variable takes value 3, only the coefficient of $$PURPOSE_3$$ will be added to the others. The same goes for each other categorical variable. For the dummies the coefficient is added only if the value is equal to 1 for the variable, otherwise no. While for the continuous variables the coefficient is multiplied by the value is recorded in the observation. 
+Each new observation will be evaluated thanks to this formula, with its information put inside of it. It follows the same principle described for the generalized linear model. 
 
 ##### Predictions and confusion matrix 
 
@@ -458,6 +408,7 @@ plot(lda.pred$x[,1], lda.pred$class, col=TestData$RESPONSE)
 #The Predicted Group-1 and Group-2 has been colored (red and green). The mix of red and green color in each group shows the incorrect classification prediction.
 
 ```
+
 In the graph, the red dots corresponds to the incorrect classification preditions. We can see that the majority are in the positive values, which is quite bad for the company, as it would mean granting a credit to someone who is actually at high risk. 
 
 ```{r confusion matrix lda}
@@ -471,7 +422,7 @@ rm(cm)
 
 ```
  
-Here the sensitivity is higher with respect to the previous models (above 40%), but it is still quite low. 
+Here the sensitivity is higher with respect to the previous models (above 40%), but it is still quite low. If we look at the preicision, is quite low, as it is only around 70%. What is important to note is that 36 times in which the model would have predicted a positive value for the output, it should have been negative, which is something that could cost quite a lot to the copmany. 
  
 #### QDA 
 
@@ -484,6 +435,8 @@ We now look at the Quadratic Discriminant Analysis, which is defined in the foll
 (source: http://www.sthda.com/english/articles/36-classification-methods-essentials/146-discriminant-analysis-essentials-in-r/)
 
 ##### Fitting the model 
+
+We start by fitting the model.
 
 ```{r fit qda}
 
@@ -498,6 +451,8 @@ However, as our sample is quite small, we predict that the LDA will be a better 
 
 ##### Predictions and confusion matrix 
 
+Then we move to the predictions.
+
 ```{r qda predictions}
 
 #getting the overall predictions
@@ -511,6 +466,8 @@ plot(qda.pred$posterior[,2], qda.pred$class, col=TestData$RESPONSE)
 
 ```
 
+Here, it seems still that the majority of the false prediction are in the positive level, however they seem less than before.
+
 ```{r confusion matrix qda}
 
 #building the confusion matrix for the QDA
@@ -522,10 +479,8 @@ rm(cm)
 
 ``` 
 
-Here the sensitivity is the highest up to now (over 50%), is still quite low though. The specificity is moderately high (above 85%) as it is the accuracy (above 70%). 
+As we predicted, the model performs a little bit worse than the LDA, but for the sensitivity, which is the highest up to now (over 50%), is still quite low, though. The specificity is moderately high (above 85%) as it is the accuracy (above 70%). As we want to have a value for the false positive low, the 35 here is still quite high.
 
-<!-- More on interpretation when we are sure we need to look at specificity  -->
- 
 #### MDA 
 
 ##### Definition
@@ -553,7 +508,7 @@ The summary gives the percentage of the variance that there is inside the differ
 
 ##### Predictions and confusion matrix 
 
-Using the model we get the prediction for the RESPONSE variable and we can construct the confidence matrix for this case.
+Using the model we get the prediction for the `RESPONSE` variable and we can construct the confidence matrix for this case.
 
 ```{r mda predictions}
 
@@ -572,7 +527,7 @@ rm(cm)
 
 ```  
 
-The sensitivity in this case is around 45%, while the specificity is higher, reaching almost 88%. The accurary is around 75%. 
+The sensitivity in this case is around 45%, while the specificity is higher, reaching almost 88%. The accurary is around 75%. The number of false positive is the highest one up to now, being 40, which is bad for the company.
 
 #### FDA 
 
@@ -618,7 +573,7 @@ rm(cm)
 
 ```  
 
-Contrary to what it is expected, this model has a sensitivity of almost 50%, among one of the highest up to now, and the specificity is higher than 90%. The accuracy is around 78%. 
+Contrary to what it is expected, this model has a sensitivity of almost 50%, among one of the highest up to now, and the specificity is higher than 90%. The accuracy is around 78%. The false positive observations are 36.
 
 ### Ensemble Methods
 
@@ -698,7 +653,7 @@ rm(cm)
 
 ```
 
-Here the sensitivity is around 46%, the specificity is high (more than 90%) and the accuracy is aroun 77%. 
+Here the sensitivity is around 46%, the specificity is high (more than 90%) and the accuracy is aroun 77%, while the number of false positive is the highest, having 41 observations. 
 
 ### XGBoost 
 
@@ -828,7 +783,7 @@ rm(cm)
 
 ```  
 
-### XGBoost 
+### Neural Network 
 
 #### Model name
 
@@ -866,8 +821,6 @@ rm(cm)
 
 ```
 
-
-
 ##### Hyper-parameter Tuning
 
 ```{r neural tuning}
@@ -884,7 +837,6 @@ nn.fit_balance <- caret::train(RESPONSE ~ ., TrainData, method='nnet', trace = F
                        trControl= train_params)
 
 ```
-
 
 ##### Predictions 
 
