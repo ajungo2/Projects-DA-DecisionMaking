@@ -1,0 +1,1352 @@
+# Model 
+
+```{r confusion matrix draw function, include=FALSE}
+
+############# Function for draw the confussion matrix####################################
+
+draw_confusion_matrix <- function(cm) {
+
+  layout(matrix(c(1,1,2)))
+  par(mar=c(2,2,2,2))
+  plot(c(100, 345), c(300, 450), type = "n", xlab="", ylab="", xaxt='n', yaxt='n')
+  title('CONFUSION MATRIX', cex.main=2)
+
+  # create the matrix 
+  rect(150, 430, 240, 370, col='#3F97D0')
+  text(195, 435, '0', cex=1.2)
+  rect(250, 430, 340, 370, col='#F7AD50')
+  text(295, 435, '1', cex=1.2)
+  text(125, 370, 'Predicted', cex=1.3, srt=90, font=2)
+  text(245, 450, 'Actual', cex=1.3, font=2)
+  rect(150, 305, 240, 365, col='#F7AD50')
+  rect(250, 305, 340, 365, col='#3F97D0')
+  text(140, 400, '0', cex=1.2, srt=90)
+  text(140, 335, '1', cex=1.2, srt=90)
+
+  # add in the cm results 
+  res <- as.numeric(cm$table)
+  text(195, 400, res[1], cex=1.6, font=2, col='white')
+  text(195, 335, res[2], cex=1.6, font=2, col='white')
+  text(295, 400, res[3], cex=1.6, font=2, col='white')
+  text(295, 335, res[4], cex=1.6, font=2, col='white')
+
+  # add in the specifics 
+  plot(c(100, 0), c(100, 0), type = "n", xlab="", ylab="", 
+       main = "DETAILS", xaxt='n', yaxt='n')
+  text(10, 85, names(cm$byClass[1]), cex=1.2, font=2)
+  text(10, 70, round(as.numeric(cm$byClass[1]), 3), cex=1.2)
+  text(30, 85, names(cm$byClass[2]), cex=1.2, font=2)
+  text(30, 70, round(as.numeric(cm$byClass[2]), 3), cex=1.2)
+  text(50, 85, names(cm$byClass[5]), cex=1.2, font=2)
+  text(50, 70, round(as.numeric(cm$byClass[5]), 3), cex=1.2)
+  text(70, 85, names(cm$byClass[6]), cex=1.2, font=2)
+  text(70, 70, round(as.numeric(cm$byClass[6]), 3), cex=1.2)
+  text(90, 85, names(cm$byClass[7]), cex=1.2, font=2)
+  text(90, 70, round(as.numeric(cm$byClass[7]), 3), cex=1.2)
+
+  # add in the accuracy information 
+  text(30, 35, names(cm$overall[1]), cex=1.5, font=2)
+  text(30, 20, round(as.numeric(cm$overall[1]), 3), cex=1.4)
+  text(70, 35, names(cm$overall[2]), cex=1.5, font=2)
+  text(70, 20, round(as.numeric(cm$overall[2]), 3), cex=1.4)
+}  
+
+```
+
+
+## Select modeling technique
+
+The modelling technique that we will be using are the following:
+
+------> it is still not finish <------------ 
+
+
+| n° | Model        |  Definition | 
+|:--:|:-------------|:--------------|   
+| 1  | Logistic <br /> regression   | > Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, although many more complex extensions exist. In regression analysis, logistic regression (or logit regression) is estimating the parameters of a logistic model (a form of binary regression). 
+(https://en.wikipedia.org/wiki/Logistic_regression) |
+| 2  | Decision <br /> trees        |   |
+| 3  | Discriminate <br /> analysis |   |
+| 4  | Random <br /> forest         |   |
+| 5  | Neural <br /> network        |   |
+| 6  | XGBoost                      |   |
+
+
+In order to compare the 6 models show before applying the CAREt library.
+
+## Generate test design 
+
+$$H_ {0}$$: The $Model_n$ give the best accuracy and sensitivity.
+
+$$H_ {1}$$: It do not give the best values. 
+
+Where $n= (1,2,3,4,5,6)$ and represent each model choosen in the selection technique section.
+
+
+## Build model
+
+Firstly, we need to standardize the data, as the variables have different scales. We will normalize only the continuous variables, as the categorical and dummy variables have only few different levels.  
+
+```{r scaling, warning=FALSE, message=FALSE, echo=FALSE}
+
+#selecting only the continuous variables to scale them
+
+p1<- data_sel %>%  
+      tidyr::gather(variable, value, c("DURATION", "AMOUNT", "INSTALL_RATE", 
+                                       "AGE", "NUM_CREDITS")) %>% 
+      ggplot(aes(x = variable, y = value, fill = variable)) + 
+      geom_boxplot() +
+      theme_bw() +
+      coord_flip()+
+      theme(legend.position="none")+
+      theme(legend.title = element_blank())
+      
+      
+data_scale <- data_sel %>% 
+                dplyr::select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% 
+                scale() %>%  #normalization
+                as.data.frame()
+
+#recreating the other variables to add them back to the dataset of the scaled ones 
+
+data_scale %<>% mutate(
+  CHK_ACCT = data_sel$CHK_ACCT,
+  HISTORY = data_sel$HISTORY,
+  PURPOSE = data_sel$PURPOSE,
+  SAV_ACCT = data_sel$SAV_ACCT,
+  EMPLOYMENT = data_sel$EMPLOYMENT,
+  SEX_MALE = data_sel$SEX_MALE,
+  MALE_SINGLE = data_sel$MALE_SINGLE,
+  MALE_MAR_WID = data_sel$MALE_MAR_WID,
+  CO_APPLICANT = data_sel$CO_APPLICANT,
+  GUARANTOR = data_sel$GUARANTOR,
+  PRESENT_RESIDENT = data_sel$PRESENT_RESIDENT,
+  PROPERTY = data_sel$PROPERTY,
+  OTHER_INSTALL = data_sel$OTHER_INSTALL,
+  RESIDENCE = data_sel$RESIDENCE,
+  JOB = data_sel$JOB, 
+  RESPONSE = data_sel$RESPONSE
+)
+
+#reordering variable in the dataset
+
+data_scale %<>% 
+  dplyr::select(CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,
+         INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,
+         PRESENT_RESIDENT,PROPERTY,AGE,OTHER_INSTALL,RESIDENCE,NUM_CREDITS,JOB,RESPONSE)
+
+
+p2<- data_scale %>%  
+      tidyr::gather(variable, value, c("DURATION", "AMOUNT", "INSTALL_RATE", 
+                                       "AGE", "NUM_CREDITS")) %>% 
+      ggplot(aes(x = variable, y = value, fill = variable)) + 
+      geom_boxplot() + 
+      theme_bw() +
+      coord_flip()+ 
+      theme(legend.position="bottom")+
+      theme(legend.title = element_blank())
+
+gridExtra::grid.arrange(p1, p2, ncol=2, nrow = 1)
+
+rm(p1, p2)
+
+##################quetion--> it is ok that we have negatives values##################
+
+```
+
+Now that the normalization is done, lets move on by creating a training and test set based on the data.This will be done by dividing it in a randomly selection into the two subsets, with 75% of the data in the training set and the remaining 25% in the test set.
+
+
+```{r test and training sets, warning=FALSE, message=FALSE, echo=FALSE}
+
+#so that we always have the same division
+set.seed(2311)
+
+
+#creation of the index to divide the data in the two subsets
+val_index<-createDataPartition(data_scale$RESPONSE, 
+                               p=0.75, list=FALSE)
+
+#########training dataset
+TrainData<-as.data.frame(data_scale[val_index,])
+
+########test dataset
+TestData <- data_scale[-val_index,]
+
+####################graph############################################
+
+#table for the graph of training and testing
+
+names<- c("Total", "Train", "Test")
+values<- c(999, 750, 249)
+
+p0<- gridExtra::grid.arrange(tableGrob(data.frame(names,values))) 
+
+p1<- ggplot2::ggplot(data=data_scale, aes(x= RESPONSE, fill=RESPONSE)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")
+
+p2<- ggplot2::ggplot(data=TrainData, aes(x= RESPONSE, fill=RESPONSE)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")
+
+p3<- ggplot2::ggplot(data=TestData, aes(x= RESPONSE, fill=RESPONSE)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")
+
+
+grid.arrange(p0, p1, p2, p3, ncol=2)
+
+rm(p1, p0, p2, p3, names, values) #delete variables
+
+######### missing the tittles##################################################
+
+```
+
+As, you can see below the data have the same proportion in the dataset, the training and the testing set. We can now move to the modelization. 
+
+### M1: Logistic regression
+
+\[ Z_{i} = ln(\frac{P_{i}} {1-P_{i}}) = \beta_0+\beta_1X_1+...+\beta_nX_n \]
+
+To do so, we are going follow 6 steps:
+
+1) Fitting the model with no balance data
+2) Prediction
+3) Evaluation of the prediction
+4) Fitting the model with balance data
+5) Prediction
+6) Evaluation of the prediction
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+
+##### Fitting the model
+
+```{r glm-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################vvvv
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+mod_lg_fit <- caret::train(RESPONSE ~ ., TrainData, method="glm", 
+                           family="binomial",trControl= train_params)
+
+################check outputs################################vv
+summary(mod_lg_fit)
+
+
+```
+
+##### Coefficients 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+#########NOT SURE IF THIS IS NECESSARY#######################
+##variable is significance--> high coefficient = bring high information
+
+temp <- summary(mod_lg_fit)$coeff[-1,4] < 0.05
+
+############condition: yes or not#####################################
+
+temp %<>% as.data.frame()  
+
+kable(temp, caption = "Significance of variable")
+
+#remove variable temp
+rm(temp) 
+
+#########################################################################
+
+mod_lg_fit$coefnames
+
+#########################################################################
+
+```
+
+##### Prediction (unbalance)
+
+```{r predictions lg, echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+lg.pred <- predict(mod_lg_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix lg, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(lg.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+#############remove temporary element
+rm(cm)
+
+#### save the variables#######
+
+sens<- caret::sensitivity(table(as.factor(lg.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(lg.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.791
+
+logistic<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+```
+
+##### Fitting the model: balance
+
+```{r glm-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+mod_lg_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="glm", 
+                                  family="binomial", 
+                                  metric = "Sens", #optimize sensitivity
+                                  maximize = TRUE, #maximize the metric
+                                  trControl= train_params)
+
+################check outputs################################vv
+summary(mod_lg_fitbalance)
+
+
+```
+
+##### Prediction
+
+```{r predictions lgb, echo=FALSE, message=FALSE, warning=FALSE}
+#probability given the model
+
+lg.pred.b <- predict(mod_lg_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix lgb, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(lg.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#### save the variables#######
+
+sens.b<- caret::sensitivity(table(as.factor(lg.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(lg.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.671
+
+logistic_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+```
+
+####
+
+
+### M2: Decision trees
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+
+##### Fitting the model
+
+```{r rpart ,echo=FALSE, message=FALSE, warning=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+mod_dt_fit <- caret::train(RESPONSE ~ ., TrainData, method="rpart", 
+                           trControl= train_params)
+
+################check outputs################################vv
+summary(mod_dt_fit$finalModel)
+
+
+```
+
+##### Plot (Unbalance)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
+
+#######plot option 1 #########################
+##plot(mod_dt_fit$finalModel, uniform=TRUE,
+##     main="Classification Tree")
+##text(mod_dt_fit$finalModel, use.n.=TRUE, all=TRUE, cex=.8)
+
+
+#######plot option 2 #########################
+suppressMessages(library(rattle))
+rattle::fancyRpartPlot(mod_dt_fit$finalModel)
+
+
+```
+
+##### Prediction (unbalance)
+
+```{r predictions rpart, echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+dt.pred <- predict(mod_dt_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix rpart, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(dt.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#############Parameters
+
+sens<- caret::sensitivity(table(as.factor(dt.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(dt.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.739
+
+decision_tree<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+```
+
+##### Fitting the model: balance
+
+```{r rpart-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################
+
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+mod_dt_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rpart", 
+                                  metric = "Sens", #optimize sensitivity
+                                  maximize = TRUE, #maximize the metric
+                                  trControl= train_params)
+
+################check outputs################################
+summary(mod_dt_fitbalance$finalModel)
+
+
+```
+
+##### Plot (balance)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
+
+#######plot option 1 #########################
+##plot(mod_dt_fitbalance$finalModel, uniform=TRUE,
+##     main="Classification Tree")
+##text(mod_dt_fitbalance$finalModel, use.n.=TRUE, all=TRUE, cex=.8)
+
+
+#######plot option 2 #########################
+suppressMessages(library(rattle))
+rattle::fancyRpartPlot(mod_dt_fitbalance$finalModel)
+
+
+```
+
+##### Prediction
+
+```{r predictions rpartb, echo=FALSE, message=FALSE, warning=FALSE}
+#probability given the model
+
+dt.pred.b <- predict(mod_dt_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix rpartb, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(dt.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+#############Parameters
+
+sens.b<- caret::sensitivity(table(as.factor(dt.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(dt.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.606
+
+decision_tree_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+```
+
+
+####
+
+
+### M3: Discriminate analysis
+
+#### LDA {.tabset .tabset-fade .tabset-pills}
+
+##### Fitting the model
+
+```{r lda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################vvvv
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+mod_lda_fit <- caret::train(RESPONSE ~ ., TrainData, method="lda", 
+                           family="binomial",trControl= train_params)
+
+################check outputs################################vv
+summary(mod_lda_fit)
+
+
+```
+
+
+##### Prediction (unbalance)
+
+```{r predictions lda, echo=FALSE, message=FALSE, warning=FALSE}
+
+lda.pred <- predict(mod_lda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix lda, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(lda.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+#############
+sens<- caret::sensitivity(table(as.factor(lda.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(lda.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.783
+
+lda<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+```
+
+##### Fitting the model: balance
+
+```{r ldab-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+#########################model######################################
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+
+mod_lda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="lda", 
+                           family="binomial",
+                           metric = "Sens", #optimize sensitivity
+                           maximize = TRUE, #maximize the metric
+                           trControl= train_params)
+
+################check outputs################################vv
+summary(mod_lda_fitbalance)
+
+
+```
+
+
+##### Prediction
+
+```{r predictions ldab, echo=FALSE, message=FALSE, warning=FALSE}
+
+lda.pred.b <- predict(mod_lda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix ldab, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(lda.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#########
+
+sens.b<- caret::sensitivity(table(as.factor(lda.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(lda.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.695
+
+lda_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+```
+
+####
+
+
+
+
+#### QDA {.tabset .tabset-fade .tabset-pills}
+
+##### Fitting the model
+
+```{r qda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################vvvv
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+mod_qda_fit <- caret::train(RESPONSE ~ ., TrainData, method="qda", 
+                           family="binomial",trControl= train_params)
+
+################check outputs################################vv
+summary(mod_qda_fit)
+
+
+```
+
+
+##### Prediction (unbalance)
+
+```{r predictions qda, echo=FALSE, message=FALSE, warning=FALSE}
+
+qda.pred <- predict(mod_qda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix qda, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(qda.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#############
+sens<- caret::sensitivity(table(as.factor(qda.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(qda.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.763
+
+qda<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+
+```
+
+##### Fitting the model: balance
+
+```{r qdab-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+#########################model######################################
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+
+mod_qda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="qda", 
+                           family="binomial",
+                           metric = "Sens", #optimize sensitivity
+                           maximize = TRUE, #maximize the metric
+                           trControl= train_params)
+
+################check outputs################################vv
+summary(mod_qda_fitbalance)
+
+
+```
+
+
+##### Prediction
+
+```{r predictions qdab, echo=FALSE, message=FALSE, warning=FALSE}
+
+qda.pred.b <- predict(mod_qda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix qdab, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(qda.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+#########
+
+sens.b<- caret::sensitivity(table(as.factor(qda.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(qda.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.679
+
+qda_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+
+```
+
+####
+
+
+
+
+#### FDA {.tabset .tabset-fade .tabset-pills}
+
+##### Fitting the model
+
+```{r fda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################vvvv
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+
+library(earth)
+mod_fda_fit <- caret::train(RESPONSE ~ ., TrainData, method="fda", 
+                              trControl= train_params)
+
+################check outputs################################vv
+summary(mod_fda_fit)
+
+
+```
+
+
+##### Prediction (unbalance)
+
+```{r predictions fda, echo=FALSE, message=FALSE, warning=FALSE}
+
+fda.pred <- predict(mod_fda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix fda, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(fda.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#############
+sens<- caret::sensitivity(table(as.factor(fda.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(fda.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.759
+
+fda<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+```
+
+##### Fitting the model: balance
+
+```{r fdab-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+#########################model######################################
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+mod_fda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="fda", 
+                                   metric = "Sens", #optimize sensitivity
+                                    maximize = TRUE,
+                                    trControl= train_params)
+
+################check outputs################################vv
+summary(mod_fda_fitbalance)
+
+
+```
+
+
+##### Prediction
+
+```{r predictions fdab, echo=FALSE, message=FALSE, warning=FALSE}
+
+fda.pred.b <- predict(mod_fda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix fdab, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(fda.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#####################
+
+sens.b<- caret::sensitivity(table(as.factor(fda.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(fda.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.598
+
+fda_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+
+```
+
+####
+
+
+
+
+
+#### MDA {.tabset .tabset-fade .tabset-pills}
+
+##### Fitting the model
+
+```{r mda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################vvvv
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+mod_mda_fit <- caret::train(RESPONSE ~ ., TrainData, method="mda", 
+                           family="binomial",trControl= train_params)
+
+################check outputs################################vv
+summary(mod_mda_fit)
+
+
+```
+
+
+##### Prediction (unbalance)
+
+```{r predictions mda, echo=FALSE, message=FALSE, warning=FALSE}
+
+mda.pred <- predict(mod_mda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix mda, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(mda.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+#############remove temporary element
+sens<- caret::sensitivity(table(as.factor(mda.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(mda.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.739
+
+mda<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+```
+
+##### Fitting the model: balance
+
+```{r mdab-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+#########################model######################################
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+mod_mda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="mda", 
+                           family="binomial",
+                           metric = "Sens", #optimize sensitivity
+                           maximize = TRUE,
+                           trControl= train_params)
+
+################check outputs################################vv
+summary(mod_mda_fitbalance)
+
+
+```
+
+
+##### Prediction
+
+```{r predictions mdab, echo=FALSE, message=FALSE, warning=FALSE}
+
+mda.pred.b <- predict(mod_mda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix mdab, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(mda.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#########
+
+sens.b<- caret::sensitivity(table(as.factor(mda.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(mda.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.675
+
+mda_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+```
+
+####
+
+
+
+### M4: Random Forest
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+
+##### Fitting the model
+
+```{r rf-model, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################vvvv
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+mod_rf_fit <- caret::train(RESPONSE ~ ., TrainData, method="rf", 
+                           trControl= train_params)
+
+################check outputs################################vv
+summary(mod_rf_fit)
+
+
+```
+
+##### Prediction (unbalance)
+
+```{r predictions rf, echo=FALSE, message=FALSE, warning=FALSE}
+
+rf.pred <- predict(mod_rf_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix rf, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(rf.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+############
+sens<- caret::sensitivity(table(as.factor(rf.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(rf.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.747
+
+rf<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+```
+
+##### Fitting the model: balance
+
+```{r rfb-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+mod_rf_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rf", 
+                           family="binomial",
+                           metric = "Sens", #optimize sensitivity
+                           maximize = TRUE,
+                           trControl= train_params)
+
+################check outputs################################vv
+summary(mod_rf_fitbalance)
+
+
+```
+
+
+##### Prediction
+
+```{r predictions rfb, echo=FALSE, message=FALSE, warning=FALSE}
+
+rf.pred.b <- predict(mod_rf_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix mdab, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(rf.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+######################
+
+sens.b<- caret::sensitivity(table(as.factor(rf.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(rf.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.651
+
+rf_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+
+```
+
+####
+
+
+
+
+
+### M5: Neural Networks
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+##### Fitting the model
+
+```{r nn-model, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Same division
+set.seed(1234)
+
+#########################model######################################vvvv
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+mod_nn_fit <- caret::train(RESPONSE ~ ., TrainData, method="nnet", 
+                           trControl= train_params)
+
+################check outputs################################
+
+#summary(mod_nn_fit) #this is very long
+
+```
+
+##### plot
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=2}
+
+library(nnet)
+NeuralNetTools::plotnet(mod_nn_fit$finalModel, y_names = "yes/no")
+title("Graphical Representation of our Neural Network")
+
+
+```
+
+##### Prediction (unbalance)
+
+```{r predictions nn, echo=FALSE, message=FALSE, warning=FALSE}
+
+nn.pred <- predict(mod_nn_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix nn, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(nn.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+#############
+
+sens<- caret::sensitivity(table(as.factor(nn.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(nn.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.763
+
+nn<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+```
+
+##### Fitting the model: balance
+
+```{r nnb-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+mod_nn_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="nnet", 
+                           family="binomial",
+                           metric = "Sens", #optimize sensitivity
+                           maximize = TRUE,
+                           trControl= train_params)
+
+################check outputs################################
+summary(mod_nn_fitbalance)
+
+
+```
+
+
+##### Prediction
+
+```{r predictions nnb, echo=FALSE, message=FALSE, warning=FALSE}
+
+nn.pred.b <- predict(mod_nn_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix nnb, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(nn.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+######################
+
+sens.b<- caret::sensitivity(table(as.factor(nn.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(nn.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.679
+
+nn_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+
+```
+
+####
+
+
+
+### M6: XGBoost
+
+#### {.tabset .tabset-fade .tabset-pills}
+
+
+##### Fitting the model
+
+```{r xgb-model, echo=FALSE, message=FALSE, warning=FALSE}
+
+######################### transform data ############
+data_xgboost <- map_df(data_scale, function(columna) {
+                  columna %>% 
+                  as.factor() %>% 
+                  as.numeric %>% 
+                  { . - 1 } })
+
+test_xgboost <- sample_frac(data_xgboost, size = 0.249)
+train_xgboost <- setdiff(data_xgboost, test_xgboost)
+
+
+#Convertir a DMatrix
+
+train_xgb_matrix <-   train_xgboost %>% 
+                            dplyr::select(- RESPONSE) %>% 
+                            as.matrix() %>% 
+                            xgboost::xgb.DMatrix(data = ., label = train_xgboost$RESPONSE)
+#Convertir a DMatrix
+
+test_xgb_matrix <-  test_xgboost %>% 
+                            dplyr::select(- RESPONSE) %>% 
+                            as.matrix() %>% 
+                            xgboost::xgb.DMatrix(data = ., label = test_xgboost$RESPONSE)
+
+#Same division
+set.seed(1234)
+
+#########################model######################################
+train_params <- trainControl(method = "repeatedcv", 
+                             number = 10, # with n folds 
+                             repeats=5) #K-Fold Cross Validation
+
+mod_xgb_fit <- caret::train(RESPONSE ~ ., TrainData, 
+                           method="xgbTree", 
+                           trControl= train_params)
+
+################check outputs################################vv
+summary(mod_xgb_fit)
+
+```
+
+##### plot
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+mod_xgb_fit$bestTune
+
+
+```
+
+##### Prediction (unbalance)
+
+```{r predictions xgb, echo=FALSE, message=FALSE, warning=FALSE}
+
+xgb.pred <- predict(mod_xgb_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (Unbalance)
+
+```{r confusion matrix xgb, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(xgb.pred), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+######################
+
+sens<- caret::sensitivity(table(as.factor(xgb.pred), as.factor(TestData$RESPONSE)))
+sp<- caret::specificity(table(as.factor(xgb.pred), as.factor(TestData$RESPONSE)))
+acc<- 0.743
+
+xgb<- c(sens , sp, acc)
+
+#############remove temporary element
+rm(cm, sens, sp, acc)
+
+
+```
+
+##### Fitting the model: balance
+
+```{r xgbb-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
+                                    repeats=5, sampling = "down", 
+                                    summaryFunction = twoClassSummary)
+
+mod_xgb_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="xgbTree", 
+                            metric = "Sens", #optimize sensitivity
+                           maximize = TRUE,
+                           trControl= train_params)
+
+################check outputs################################
+summary(mod_xgb_fitbalance)
+
+
+```
+
+
+##### Prediction
+
+```{r predictions xgbb, echo=FALSE, message=FALSE, warning=FALSE}
+
+xgb.pred.b <- predict(mod_xgb_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+
+```
+
+##### Diagnosis (balance)
+
+```{r confusion matrix xgbb, echo=FALSE, message=FALSE, warning=FALSE}
+
+#############confusion matrix 
+cm <- confusionMatrix(as.factor(xgb.pred.b), as.factor(TestData$RESPONSE))
+############draw of confusion matrix
+draw_confusion_matrix(cm)
+
+######################
+
+sens.b<- caret::sensitivity(table(as.factor(xgb.pred.b), as.factor(TestData$RESPONSE)))
+sp.b<- caret::specificity(table(as.factor(xgb.pred.b), as.factor(TestData$RESPONSE)))
+acc.b<- 0.723
+
+xgb_balance<- c(sens.b , sp.b, acc.b)
+
+#############remove temporary element
+rm(cm, sens.b, sp.b, acc.b)
+
+
+```
+
+####
+
+
+
+
+
+## Assess model
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+Details<- c("Sensitivity", "Specificity", "Accuracy")
+summary_table<- data.frame(Details, logistic, logistic_balance, 
+                           decision_tree, decision_tree_balance,
+                           lda, lda_balance, 
+                           qda, qda_balance,
+                           fda, fda_balance, 
+                           mda, mda_balance,
+                           rf, rf_balance,
+                           nn, nn_balance,
+                           xgb, xgb_balance)
+                           
+
+summary_table<-data.frame(t(summary_table[-1]))                           
+names(summary_table) <- c("Sensitivity", "Specificity", "Accuracy")                          
+                           
+summary_table
+
+```
+
+
