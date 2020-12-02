@@ -58,21 +58,16 @@ draw_confusion_matrix <- function(cm) {
 
 The modelling technique that we will be using are the following:
 
-------> it is still not finish <------------ 
+| n° | Model        |  Definition                                                       | 
+|:--:|:-------------|:------------------------------------------------------------------|   
+| 1  | Logistic <br /> regression   | > Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, although many more complex extensions exist. In regression analysis, logistic regression (or logit regression) is estimating the parameters of a logistic model (a form of binary regression). <br /> (https://en.wikipedia.org/wiki/Logistic_regression) |
+| 2  | Decision <br /> trees        | > A decision tree is a decision support tool that uses a tree-like model of decisions and their possible consequences, including chance event outcomes, resource costs, and utility. It is one way to display an algorithm that only contains conditional control statements.<br /> (https://en.wikipedia.org/wiki/Decision_tree) |
+| 3  | Discriminate <br /> analysis |  > Discriminant analysis is statistical technique used to classify observations into non-overlapping groups, based on scores on one or more quantitative predictor variables.<br /> (https://stattrek.com/multiple-regression/discriminant-analysis.aspx)|
+| 4  | Random <br /> forest | > Random forests or random decision forests are an ensemble learning method for classification, regression and other tasks that operate by constructing a multitude of decision trees at training time and outputting the class that is the mode of the classes (classification) or mean/average prediction (regression) of the individual trees. <br /> (https://en.wikipedia.org/wiki/Random_forest)|
+| 5  | Neural <br /> network| > A neural network is a network or circuit of neurons, or in a modern sense, an artificial neural network, composed of artificial neurons or nodes. <br /> (https://en.wikipedia.org/wiki/Neural_network)  |
+| 6  | XGBoost              | > XGBoost is an implementation of gradient boosted decision trees designed for speed and performance. <br /> (https://machinelearningmastery.com/gentle-introduction-xgboost-applied-machine-learning/)|
 
-
-| n° | Model        |  Definition | 
-|:--:|:-------------|:--------------|   
-| 1  | Logistic <br /> regression   | > Logistic regression is a statistical model that in its basic form uses a logistic function to model a binary dependent variable, although many more complex extensions exist. In regression analysis, logistic regression (or logit regression) is estimating the parameters of a logistic model (a form of binary regression). 
-(https://en.wikipedia.org/wiki/Logistic_regression) |
-| 2  | Decision <br /> trees        |   |
-| 3  | Discriminate <br /> analysis |   |
-| 4  | Random <br /> forest         |   |
-| 5  | Neural <br /> network        |   |
-| 6  | XGBoost                      |   |
-
-
-In order to compare the 6 models show before applying the CAREt library.
+In order to compare the 6 models shown above, we will mainly use the *CARET package* for each algorithm. 
 
 ## Generate test design 
 
@@ -80,30 +75,34 @@ $$H_ {0}$$: The $Model_n$ give the best accuracy and sensitivity.
 
 $$H_ {1}$$: It do not give the best values. 
 
-Where $n= (1,2,3,4,5,6)$ and represent each model choosen in the selection technique section.
+Where $n= (1,2,3,4,5,6)$ and it represent each listed model in the selection technique part.
 
 
 ## Build model
 
-Firstly, we need to standardize the data, as the variables have different scales. We will normalize only the continuous variables, as the categorical and dummy variables have only few different levels.  
+To be able to generate the model, first, we need to standardize the data, as the variables have different scales. Nevertheless, We will normalize only the continuous variables, as the categorical and dummy variables have only few different levels.  
 
 ```{r scaling, warning=FALSE, message=FALSE, echo=FALSE}
 
 #selecting only the continuous variables to scale them
 
 p1<- data_sel %>%  
-      tidyr::gather(variable, value, c("DURATION", "AMOUNT", "INSTALL_RATE", 
-                                       "AGE", "NUM_CREDITS")) %>% 
+      tidyr::gather(variable, value, c("DURATION", "AMOUNT",  #we do not include age
+                                       "INSTALL_RATE","NUM_CREDITS")) %>% 
       ggplot(aes(x = variable, y = value, fill = variable)) + 
       geom_boxplot() +
       theme_bw() +
       coord_flip()+
       theme(legend.position="none")+
-      theme(legend.title = element_blank())
+      theme(legend.title = element_blank()) + 
+      theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+      labs(title = "Non-standardized variables",  
+           x = "Variables", y = "Value (units)")
       
       
 data_scale <- data_sel %>% 
-                dplyr::select(DURATION, AMOUNT, INSTALL_RATE, AGE, NUM_CREDITS) %>% 
+                dplyr::select(DURATION, AMOUNT, #we eliminate AGE as well 
+                              INSTALL_RATE, NUM_CREDITS) %>% 
                 scale() %>%  #normalization
                 as.data.frame()
 
@@ -128,23 +127,26 @@ data_scale %<>% mutate(
   RESPONSE = data_sel$RESPONSE
 )
 
-#reordering variable in the dataset
+#reordering variable in the dataset- we do not include the not selected variables
 
 data_scale %<>% 
   dplyr::select(CHK_ACCT,DURATION,HISTORY,PURPOSE,AMOUNT,SAV_ACCT,EMPLOYMENT,
-         INSTALL_RATE,SEX_MALE,MALE_SINGLE,MALE_MAR_WID,CO_APPLICANT,GUARANTOR,
-         PRESENT_RESIDENT,PROPERTY,AGE,OTHER_INSTALL,RESIDENCE,NUM_CREDITS,JOB,RESPONSE)
+         INSTALL_RATE, MALE_SINGLE,GUARANTOR,
+         PROPERTY,OTHER_INSTALL,RESIDENCE,NUM_CREDITS, RESPONSE) #TELEPHONE
 
 
 p2<- data_scale %>%  
-      tidyr::gather(variable, value, c("DURATION", "AMOUNT", "INSTALL_RATE", 
-                                       "AGE", "NUM_CREDITS")) %>% 
+      tidyr::gather(variable, value, c("DURATION", "AMOUNT", 
+                                       "INSTALL_RATE", "NUM_CREDITS")) %>% 
       ggplot(aes(x = variable, y = value, fill = variable)) + 
       geom_boxplot() + 
       theme_bw() +
       coord_flip()+ 
       theme(legend.position="bottom")+
-      theme(legend.title = element_blank())
+      theme(legend.title = element_blank())+ 
+      theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+      labs(title = "Standardized variables",  
+           x = "Variables", y = "Value (units)")
 
 gridExtra::grid.arrange(p1, p2, ncol=2, nrow = 1)
 
@@ -154,8 +156,7 @@ rm(p1, p2)
 
 ```
 
-Now that the normalization is done, lets move on by creating a training and test set based on the data.This will be done by dividing it in a randomly selection into the two subsets, with 75% of the data in the training set and the remaining 25% in the test set.
-
+Now that the normalization is done, lets move on by creation of the training and test set based on the data.This will be done by dividing it in a randomly selection into the two subsets, with 75% of the data in the training set and the remaining 25% in the test set.
 
 ```{r test and training sets, warning=FALSE, message=FALSE, echo=FALSE}
 
@@ -177,76 +178,102 @@ TestData <- data_scale[-val_index,]
 
 #table for the graph of training and testing
 
-names<- c("Total", "Train", "Test")
-values<- c(999, 750, 249)
+Data_set<- c("Total", "Training", "Test")
+Number_of_obs<- c(999, 750, 249)
 
-p0<- gridExtra::grid.arrange(tableGrob(data.frame(names,values))) 
+p0<- gridExtra::grid.arrange(tableGrob(data.frame(Data_set,Number_of_obs))) 
 
 p1<- ggplot2::ggplot(data=data_scale, aes(x= RESPONSE, fill=RESPONSE)) +
         geom_bar(aes(y = (..count..)/sum(..count..)))+
         scale_y_continuous(labels=scales::percent) +
-        ylab("Freq")
+        ylab("Freq")+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio- Data 100%",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
 
 p2<- ggplot2::ggplot(data=TrainData, aes(x= RESPONSE, fill=RESPONSE)) +
         geom_bar(aes(y = (..count..)/sum(..count..)))+
         scale_y_continuous(labels=scales::percent) +
-        ylab("Freq")
+        ylab("Freq")+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio- Data 75%",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
 
 p3<- ggplot2::ggplot(data=TestData, aes(x= RESPONSE, fill=RESPONSE)) +
         geom_bar(aes(y = (..count..)/sum(..count..)))+
         scale_y_continuous(labels=scales::percent) +
-        ylab("Freq")
+        ylab("Freq")+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio- Data 25%",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
 
 
 grid.arrange(p0, p1, p2, p3, ncol=2)
 
-rm(p1, p0, p2, p3, names, values) #delete variables
+rm(p1, p0, p2, p3, Data_set, Number_of_obs) #delete variables
 
 ######### missing the tittles##################################################
 
 ```
 
-As, you can see below the data have the same proportion in the dataset, the training and the testing set. We can now move to the modelization. 
+As you can see above, the data have the same proportion in the dataset, the training and the testing set, in all of them the dependent variable is biased since it shows a greater tendency for a positive response, for this reason we will evaluate two fits for each algorithm, one with the skewed data and the other with the balance of it. Finally, for being able to compare within them we are going to compute the confussion matrix which include the following information: 
+
+- \[ Accuracy = \frac{TruePositive+TrueNegative} {TruePositive+TrueNegative+FalsePositive+FalseNegative}\] , 
+- \[ Sensitivity = \frac{TruePositive} {TruePositive+FalseNegative}\]
+-\[ Specifity = \frac{TrueNegative} {TrueNegative+FalsePositive}\]
+
+In short words, the sensitivity measure the true positive rate which is key for this project, since a false positive has a negative impact on our main objective because it would increase the risk of not being able to make agreed payments. Meaning that, in addition to balancing the data, we will focus the second model on **maximizing sensitivity**.
 
 ### M1: Logistic regression
 
+The general equation for the model is:
+
 \[ Z_{i} = ln(\frac{P_{i}} {1-P_{i}}) = \beta_0+\beta_1X_1+...+\beta_nX_n \]
 
-To do so, we are going follow 6 steps:
+For the application of the algorithm we will apply the following steps:
 
-1) Fitting the model with no balance data
-2) Prediction
-3) Evaluation of the prediction
-4) Fitting the model with balance data
-5) Prediction
-6) Evaluation of the prediction
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data   | As we see earlier the output variable is unbalance. We are going to evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 1) Fit the model. <br /> 2) Coefficient analysis <br /> 3) Predict . <br /> 4)Confusion matrix .| 
+| Balanced data | In this step, we are going to balance the data with the *training.control* function and, then, we will evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 5) Fit the model. <br /> 6) Predict <br /> 7)Confusion matrix |
 
 #### {.tabset .tabset-fade .tabset-pills}
 
 
-##### Fitting the model
+##### 1) Fitting the model
 
-```{r glm-model, echo=FALSE, warning=FALSE, message=FALSE}
+```{r glm-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 #Same division
 set.seed(1234)
 
-#########################model######################################vvvv
-train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+#########################model######################################
+
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) 
+#10-Fold Cross Validation   #5 repetitions
+
 mod_lg_fit <- caret::train(RESPONSE ~ ., TrainData, method="glm", 
                            family="binomial",trControl= train_params)
 
-################check outputs################################vv
+```
+
+```{r summary glm-model, echo=FALSE, warning=FALSE, message=FALSE}
+
+################check outputs################################
 summary(mod_lg_fit)
 
 
 ```
 
-##### Coefficients 
+In this step, we can see that the variables that take the highest importance and that are statistically significant for the model are: the second and third level of `CHK_ACC`, `DURATION`, the fourth level of `HISTORY`,the first level of `PURPOSE`, `AMOUNT`,the fourth level of `SAV_ACCT` and the third level of `EMPLOYMENT` and the first level of `OTHER_INSTALL`.
+
+##### 2) Coefficients 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
-#########NOT SURE IF THIS IS NECESSARY#######################
 ##variable is significance--> high coefficient = bring high information
 
 temp <- summary(mod_lg_fit)$coeff[-1,4] < 0.05
@@ -255,29 +282,68 @@ temp <- summary(mod_lg_fit)$coeff[-1,4] < 0.05
 
 temp %<>% as.data.frame()  
 
-kable(temp, caption = "Significance of variable")
+kableExtra::kable(temp, caption = "Significance of variable")%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 #remove variable temp
 rm(temp) 
 
 #########################################################################
 
-mod_lg_fit$coefnames
+#mod_lg_fit$coefnames
 
 #########################################################################
 
 ```
 
-##### Prediction (unbalance)
+If we look at the coeffiecient of the different variables we can conclude that, among the significant one that we described before, `CHK_ACCT`, `HISTORY` (all but the first level), `SAV_ACCT`, `EMPLOYMENT` and `MALE_SINGLE`, have a positive impact on the output, meaning that the higher is their level or if they are positive, the probability of having `RESPONSE` = 1 will increase. 
 
-```{r predictions lg, echo=FALSE, message=FALSE, warning=FALSE}
+On the other hand, among the significant variables, `DURATION`, `PURPOSE` (all but level two and four), `AMOUNT` and `OTHER_INSTALL` have a negative effect on the output, meaning that if they increase their level or value, or if they have a positive value (for the dummies), the probability of having a positive response will decrease.
+
+The linear predictor is given by 
+$$ \eta  = - 0.9 + 0.3 * CHKACCT_1 + 1.2 * CHKACCT_2  + 1.7 * CHKACCT_3 - 0.3 * DURATION - 0.4 * HISTORY_1 + 0.5 * HISTORY_2 +  0.7 * HISTORY_3 + 1.4 * HISTORY_4 - 0.9 * PURPOSE_1 + 0.8 * PURPOSE_2 - 0.08 * PURPOSE_3 + 0.05 * PURPOSE_4 - 0.7 * PURPOSE_5 - 0.08 * PURPOSE_6 - 0.3 * AMOUNT - 0.5 * SAVACCT_1 + 0.2 * SAVACCT_2 + 0.7 * SAVACCT_3 + 1.3 * SAVACCT_4 + 0.25 * EMPLOYMENT_1 + * 0.6 EMPLOYMENT_2 + 1.1 * EMPLOYMENT_3 + 0.7 * EMPLOYMENT_4 - 0.4 * INSTALLRATE + 0.5 * MALESINGLE_1 + 0.9 * GUARANTOR_1 + 0.06 * PROPERTY_1 - 0.5 * PROPERTY_2 - 0.6 * OTHERINSTALL_1 - 0.8 * RESIDENCE_1 - 0.3 * RESIDENCE_2 - 0.1 * NUMCREDITS + 0.4426 * TELEPHONE_1 $$
+
+To be clear, if for example the purpose variable takes value 3, only the coefficient of PURPOSE_3 will be added to the others. The same goes for each other categorical variable. For the dummies the coefficient is added only if the value is equal to 1 for the variable, otherwise no. While for the continuous variables the coefficient is multiplied by the value is recorded in the observation.
+
+##### 3) Prediction (unbalance)
+
+Now we will get the predictions using this model. To being able to do it, we will start by getting the probabilities of the output given the coefficients we have found by fitting the model, then we will use a cut point of 0.5 to decide whether the value will be equal to 1 (if the probability it higher than 0.5) or 0 (otherwise).
+The model basically fit the information of the new observation in the function that is given above, and then it finds a value *eta* that is then used to get the prediction of the probability of the output by doint p = 1 / (1 + eta). We use this probability to determine whether the prediciton will by 1 or 0, by taking a cut point of 0.5.
+
+```{r predictions lg, echo=TRUE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 lg.pred <- predict(mod_lg_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
+
 ```
 
-##### Diagnosis (Unbalance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+
+plot_pred_unbalance <- as.data.frame(as.vector(lg.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio- testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")+
+        theme_bw()
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+
+##### 4) Diagnosis (Unbalance)
 
 ```{r confusion matrix lg, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -285,14 +351,12 @@ lg.pred <- predict(mod_lg_fit, newdata = TestData)  #predict give me the probabi
 cm <- confusionMatrix(as.factor(lg.pred), as.factor(TestData$RESPONSE))
 ############draw of confusion matrix
 draw_confusion_matrix(cm)
-#############remove temporary element
-rm(cm)
 
 #### save the variables#######
 
 sens<- caret::sensitivity(table(as.factor(lg.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(lg.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.791
+acc<- cm$overall["Accuracy"]
 
 logistic<- c(sens , sp, acc)
 
@@ -301,9 +365,9 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+##### 5) Fitting the model: balance
 
-```{r glm-model, echo=FALSE, warning=FALSE, message=FALSE}
+```{r glm-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 #Same division
 set.seed(1234)
@@ -325,16 +389,41 @@ summary(mod_lg_fitbalance)
 
 ```
 
-##### Prediction
+##### 6) Prediction
 
-```{r predictions lgb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r predictions lgb, echo=TRUE, message=FALSE, warning=FALSE}
+
 #probability given the model
-
-lg.pred.b <- predict(mod_lg_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+lg.pred.b <- predict(mod_lg_fitbalance, newdata = TestData)  
 
 ```
 
-##### Diagnosis (balance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(lg.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio- testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")+
+        theme_bw()
+p
+
+rm(plot_pred_balance, p)
+
+```
+
+Contrary to the output of the first model we can see that the proportion of the prediction is better balanced.
+
+##### 7) Diagnosis (balance)
 
 ```{r confusion matrix lgb, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -347,7 +436,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(lg.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(lg.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.671
+acc.b<- cm$overall["Accuracy"]
 
 logistic_balance<- c(sens.b , sp.b, acc.b)
 
@@ -361,54 +450,110 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ### M2: Decision trees
 
+The next image illustrates better the way of working of decision trees.
+
+```{r, echo=FALSE, fig.cap="A caption", out.width = '50%', warning=FALSE, message=FALSE}
+
+library(here)
+library(knitr)
+#we take this picture from here: 
+#https://okanbulut.github.io/bigdata/supervised-machine-learning-part-i.html
+
+knitr::include_graphics(here::here("data/DT.png"))
+
+```
+
+
+The process consist in the minimization of the classification error rate 
+
+\[E=\ 1-max_{k}(p_{mk})\] , where $p_{mk}$ is the proportion of training observation.
+
+
+For the application of the algorithm we will apply the following steps:
+
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data   | As we see earlier the output variable is unbalance. We are going to evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 1) Fit the model. <br /> 2) Plot the best tree <br /> 3) Predict . <br /> 4)Confusion matrix .| 
+| Balanced data | In this step, we are going to balance the data with the *training.control* function and, then, we will evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 5) Fit the model. <br /> 6) Plot the best tree <br /> 6) Predict <br /> 7)Confusion matrix |
+
+
+
 #### {.tabset .tabset-fade .tabset-pills}
 
+##### 1) Fitting the model
 
-##### Fitting the model
+We will start by fitting the model on the data.
 
-```{r rpart ,echo=FALSE, message=FALSE, warning=FALSE}
+```{r rpart ,echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
 
 #########################model######################################
-train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) 
+
+#10-Fold Cross Validation #5 repetions
+
 mod_dt_fit <- caret::train(RESPONSE ~ ., TrainData, method="rpart", 
                            trControl= train_params)
-
-################check outputs################################vv
-summary(mod_dt_fit$finalModel)
 
 
 ```
 
-##### Plot (Unbalance)
+```{r ,echo=FALSE, message=FALSE, warning=FALSE}
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
+################check outputs################################vv
+summary(mod_dt_fit$finalModel$frame)
 
-#######plot option 1 #########################
-##plot(mod_dt_fit$finalModel, uniform=TRUE,
-##     main="Classification Tree")
-##text(mod_dt_fit$finalModel, use.n.=TRUE, all=TRUE, cex=.8)
+```
 
 
-#######plot option 2 #########################
+##### 2) Plot (Unbalance)
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
+
+#######plot #########################
 suppressMessages(library(rattle))
 rattle::fancyRpartPlot(mod_dt_fit$finalModel)
 
 
 ```
 
-##### Prediction (unbalance)
+##### 3) Prediction (unbalance)
 
-```{r predictions rpart, echo=FALSE, message=FALSE, warning=FALSE}
+```{r predictions rpart, echo=TRUE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 dt.pred <- predict(mod_dt_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-##### Diagnosis (Unbalance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(dt.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio DT - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")+
+        theme_bw()
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+The prediction is clearly bias to a positive answer.
+
+##### 4) Diagnosis (Unbalance)
 
 ```{r confusion matrix rpart, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -421,7 +566,7 @@ draw_confusion_matrix(cm)
 
 sens<- caret::sensitivity(table(as.factor(dt.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(dt.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.739
+acc<- cm$overall["Accuracy"]
 
 decision_tree<- c(sens , sp, acc)
 
@@ -431,7 +576,9 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+We can see that here the sensitivity is really low, while the specificity is higher, reaching a value above 92%, which is in any case the one in which we are the most interested. The accuracy is around 74%. Here, in 30 cases in which the model should have given a negative value, it actually predicted a positive one, and it could cost quite a lot to the company. 
+
+##### 5) Fitting the model: balance
 
 ```{r rpart-model, echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -449,15 +596,18 @@ mod_dt_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rpart",
                                   maximize = TRUE, #maximize the metric
                                   trControl= train_params)
 
-################check outputs################################
-summary(mod_dt_fitbalance$finalModel)
+```
 
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+
+################check outputs################################
+summary(mod_dt_fitbalance$finalModel$frame)
 
 ```
 
-##### Plot (balance)
+##### 6) Plot (balance)
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 #######plot option 1 #########################
 ##plot(mod_dt_fitbalance$finalModel, uniform=TRUE,
@@ -472,7 +622,7 @@ rattle::fancyRpartPlot(mod_dt_fitbalance$finalModel)
 
 ```
 
-##### Prediction
+##### 7) Prediction
 
 ```{r predictions rpartb, echo=FALSE, message=FALSE, warning=FALSE}
 #probability given the model
@@ -481,7 +631,32 @@ dt.pred.b <- predict(mod_dt_fitbalance, newdata = TestData)  #predict give me th
 
 ```
 
-##### Diagnosis (balance)
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(dt.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio DT - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")+
+        theme_bw()
+p
+
+rm(plot_pred_balance, p)
+
+```
+
+
+##### 8) Diagnosis (balance)
 
 ```{r confusion matrix rpartb, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -493,7 +668,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(dt.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(dt.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.606
+acc.b<- cm$overall["Accuracy"]
 
 decision_tree_balance<- c(sens.b , sp.b, acc.b)
 
@@ -503,42 +678,114 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
+We can see that here the sensitivity have been improve, however the specificity is lower, reaching a value above 55%, which is in any case the one in which we are the most interested. The accuracy is around 60%. 
 
 ####
 
 
 ### M3: Discriminate analysis
 
-#### LDA {.tabset .tabset-fade .tabset-pills}
+There are four types of discriminate analysis, we will explain them in the following table:
 
-##### Fitting the model
 
-```{r lda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+| n° | Model  |  Definition                                                       | 
+|:--:|:-------|:------------------------------------------------------------------|   
+| 1  |  LDA   | > Linear discriminant analysis (LDA), normal discriminant analysis (NDA), or discriminant function analysis is a generalization of Fisher's linear discriminant, a method used in statistics and other fields, to find a linear combination of features that characterizes or separates two or more classes of objects or events. <br /> (https://en.wikipedia.org/wiki/Linear_discriminant_analysis) |
+| 2  | QDA   | >This method assume that the measurements from each class are normally distributed, but there is not assumption saying that the covariance of each of the classes is identical.When the normality assumption is true, the best possible test for the hypothesis that a given measurement is from a given class is the likelihood ratio test.<br /> (https://en.wikipedia.org/wiki/Quadratic_classifier) |
+| 3  | FDA   |  > It analyzes data providing information about curves, surfaces or anything else varying over a continuum. In its most general form, under an FDA framework each sample element is considered to be a function.<br /> (https://en.wikipedia.org/wiki/Functional_data_analysis)|
+| 4  | MDA   | > It is a multivariate dimensionality reduction technique. It has been used to predict signals as diverse as neural memory traces and corporate failure. <br /> (https://en.wikipedia.org/wiki/Multiple_discriminant_analysis)|
+
+The next image illustrates better the way of working for each model.
+
+```{r, echo=FALSE, out.width = '50%', warning=FALSE, message=FALSE}
+
+library(here)
+library(knitr)
+#we take this picture from here: 
+#http://www.sthda.com/english/articles/36-classification-methods-essentials/146-discriminant-analysis-essentials-in-r/
+
+knitr::include_graphics(here::here("data/LDA-QDA-MDA.png"))
+
+```
+
+
+#### Linear Discriminant Analysis {.tabset .tabset-fade .tabset-pills}
+
+Steps for the aplication of the algorithm:
+
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+
+
+##### 1) Fitting the model
+
+```{r lda-model ,echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
 
 #########################model######################################vvvv
-train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+train_params <- caret::trainControl(method = "repeatedcv", number = 10, repeats=5) 
+#K-Fold Cross Validation
 mod_lda_fit <- caret::train(RESPONSE ~ ., TrainData, method="lda", 
                            family="binomial",trControl= train_params)
-
-################check outputs################################vv
-summary(mod_lda_fit)
 
 
 ```
 
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
-##### Prediction (unbalance)
+################check outputs################################vv
+summary(mod_lda_fit)
 
-```{r predictions lda, echo=FALSE, message=FALSE, warning=FALSE}
+```
+
+We can see from the graph that the model seems to be better at predict the positive value as the mean seems to be around the value 1, while for the negative output the mean seems to be a bit lower than 0, which is the value it should take, and it is around -1.
+
+The linear combination of predictor variables that are used to form the decision rule is the following: 
+
+$$ RESPONSE = -0.3265 * DURATION -0.2747 * HISTORY_1 + 0.8792 * HISTORY_2 + 1.1810 * HISTORY_3 + 1.6214 * HISTORY_4 - 0.7437 * PURPOSE_1 + 0.7736 * PURPOSE_2 + 0.0172 * PURPOSE_3 + 0.2035 * PURPOSE_4 - 0.6116 * PURPOSE_5 + 0.1298 * PURPOSE_6 - 0.2579 * AMOUNT + 0.5066 * SAV_ACCT_1 + 0.7517 * SAV_ACCT_2 + 0.7778 * SAV_ACCT_3 + 1.0997 * SAV_ACCT_4 + 0.6175 * EMPLOYMENT_1 + 1.1982 * EMPLOYMENT_2 + 1.4580 * EMPLOYMENT_3 + 1.1806 * EMPLOYMENT_4 - 0.2897 * INSTALL_RATE - 0.5663 * SEX_MALE_1 + 0.9272 * MALE_SINGLE_1 + 0.5183 * MALE_MAR_WID_1 - 0.0863 * CO_APPLICANT_1 + 0.5084 * GUARANTOR_1 - 0.2437 * PRESENT_RESIDENT_-1 - 0.1913 * PRESENT_RESIDENT_0 - 0.0477 * PRESENT_RESIDENT_1 + 0.0367 * PROPERTY_1 - 0.6374 * PROPERTY_2 + 0.0502 * AGE - 0.4501 * OTHER_INSTALL_1 - 0.7509 * RESIDENCE_1 - 0.2185 * RESIDENCE_2 - 0.0703 * NUM_CREDITS - 1.0570 * JOB_1 - 1.0581 * JOB_2 - 0.8362 * JOB_3$$
+
+Each new observation will be evaluated thanks to this formula, with its information put inside of it. It follows the same principle described for the generalized linear model. 
+
+##### 2) Prediction (unbalance)
+
+```{r predictions lda, echo=TRUE, message=FALSE, warning=FALSE}
 
 lda.pred <- predict(mod_lda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-##### Diagnosis (Unbalance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(lda.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio LDA - Testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+
+p
+
+
+rm(plot_pred_unbalance, p)
+
+```
+
+With this graph we confirm the explained in the fit part that the prediction tends to give us a positive response. 
+
+##### 3) Diagnosis (Unbalance)
 
 ```{r confusion matrix lda, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -549,7 +796,7 @@ draw_confusion_matrix(cm)
 #############
 sens<- caret::sensitivity(table(as.factor(lda.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(lda.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.783
+acc<- cm$overall["Accuracy"]
 
 lda<- c(sens , sp, acc)
 
@@ -559,9 +806,11 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+Here the sensitivity is higher with respect to the previous unbalance models (above 40%), but it is still quite low. If we look at the preicision, is quite low, as it is only around 78%. What is important to note is that 22 times in which the model would have predicted a positive value for the output, it should have been negative, which is something that could cost quite a lot to the copmany. 
 
-```{r ldab-model, echo=FALSE, warning=FALSE, message=FALSE}
+##### 4) Fitting the model: balance
+
+```{r ldab-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
@@ -575,6 +824,11 @@ mod_lda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="lda",
                            maximize = TRUE, #maximize the metric
                            trControl= train_params)
 
+
+```
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+
 ################check outputs################################vv
 summary(mod_lda_fitbalance)
 
@@ -582,15 +836,40 @@ summary(mod_lda_fitbalance)
 ```
 
 
-##### Prediction
 
-```{r predictions ldab, echo=FALSE, message=FALSE, warning=FALSE}
+##### 5) Prediction
+
+```{r predictions ldab, echo=TRUE, message=FALSE, warning=FALSE}
 
 lda.pred.b <- predict(mod_lda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-##### Diagnosis (balance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(lda.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio LDA - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_balance, p)
+
+```
+
+
+##### 6) Diagnosis (balance)
 
 ```{r confusion matrix ldab, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -603,7 +882,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(lda.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(lda.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.695
+acc.b<- cm$overall["Accuracy"]
 
 lda_balance<- c(sens.b , sp.b, acc.b)
 
@@ -617,12 +896,18 @@ rm(cm, sens.b, sp.b, acc.b)
 
 
 
+#### Quadratic discriminant analysis {.tabset .tabset-fade .tabset-pills}
 
-#### QDA {.tabset .tabset-fade .tabset-pills}
+Steps for the aplication of the algorithm:
 
-##### Fitting the model
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
 
-```{r qda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+##### 1) Fitting the model
+
+```{r qda-model ,echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -632,22 +917,52 @@ train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-F
 mod_qda_fit <- caret::train(RESPONSE ~ ., TrainData, method="qda", 
                            family="binomial",trControl= train_params)
 
-################check outputs################################vv
+```
+
+```{r ,echo=FALSE, message=FALSE, warning=FALSE}
+
+################check outputs################################
 summary(mod_qda_fit)
 
 
 ```
 
 
-##### Prediction (unbalance)
+##### 2) Prediction (unbalance)
 
 ```{r predictions qda, echo=FALSE, message=FALSE, warning=FALSE}
 
-qda.pred <- predict(mod_qda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+qda.pred <- predict(mod_qda_fit, newdata = TestData)
 
 ```
 
-##### Diagnosis (Unbalance)
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(qda.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio QDA - testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+Here, it seems still that the majority of the false prediction are in the positive level, however they seem less than before.
+
+##### 3) Diagnosis (Unbalance)
 
 ```{r confusion matrix qda, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -659,7 +974,7 @@ draw_confusion_matrix(cm)
 #############
 sens<- caret::sensitivity(table(as.factor(qda.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(qda.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.763
+acc<- cm$overall["Accuracy"]
 
 qda<- c(sens , sp, acc)
 
@@ -670,7 +985,9 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+As we predicted, the model performs a little bit worse than the LDA, but for the sensitivity, which is the highest up to now (over 50%), is still quite low, though. The specificity is moderately high (above 85%) as it is the accuracy (above 70%). As we want to have a value for the false positive low, the 35 here is still quite high.
+
+##### 4) Fitting the model: balance
 
 ```{r qdab-model, echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -685,23 +1002,41 @@ mod_qda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="qda",
                            metric = "Sens", #optimize sensitivity
                            maximize = TRUE, #maximize the metric
                            trControl= train_params)
-
-################check outputs################################vv
-summary(mod_qda_fitbalance)
-
-
 ```
 
 
-##### Prediction
+##### 5) Prediction
 
-```{r predictions qdab, echo=FALSE, message=FALSE, warning=FALSE}
+```{r predictions qdab, echo=TRUE, message=FALSE, warning=FALSE}
 
-qda.pred.b <- predict(mod_qda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+qda.pred.b <- predict(mod_qda_fitbalance, newdata = TestData)  
 
 ```
 
-##### Diagnosis (balance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(qda.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio QDA - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_balance, p)
+
+```
+
+##### 6) Diagnosis (balance)
 
 ```{r confusion matrix qdab, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -713,7 +1048,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(qda.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(qda.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.679
+acc.b<- cm$overall["Accuracy"]
 
 qda_balance<- c(sens.b , sp.b, acc.b)
 
@@ -727,13 +1062,18 @@ rm(cm, sens.b, sp.b, acc.b)
 ####
 
 
+#### Functional data analysis (FDA) {.tabset .tabset-fade .tabset-pills}
 
+Steps for the aplication of the algorithm:
 
-#### FDA {.tabset .tabset-fade .tabset-pills}
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
 
-##### Fitting the model
+##### 1) Fitting the model
 
-```{r fda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+```{r fda-model ,echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -745,22 +1085,52 @@ library(earth)
 mod_fda_fit <- caret::train(RESPONSE ~ ., TrainData, method="fda", 
                               trControl= train_params)
 
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
 ################check outputs################################vv
-summary(mod_fda_fit)
+mod_fda_fit
 
 
 ```
 
+Here we see that this model has only one dimensino that, obviously, explains the 100% of the between group variance. We expect that it will perfom poorly in the predicitons.
 
-##### Prediction (unbalance)
 
-```{r predictions fda, echo=FALSE, message=FALSE, warning=FALSE}
+##### 2) Prediction (unbalance)
 
-fda.pred <- predict(mod_fda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+```{r predictions fda, echo=TRUE, message=FALSE, warning=FALSE}
+
+fda.pred <- predict(mod_fda_fit, newdata = TestData)  
 
 ```
 
-##### Diagnosis (Unbalance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(fda.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio FDA - testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+
+##### 3) Diagnosis (Unbalance)
 
 ```{r confusion matrix fda, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -772,7 +1142,7 @@ draw_confusion_matrix(cm)
 #############
 sens<- caret::sensitivity(table(as.factor(fda.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(fda.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.759
+acc<- cm$overall["Accuracy"]
 
 fda<- c(sens , sp, acc)
 
@@ -782,9 +1152,11 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+Contrary to what it is expected, this model has a sensitivity of almost 55%, among one of the highest up to now, and the specificity is higher than 85%. The accuracy is around 76%. The false positive observations are 36.
 
-```{r fdab-model, echo=FALSE, warning=FALSE, message=FALSE}
+##### 4) Fitting the model: balance
+
+```{r fdab-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
@@ -796,6 +1168,10 @@ mod_fda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="fda",
                                     maximize = TRUE,
                                     trControl= train_params)
 
+```
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+
 ################check outputs################################vv
 summary(mod_fda_fitbalance)
 
@@ -803,15 +1179,41 @@ summary(mod_fda_fitbalance)
 ```
 
 
-##### Prediction
+##### 5) Prediction
 
-```{r predictions fdab, echo=FALSE, message=FALSE, warning=FALSE}
+Using the model we get the prediction for the `RESPONSE` variable and we can construct the confidence matrix for this case.
+
+```{r predictions fdab, echo=TRUE, message=FALSE, warning=FALSE}
 
 fda.pred.b <- predict(mod_fda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-##### Diagnosis (balance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(fda.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio FDA - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_balance, p)
+
+```
+
+
+##### 6) Diagnosis (balance)
 
 ```{r confusion matrix fdab, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -824,7 +1226,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(fda.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(fda.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.598
+acc.b<- cm$overall["Accuracy"]
 
 fda_balance<- c(sens.b , sp.b, acc.b)
 
@@ -841,11 +1243,18 @@ rm(cm, sens.b, sp.b, acc.b)
 
 
 
-#### MDA {.tabset .tabset-fade .tabset-pills}
+#### Mixture discriminant analysis (MDA) {.tabset .tabset-fade .tabset-pills}
 
-##### Fitting the model
+Steps for the aplication of the algorithm:
 
-```{r mda-model ,echo=FALSE, message=FALSE, warning=FALSE}
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+
+##### 1) Fitting the model
+
+```{r mda-model ,echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -855,22 +1264,54 @@ train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-F
 mod_mda_fit <- caret::train(RESPONSE ~ ., TrainData, method="mda", 
                            family="binomial",trControl= train_params)
 
+
+```
+
+
+```{r ,echo=FALSE, message=FALSE, warning=FALSE}
+
+
 ################check outputs################################vv
 summary(mod_mda_fit)
 
 
 ```
 
+The summary gives the percentage of the variance that there is inside the different groups that has been created (which in this case are 3), and we can see that the vast majority of the variance is explained thanks to the first three groups (reaching more than 90%), but we could also be satisfied only considering the first two groups (as they each almost 80% of the variance explained).
 
-##### Prediction (unbalance)
+##### 2) Prediction (unbalance)
 
-```{r predictions mda, echo=FALSE, message=FALSE, warning=FALSE}
+```{r predictions mda, echo=TRUE, message=FALSE, warning=FALSE}
 
-mda.pred <- predict(mod_mda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+mda.pred <- predict(mod_mda_fit, newdata = TestData)  
 
 ```
 
-##### Diagnosis (Unbalance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(mda.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio MDA - testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+
+##### 3) Diagnosis (Unbalance)
 
 ```{r confusion matrix mda, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -881,7 +1322,7 @@ draw_confusion_matrix(cm)
 #############remove temporary element
 sens<- caret::sensitivity(table(as.factor(mda.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(mda.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.739
+acc<- cm$overall["Accuracy"]
 
 mda<- c(sens , sp, acc)
 
@@ -891,9 +1332,11 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+The sensitivity in this case is around 55%, while the specificity is higher, reaching almost 85%. The accurary is around 75%. 
 
-```{r mdab-model, echo=FALSE, warning=FALSE, message=FALSE}
+##### 4) Fitting the model: balance
+
+```{r mdab-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
@@ -906,22 +1349,52 @@ mod_mda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="mda",
                            maximize = TRUE,
                            trControl= train_params)
 
-################check outputs################################vv
-summary(mod_mda_fitbalance)
-
 
 ```
 
 
-##### Prediction
 
-```{r predictions mdab, echo=FALSE, message=FALSE, warning=FALSE}
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+
+################check outputs################################vv
+mod_mda_fitbalance
+
+```
+
+
+##### 5) Prediction
+
+```{r predictions mdab, echo=TRUE, message=FALSE, warning=FALSE}
 
 mda.pred.b <- predict(mod_mda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-##### Diagnosis (balance)
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(mda.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio MDA - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_balance, p)
+
+```
+
+
+##### 6) Diagnosis (balance)
 
 ```{r confusion matrix mdab, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -934,7 +1407,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(mda.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(mda.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.675
+acc.b<- cm$overall["Accuracy"]
 
 mda_balance<- c(sens.b , sp.b, acc.b)
 
@@ -950,12 +1423,19 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ### M4: Random Forest
 
+
+Steps for the aplication of the algorithm:
+
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data |  1) Fit the model. <br /> 2)Checking Variables. <br /> 3) Predict . <br /> 4)Confusion matrix .| 
+| Balanced data   | 5) Fit the model. <br /> 6) Predict <br /> 7)Confusion matrix |
+
 #### {.tabset .tabset-fade .tabset-pills}
 
+##### 1) Fitting the model
 
-##### Fitting the model
-
-```{r rf-model, echo=FALSE, message=FALSE, warning=FALSE}
+```{r rf-model, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -965,13 +1445,53 @@ train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-F
 mod_rf_fit <- caret::train(RESPONSE ~ ., TrainData, method="rf", 
                            trControl= train_params)
 
+```
+
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
 ################check outputs################################vv
-summary(mod_rf_fit)
+print(mod_rf_fit)
 
 
 ```
 
-##### Prediction (unbalance)
+
+##### 2) Checking Variables
+
+```{r echo=FALSE, fig.asp=1.5, echo=}
+#Variable importance analysis
+
+rf.fit <- randomForest::randomForest(RESPONSE ~., 
+                       TrainData, 
+                       ntree = 500, 
+                       mtry = 4, 
+                       importance = TRUE, 
+                       replace = FALSE)
+
+randomForest::importance(rf.fit) 
+randomForest::varImpPlot(rf.fit, main ='Variable Importance')
+
+#two criteria: MeanDecreaseAccuracy (rough estimate of the loss in prediction performance when that particular variable is omitted from the training set) and Mean Decrease Gini (GINI is a measure of node impurity, highest purity means that each node contains only elements of a single class. Assessing the decrease in GINI when that feature is omitted leads to an understanding of how important that feature is to split the data correctly)
+
+```
+
+
+The summary of the models gives the decrease in accuracy and the decrease of the gini index for each variable in the model, along with the number of trees that are built (500 in our case), the number of variabes that are randomly chones to be tried at each split before choosing which one is the best one to describe the node. Moreover, we can already find the confusion matrix (we will show it better again afterwards to keep the coherence of the analysis throuhgout all the models), with the class errorand the Out-Of-Bag estimate of the error rate. 
+
+Let's give some definitions to be clearer:
+
+> Variable importance is the mean decrease of accuracy over all out-of-bag cross validated predictions, when a given variable is permuted after training, but before prediction.
+
+> GINI importance measures the average gain of purity by splits of a given variable. If the variable is useful, it tends to split mixed labeled nodes into pure single class nodes. Splitting by a permuted variables tend neither to increase nor decrease node purities. 
+
+source:https://stats.stackexchange.com/questions/197827/how-to-interpret-mean-decrease-in-accuracy-and-mean-decrease-gini-in-random-fore
+
+> Out-of-bag (OOB) error, also called out-of-bag estimate, is a method of measuring the prediction error of random forests, boosted decision trees, and other machine learning models utilizing bootstrap aggregating (bagging) to sub-sample data samples used for training. OOB is the mean prediction error on each training sample xᵢ, using only the trees that did not have xᵢ in their bootstrap sample.
+source: https://en.wikipedia.org/wiki/Out-of-bag_error
+
+
+##### 3) Prediction (unbalance)
 
 ```{r predictions rf, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -979,7 +1499,33 @@ rf.pred <- predict(mod_rf_fit, newdata = TestData)  #predict give me the probabi
 
 ```
 
-##### Diagnosis (Unbalance)
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(rf.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio Random Forest - testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+
+
+##### 4) Diagnosis (Unbalance)
 
 ```{r confusion matrix rf, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -990,7 +1536,7 @@ draw_confusion_matrix(cm)
 ############
 sens<- caret::sensitivity(table(as.factor(rf.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(rf.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.747
+acc<- cm$overall["Accuracy"]
 
 rf<- c(sens , sp, acc)
 
@@ -1000,9 +1546,11 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+Here the sensitivity is around 46%, the specificity is high (more than 87%) and the accuracy is aroun 75%, while the number of false positive is the highest, having 36 observations.
 
-```{r rfb-model, echo=FALSE, warning=FALSE, message=FALSE}
+##### 5) Fitting the model: balance
+
+```{r rfb-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
                                     repeats=5, sampling = "down", 
@@ -1014,22 +1562,49 @@ mod_rf_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rf",
                            maximize = TRUE,
                            trControl= train_params)
 
+```
+
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+
 ################check outputs################################vv
-summary(mod_rf_fitbalance)
+print(mod_rf_fitbalance)
 
+```
+
+##### 6) Prediction
+
+```{r predictions rfb, echo=TRUE, message=FALSE, warning=FALSE}
+
+rf.pred.b <- predict(mod_rf_fitbalance, newdata = TestData)  
+
+```
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(rf.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio Random Forest - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_balance, p)
 
 ```
 
 
-##### Prediction
-
-```{r predictions rfb, echo=FALSE, message=FALSE, warning=FALSE}
-
-rf.pred.b <- predict(mod_rf_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
-
-```
-
-##### Diagnosis (balance)
+##### 7) Diagnosis (balance)
 
 ```{r confusion matrix mdab, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1041,7 +1616,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(rf.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(rf.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.651
+acc.b<- cm$overall["Accuracy"]
 
 rf_balance<- c(sens.b , sp.b, acc.b)
 
@@ -1057,30 +1632,42 @@ rm(cm, sens.b, sp.b, acc.b)
 
 
 
-
 ### M5: Neural Networks
+
+Steps for the aplication of the algorithm:
+
+| Data set        | Steps                                                        | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data |  1) Fit the model. <br /> 2) Plot <br /> 3) Predict . <br /> 4)Confusion matrix .| 
+| Balanced data   | 5) Fit the model. <br /> 6) Plot<br /> 7) Predict <br /> 8)Confusion matrix |
 
 #### {.tabset .tabset-fade .tabset-pills}
 
-##### Fitting the model
+##### 1) Fitting the model
 
-```{r nn-model, echo=FALSE, message=FALSE, warning=FALSE}
+```{r nn-model, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
 
-#########################model######################################vvvv
-train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-Fold Cross Validation
+#########################model######################################
+train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) 
 mod_nn_fit <- caret::train(RESPONSE ~ ., TrainData, method="nnet", 
                            trControl= train_params)
 
+```
+
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
 ################check outputs################################
 
-#summary(mod_nn_fit) #this is very long
+print(mod_nn_fit)
 
 ```
 
-##### plot
+
+##### 2) Plot
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=2}
 
@@ -1091,15 +1678,40 @@ title("Graphical Representation of our Neural Network")
 
 ```
 
-##### Prediction (unbalance)
+##### 3) Prediction (unbalance)
 
-```{r predictions nn, echo=FALSE, message=FALSE, warning=FALSE}
+```{r predictions nn, echo=TRUE, message=FALSE, warning=FALSE}
 
-nn.pred <- predict(mod_nn_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+nn.pred <- predict(mod_nn_fit, newdata = TestData)  
 
 ```
 
-##### Diagnosis (Unbalance)
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(nn.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio NN - testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+
+##### 4) Diagnosis (Unbalance)
 
 ```{r confusion matrix nn, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1112,7 +1724,7 @@ draw_confusion_matrix(cm)
 
 sens<- caret::sensitivity(table(as.factor(nn.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(nn.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.763
+acc<- cm$overall["Accuracy"]
 
 nn<- c(sens , sp, acc)
 
@@ -1122,9 +1734,9 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+##### 5) Fitting the model: balance
 
-```{r nnb-model, echo=FALSE, warning=FALSE, message=FALSE}
+```{r nnb-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
                                     repeats=5, sampling = "down", 
@@ -1136,22 +1748,53 @@ mod_nn_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="nnet",
                            maximize = TRUE,
                            trControl= train_params)
 
+
+```
+
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+
 ################check outputs################################
-summary(mod_nn_fitbalance)
+print(mod_nn_fitbalance)
 
 
 ```
 
 
-##### Prediction
+##### 6) Prediction
 
 ```{r predictions nnb, echo=FALSE, message=FALSE, warning=FALSE}
 
-nn.pred.b <- predict(mod_nn_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+nn.pred.b <- predict(mod_nn_fitbalance, newdata = TestData)  
 
 ```
 
-##### Diagnosis (balance)
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(nn.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio NN - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_balance, p)
+
+```
+
+
+##### 7) Diagnosis (balance)
 
 ```{r confusion matrix nnb, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1164,14 +1807,12 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(nn.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(nn.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.679
+acc.b<- cm$overall["Accuracy"]
 
 nn_balance<- c(sens.b , sp.b, acc.b)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
-
-
 
 ```
 
@@ -1181,19 +1822,29 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ### M6: XGBoost
 
+
+Steps for the aplication of the algorithm:
+
+| Data set        | Steps                                                       | 
+| :--------------:|:-------------------------------------------------------------|
+| Unbalanced data |  1) Fit the model. <br /> 2) Plot  <br /> 3) Predict . <br /> 3)Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+
+
 #### {.tabset .tabset-fade .tabset-pills}
 
 
-##### Fitting the model
+##### 1) Fitting the model
 
-```{r xgb-model, echo=FALSE, message=FALSE, warning=FALSE}
+```{r xgb-model, echo=TRUE, message=FALSE, warning=FALSE}
 
+library(dplyr)
 ######################### transform data ############
-data_xgboost <- map_df(data_scale, function(columna) {
-                  columna %>% 
-                  as.factor() %>% 
-                  as.numeric %>% 
-                  { . - 1 } })
+data_xgboost <- purrr::map_df(data_scale, function(columna) {
+                          columna %>% 
+                          as.factor() %>% 
+                          as.numeric %>% 
+                          { . - 1 } })
 
 test_xgboost <- sample_frac(data_xgboost, size = 0.249)
 train_xgboost <- setdiff(data_xgboost, test_xgboost)
@@ -1216,7 +1867,7 @@ test_xgb_matrix <-  test_xgboost %>%
 set.seed(1234)
 
 #########################model######################################
-train_params <- trainControl(method = "repeatedcv", 
+train_params <- caret::trainControl(method = "repeatedcv", 
                              number = 10, # with n folds 
                              repeats=5) #K-Fold Cross Validation
 
@@ -1224,12 +1875,18 @@ mod_xgb_fit <- caret::train(RESPONSE ~ ., TrainData,
                            method="xgbTree", 
                            trControl= train_params)
 
-################check outputs################################vv
-summary(mod_xgb_fit)
 
 ```
 
-##### plot
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+################check outputs################################vv
+print(mod_xgb_fit)
+
+```
+
+
+##### 2) Plot
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1238,15 +1895,39 @@ mod_xgb_fit$bestTune
 
 ```
 
-##### Prediction (unbalance)
+##### 3) Prediction (unbalance)
 
-```{r predictions xgb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r predictions xgb, echo=TRUE, message=FALSE, warning=FALSE}
 
-xgb.pred <- predict(mod_xgb_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+xgb.pred <- predict(mod_xgb_fit, newdata = TestData)  
 
 ```
 
-##### Diagnosis (Unbalance)
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_unbalance <- as.data.frame(as.vector(xgb.pred))
+names(plot_pred_unbalance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_unbalance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio XGB - testing unbalance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_unbalance, p)
+
+```
+
+##### 4)  Diagnosis (Unbalance)
 
 ```{r confusion matrix xgb, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1259,7 +1940,7 @@ draw_confusion_matrix(cm)
 
 sens<- caret::sensitivity(table(as.factor(xgb.pred), as.factor(TestData$RESPONSE)))
 sp<- caret::specificity(table(as.factor(xgb.pred), as.factor(TestData$RESPONSE)))
-acc<- 0.743
+acc<- cm$overall["Accuracy"]
 
 xgb<- c(sens , sp, acc)
 
@@ -1269,9 +1950,9 @@ rm(cm, sens, sp, acc)
 
 ```
 
-##### Fitting the model: balance
+##### 5) Fitting the model: balance
 
-```{r xgbb-model, echo=FALSE, warning=FALSE, message=FALSE}
+```{r xgbb-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
                                     repeats=5, sampling = "down", 
@@ -1282,18 +1963,46 @@ mod_xgb_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="xgbTree",
                            maximize = TRUE,
                            trControl= train_params)
 
-################check outputs################################
-summary(mod_xgb_fitbalance)
 
+```
+
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+
+################check outputs################################
+print(mod_xgb_fitbalance)
 
 ```
 
 
 ##### Prediction
 
-```{r predictions xgbb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r predictions xgbb, echo=TRUE, message=FALSE, warning=FALSE}
 
-xgb.pred.b <- predict(mod_xgb_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
+xgb.pred.b <- predict(mod_xgb_fitbalance, newdata = TestData) 
+
+```
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+#prediction given the model
+plot_pred_balance <- as.data.frame(as.vector(xgb.pred.b))
+names(plot_pred_balance)<- c("predictions")
+
+#table for the graph of training and testing
+
+p<- ggplot2::ggplot(data=plot_pred_balance, aes(x= predictions, fill=predictions)) +
+        geom_bar(aes(y = (..count..)/sum(..count..)))+
+        scale_y_continuous(labels=scales::percent) +
+        ylab("Freq")+
+        theme_bw()+
+        theme(legend.title = element_blank()) + 
+        theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+        labs(title = "Response Ratio XGB - testing balance",  
+           x = "Response [no=0 /yes=1]", y = "Frequency (%)")
+p
+
+rm(plot_pred_balance, p)
 
 ```
 
@@ -1310,7 +2019,7 @@ draw_confusion_matrix(cm)
 
 sens.b<- caret::sensitivity(table(as.factor(xgb.pred.b), as.factor(TestData$RESPONSE)))
 sp.b<- caret::specificity(table(as.factor(xgb.pred.b), as.factor(TestData$RESPONSE)))
-acc.b<- 0.723
+acc.b<- cm$overall["Accuracy"]
 
 xgb_balance<- c(sens.b , sp.b, acc.b)
 
@@ -1345,7 +2054,9 @@ summary_table<- data.frame(Details, logistic, logistic_balance,
 summary_table<-data.frame(t(summary_table[-1]))                           
 names(summary_table) <- c("Sensitivity", "Specificity", "Accuracy")                          
                            
-summary_table
+kableExtra::kable(summary_table, caption = "Summary table for assess the model")%>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
 
 ```
 

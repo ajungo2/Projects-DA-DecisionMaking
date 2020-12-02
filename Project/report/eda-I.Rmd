@@ -274,6 +274,8 @@ a<- plot_missing(data[,-32], title ="XXXX",
 #inspect_na(data[,-32])
 inspect_types(data[,-32])
 
+#delete variables
+rm(a,model1, x, i, n.complete, n.missing, nrows)
 
 ```
 
