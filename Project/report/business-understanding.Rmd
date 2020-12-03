@@ -9,11 +9,19 @@ In general, the banking business have two main goals:
 - The first, to offer variety of products or services that answers to individual and business customers needs; 
 - The second, and the one most important for this project, collect payments from the products provided to their clients with the goal of generating incomes for shareholders.
 
-Both objectives generate an organic balance operation between the customers needs and the gains that the company requires for its operations. However, in this analysis we will focus on dimishinig the risk of the second goal. In other words, we are looking for a good model to forecast which client will have a higher risk of not paying back a credit that has been granted to them. 
+Both objectives generate an organic balance operation between the customers needs and the gains that the company requires for its operations. However, in this analysis, we will focus on dimishinig the risk linked to the second goal. In other words, we are looking for a good model to forecast which client will have a higher risk of not being able to pay back a credit that has been granted to them. 
+
+Our main goal will be to try to minimize the losses that are given by the sum of the amounts of credit that are given to the people that are perdicted to be positive (hence being eligible for a credit) but that should actually be negative, as they determine a risk for the company of not being able to pay back the amount they received.  
+
+We want to achieve the goal of having the losses being smaller than the 10% of the total amount of the credit that would be granted to the customers.
+
+> Goal: Losses < 10% amount of credit
+
+We will determine it by considering that the company will grant a credit only to those who have a good credit score, and it will not otherwise. 
 
 ```{r, echo=FALSE, fig.cap="A caption", out.width = '50%'}
 
-#we take this picture from here: 
+#we took this picture from here: 
 #https://grupoasal.es/la-poliza-de-credito-para-el-anticipo-de-facturas/
 
 knitr::include_graphics(here::here("data/GoalCredit.jpg"))

@@ -295,13 +295,13 @@ In addition, we are going to anaylise if the agregation mentioned in the boxplot
 
 First, we establish the hypotheses:
 
-$$H_ {0}$$: The `REAL_ESTATE` and `PROP_UNKN_NONE` are independent variables.
+H0: The `REAL_ESTATE` and `PROP_UNKN_NONE` are independent variables.
 
 against the bilateral alternative: 
 
-$$H_ {1}$$: They are not independent.
+H1: They are not independent.
 
-For the $X^2$ test to be valid, the following conditions must be true:
+For the chi-squared test to be valid, the following conditions must be true:
 
 1) The sampling method is random
 2) The variables considered are categorical
@@ -316,11 +316,11 @@ Finally, we are going to accept or reject the hypotheses checking the p-value. I
 
 First, we stablish the hypotheses:
 
-$$H_ {0}$$: The `RENT` and `OWN_RES` are independent variables.
+H0: The `RENT` and `OWN_RES` are independent variables.
 
 against the bilateral alternative: 
 
-$$H_ {1}$$: They are not independent.
+H1: They are not independent.
 
 Then we move on with the same process that we mentioned above.
 
