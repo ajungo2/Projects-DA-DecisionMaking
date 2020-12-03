@@ -711,7 +711,7 @@ There are four types of discriminate analysis, we will explain them in the follo
 
 The next image illustrates better the way of working for each model.
 
-```{r, echo=FALSE, out.width = '50%', warning=FALSE, message=FALSE}
+```{r, echo=FALSE,  paged.print=FALSE, out.width = '70%', warning=FALSE, message=FALSE}
 
 library(here)
 library(knitr)
@@ -731,6 +731,7 @@ Steps for the aplication of the algorithm:
 | :--------------:|:-------------------------------------------------------------|
 | Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
 | Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+
 
 #### Unbalanced {.tabset .tabset-fade .tabset-pills}
 
