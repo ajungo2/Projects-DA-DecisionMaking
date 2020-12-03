@@ -312,7 +312,7 @@ $$ \eta  = - 0.9 + 0.3 * CHKACCT_1 + 1.2 * CHKACCT_2  + 1.7 * CHKACCT_3 - 0.3 * 
 
 To be clear, if for example the purpose variable takes value 3, only the coefficient of PURPOSE_3 will be added to the others. The same goes for each other categorical variable. For the dummies the coefficient is added only if the value is equal to 1 for the variable, otherwise no. While for the continuous variables the coefficient is multiplied by the value is recorded in the observation.
 
-##### 3) Prediction (unbalance)
+##### 3) Prediction 
 
 Now we will get the predictions using this model. To being able to do it, we will start by getting the probabilities of the output given the coefficients we have found by fitting the model, then we will use a cut point of 0.5 to decide whether the value will be equal to 1 (if the probability it higher than 0.5) or 0 (otherwise).
 The model basically fit the information of the new observation in the function that is given above, and then it finds a value *eta* that is then used to get the prediction of the probability of the output by doint p = 1 / (1 + eta). We use this probability to determine whether the prediciton will by 1 or 0, by taking a cut point of 0.5.
@@ -350,7 +350,7 @@ rm(plot_pred_unbalance, p)
 ```
 
 
-##### 4) Diagnosis (Unbalance)
+##### 4) Diagnosis 
 
 ```{r confusion matrix lg, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -376,7 +376,7 @@ rm(cm, sens, sp, acc)
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 5) Fitting the model: balance
+##### 5) Fitting the model
 
 ```{r glmb-model, echo=TRUE, warning=FALSE, message=FALSE}
 
@@ -433,7 +433,7 @@ rm(plot_pred_balance, p)
 
 Contrary to the output of the first model we can see that the proportion of the prediction is better balanced.
 
-##### 7) Diagnosis (balance)
+##### 7) Diagnosis
 
 ```{r confusion matrix lgb, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -462,7 +462,7 @@ rm(cm, sens.b, sp.b, acc.b)
 
 The next image illustrates better the way of working of decision trees.
 
-```{r, echo=FALSE, fig.cap="A caption", out.width = '50%', warning=FALSE, message=FALSE}
+```{r, echo=FALSE, fig.cap="A caption", out.width = '100%', warning=FALSE, message=FALSE}
 
 library(here)
 library(knitr)
@@ -473,10 +473,9 @@ knitr::include_graphics(here::here("data/DT.png"))
 
 ```
 
-
 The process consist in the minimization of the classification error rate 
 
-\[E=\ 1-max_{k}(p_{mk})\] , where $p_{mk}$ is the proportion of training observation.
+\[E=\ 1-max_{k}(p_{mk})\] where $p_{mk}$ is the proportion of training observation.
 
 
 For the application of the algorithm we will apply the following steps:
@@ -488,7 +487,7 @@ For the application of the algorithm we will apply the following steps:
 
 
 
-#### UnBalanced Data {.tabset .tabset-fade .tabset-pills}
+#### Unbalanced Data {.tabset .tabset-fade .tabset-pills}
 
 ##### 1) Fitting the model
 
@@ -518,7 +517,7 @@ summary(mod_dt_fit$finalModel$frame)
 ```
 
 
-##### 2) Plot (Unbalance)
+##### 2) Plot 
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
 
@@ -529,7 +528,7 @@ rattle::fancyRpartPlot(mod_dt_fit$finalModel)
 
 ```
 
-##### 3) Prediction (unbalance)
+##### 3) Prediction 
 
 ```{r predictions rpart, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -563,7 +562,7 @@ rm(plot_pred_unbalance, p)
 
 The prediction is clearly bias to a positive answer.
 
-##### 4) Diagnosis (Unbalance)
+##### 4) Diagnosis 
 
 ```{r confusion matrix rpart, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -592,9 +591,9 @@ We can see that here the sensitivity is really low, while the specificity is hig
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 5) Fitting the model: balance
+##### 5) Fitting the model
 
-```{r rpart-model, echo=FALSE, warning=FALSE, message=FALSE}
+```{r rpart-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 #Same division
 set.seed(1234)
@@ -619,7 +618,7 @@ summary(mod_dt_fitbalance$finalModel$frame)
 
 ```
 
-##### 6) Plot (balance)
+##### 6) Plot
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -670,7 +669,7 @@ rm(plot_pred_balance, p)
 ```
 
 
-##### 8) Diagnosis (balance)
+##### 8) Diagnosis 
 
 ```{r confusion matrix rpartb, echo=FALSE, message=FALSE, warning=FALSE}
 
