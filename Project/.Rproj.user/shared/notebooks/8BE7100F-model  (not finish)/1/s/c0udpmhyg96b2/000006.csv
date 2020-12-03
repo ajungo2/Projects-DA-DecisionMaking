@@ -1,0 +1,13 @@
+"0","summary_table<- data.frame(Details, logistic, logistic_balance, 
+                           decision_tree, decision_tree_balance,
+                           lda, lda_balance, 
+                           qda, qda_balance,
+                           fda, fda_balance, 
+                           mda, mda_balance,
+                           rf, rf_balance,
+                           nn, nn_balance,
+                           xgb, xgb_balance)
+"
+"2","Error in data.frame(Details, logistic, logistic_balance, decision_tree,  : 
+  object 'logistic_balance' not found
+"

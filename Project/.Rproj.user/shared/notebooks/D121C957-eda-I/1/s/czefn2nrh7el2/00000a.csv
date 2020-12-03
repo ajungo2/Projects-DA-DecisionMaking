@@ -1,0 +1,7 @@
+"0","data %>% "
+"0","  ggplot(aes(x = RESPONSE)) + "
+"0","  geom_bar(aes(fill = factor(RESPONSE))) + "
+"0","  labs(color = """", fill = """", x = ""RESPONSE"", y = ""count"", "
+"0","       title = ""Output Variable"") + "
+"0","    geom_label(stat = 'count', aes(label =..count..)) +"
+"0","  theme_bw()"

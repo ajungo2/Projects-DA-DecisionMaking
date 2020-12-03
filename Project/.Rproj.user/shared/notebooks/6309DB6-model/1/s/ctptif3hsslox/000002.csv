@@ -1,0 +1,4 @@
+"0","#building the confusion matrix for the lda "
+"0","cm <- confusionMatrix(as.factor(lda.class), as.factor(TestData$RESPONSE))"
+"0","#drawinf the cf "
+"0","draw_confusion_matrix(cm)"

@@ -1,0 +1,3 @@
+"0","data %<>% "
+"0","  mutate(RESIDENCE = as.factor(ifelse(RENT == 1, 1, "
+"0","                                      ifelse(OWN_RES == 1, 2, 0))))"

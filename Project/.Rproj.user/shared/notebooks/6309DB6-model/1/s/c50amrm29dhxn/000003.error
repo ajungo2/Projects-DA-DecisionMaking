@@ -1,0 +1,1 @@
+{"frames":[{"character_number":0,"end_character_number":0,"end_line_number":0,"file":"","func":"NeuralNetTools::plotnet(nn.fit$finalModel, y_names = \"yes/no\")","line_number":0}],"message":"Error in NeuralNetTools::plotnet(nn.fit$finalModel, y_names = \"yes/no\") : \n  object 'nn.fit' not found\n"}

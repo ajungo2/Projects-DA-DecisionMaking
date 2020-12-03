@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "--- \ntitle: \"Project....\"\nauthor: \"Maura, Rollini and Andrea, Jungo\"\ndate: \"`r format(Sys.time(), '%d %B, %Y')`\"\nsite: bookdown::bookdown_site\noutput: bookdown::html_document2\ndocumentclass: book\nbibliography: [references.bib, packages.bib]\nbiblio-style: apalike\n\nlink-citations: yes\n---\n\n# Basic instructions\n\nFor this assignment, we will work with real data that include observations with historical credit applicants who is rated as **Good** or **Bad** credit (encoded as 1 and 0 respectively in the response variable). The goal is obtain a model that may be used to determine if new applicants present a good or bad credit risk.\nFor being able to do so, We will apply the CRISP-DM model and communicate the results in this report.\n\nThere are a few milestones for our final project:\n\n\n| Date       | Assignment    |\n| :--------- |:-------------:|\n| December 18| Report        |\n| December 18| Presentation  |\n\n",
+    "created" : 1605717192296.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4209923056",
+    "id" : "B3F354DB",
+    "lastKnownWriteTime" : 1605717154,
+    "last_content_update" : 1605717154,
+    "path" : "~/Desktop/-/Uni/Third Semester/Projects in Data Analytics for Decision Making/Project/Projects-DA-DecisionMaking/Project/index.Rmd",
+    "project_path" : "index.Rmd",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

@@ -1,0 +1,4 @@
+"0","#confusion matrix of the basic model"
+"0","cm <- confusionMatrix(ct.pred, TestData$RESPONSE)"
+"0","#drawing cm for basic model"
+"0","draw_confusion_matrix(cm)"

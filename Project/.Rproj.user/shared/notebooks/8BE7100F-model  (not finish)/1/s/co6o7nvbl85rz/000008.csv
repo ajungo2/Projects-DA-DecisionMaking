@@ -1,0 +1,7 @@
+"0","#### save the variables#######"
+"0","sens.b<- caret::sensitivity(table(as.factor(lg.pred.b), as.factor(TestData$RESPONSE)))"
+"0","sp.b<- caret::specificity(table(as.factor(lg.pred.b), as.factor(TestData$RESPONSE)))"
+"0","acc.b<- 0.671"
+"0","logistic_balance<- c(sens.b , sp.b, acc.b)"
+"0","#############remove temporary element"
+"0","rm(cm, sens.b, sp.b, acc.b)"

@@ -1,0 +1,1 @@
+"0","xgb.pred.b <- predict(mod_xgb_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer"

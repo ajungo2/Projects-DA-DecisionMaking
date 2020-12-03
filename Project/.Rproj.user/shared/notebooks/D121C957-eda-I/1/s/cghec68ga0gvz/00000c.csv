@@ -1,0 +1,7 @@
+"0","#summarydata<- dfSummary(data, plain.ascii = FALSE, "
+"0","#                        style = 'grid', graph.magnif = 0.75,"
+"0","#                        valid.col = FALSE, tmp.img.dir = ""/tmp"")"
+"0","# summarydata<- print(dfSummary(data, valid.col = FALSE, "
+"0","                              # graph.magnif = 0.75),       "
+"0","                              # max.tbl.height = 300, method = ""render"")"
+"0","# summarydata"

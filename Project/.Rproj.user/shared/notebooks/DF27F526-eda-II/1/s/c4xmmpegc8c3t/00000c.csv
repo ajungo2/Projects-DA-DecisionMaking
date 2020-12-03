@@ -1,0 +1,2 @@
+"0","data %>% "
+"0","  ggplot(aes(RESPONSE)) + geom_bar(aes(fill = RESIDENCE), position = ""dodge"") + scale_fill_discrete(name = ""RESIDENCE"", labels = c(""OTHER"", ""RENT"", ""OWN_RES""))"

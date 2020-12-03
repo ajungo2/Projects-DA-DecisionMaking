@@ -1,0 +1,7 @@
+"0","library(here)"
+"2","here() starts at /Users/Maura/Desktop/-/Uni/Third Semester/Projects in Data Analytics for Decision Making/Project/Projects-DA-DecisionMaking/Project
+"
+"0","library(knitr)"
+"0","#we take this picture from here: "
+"0","#https://medium.com/@akanesen/how-to-manage-machine-learning-deep-learning-project-51f9b0fe164f"
+"0","knitr::include_graphics(here::here(""data/CRISP-DM.png""))"

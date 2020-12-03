@@ -1,0 +1,3 @@
+"0","#Inspect the NA values"
+"0","#inspect_na(data[,-32])"
+"0","inspect_types(data[,-32])"

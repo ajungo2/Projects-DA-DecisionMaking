@@ -1,0 +1,3 @@
+"0","data %<>% "
+"0","  mutate(PROPERTY = as.factor(ifelse(REAL_ESTATE == 1, 1, "
+"0","                                     ifelse(PROP_UNKN_NONE == 1, 2, 0))))"

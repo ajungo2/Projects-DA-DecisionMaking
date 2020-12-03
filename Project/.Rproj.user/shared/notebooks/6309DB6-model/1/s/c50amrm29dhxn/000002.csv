@@ -1,0 +1,5 @@
+"0","NeuralNetTools::plotnet(nn.fit$finalModel, y_names = ""yes/no"")
+"
+"2","Error in NeuralNetTools::plotnet(nn.fit$finalModel, y_names = ""yes/no"") : 
+  object 'nn.fit' not found
+"

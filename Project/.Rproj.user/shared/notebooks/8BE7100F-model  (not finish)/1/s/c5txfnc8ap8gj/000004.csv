@@ -1,0 +1,7 @@
+"0","#############"
+"0","sens<- caret::sensitivity(table(as.factor(nn.pred), as.factor(TestData$RESPONSE)))"
+"0","sp<- caret::specificity(table(as.factor(nn.pred), as.factor(TestData$RESPONSE)))"
+"0","acc<- 0.763"
+"0","nn<- c(sens , sp, acc)"
+"0","#############remove temporary element"
+"0","rm(cm, sens, sp, acc)"

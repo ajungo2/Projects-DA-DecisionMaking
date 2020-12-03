@@ -1,0 +1,8 @@
+"0","data %>% "
+"0","  ggplot(aes(RESPONSE)) + "
+"0","  geom_bar(aes(fill = factor(PURPOSE)), position = ""dodge"") + "
+"0","  labs(x = ""RESPONSE"", y = ""count"") +  "
+"0","  scale_fill_discrete(name = ""PURPOSE"", "
+"0","                      labels = c(""OTHER"", ""NEW_CAR"", ""USED_CAR"", ""FURNITURE"", "
+"0","                                 ""RADIO/TV"", ""EDUCATION"", ""RETRAINING"")) + "
+"0","  theme_bw()"

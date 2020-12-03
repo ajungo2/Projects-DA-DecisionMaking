@@ -1,0 +1,4 @@
+"0","#############confusion matrix "
+"0","cm <- confusionMatrix(as.factor(qda.pred), as.factor(TestData$RESPONSE))"
+"0","############draw of confusion matrix"
+"0","draw_confusion_matrix(cm)"

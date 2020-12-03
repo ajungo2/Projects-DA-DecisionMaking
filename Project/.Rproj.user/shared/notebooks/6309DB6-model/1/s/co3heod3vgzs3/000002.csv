@@ -1,0 +1,4 @@
+"0","#build cm for rf "
+"0","cm <- confusionMatrix(as.factor(rf.pred), as.factor(TestData$RESPONSE))"
+"0","#draw the cm"
+"0","draw_confusion_matrix(cm)"
