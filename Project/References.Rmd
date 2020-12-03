@@ -1,0 +1,12 @@
+---
+output: html_document
+---
+
+# References
+
+
+*Classification and Regression Training: CARET R documentation https://www.rdocumentation.org/packages/caret/versions/6.0-86*
+
+*Xie, A. Y. J. J. (2020, April 26). R Markdown: The Definitive Guide. Retrieved from https://bookdown.org/yihui/rmarkdown/*
+
+*Xie, A. Y. J. J. (2020, April 26). R Markdown: Code Chunk chapter https://rmarkdown.rstudio.com/lesson-7.html*

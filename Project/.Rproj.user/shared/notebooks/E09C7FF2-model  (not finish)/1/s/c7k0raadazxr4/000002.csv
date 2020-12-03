@@ -1,0 +1,4 @@
+"0",""
+"0","#prediction given the model"
+"0","dt.pred <- predict(mod_dt_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer"
+"0",""

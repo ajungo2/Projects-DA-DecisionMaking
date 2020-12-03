@@ -1,0 +1,1 @@
+{"frames":[{"character_number":0,"end_character_number":0,"end_line_number":0,"file":"","func":"predict(lda.fit, newdata = TestData)","line_number":0}],"message":"Error in predict(lda.fit, newdata = TestData) : \n  object 'lda.fit' not found\n"}

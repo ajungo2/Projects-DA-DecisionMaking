@@ -1,26 +1,76 @@
---- 
-title: "Project...."
-author: "Maura, Rollini and Andrea, Jungo"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-site: bookdown::bookdown_site
-output: bookdown::html_document2
-documentclass: book
-bibliography: [references.bib, packages.bib]
-biblio-style: apalike
-
-link-citations: yes
+---
+title: "Credit risk: German data"
+subtitle: "Projects in Data Analytics for Decision Making 2020"
+author: "Maura Rollini, Andrea Jungo"
+date: "2020-04-12"
+output: 
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    number_sections: false
+    toc_depth: 3
+    theme: readable
+    css: style.css
+    includes:
+      in_header: header.html
+abstract: "For this assignment, we will work with real data that include observations with historical credit applicants who is rated as **Good** or **Bad** credit (encoded as 1 and 0 respectively in the response variable). The goal is obtain a model that may be used to determine if new applicants present a high credit risk.For being able to do that, We will apply the CRISP-DM model and communicate the results in this report."
 ---
 
-# Basic instructions
+```{r include=FALSE}
+#load libraries
+library(knitr)
+```
 
-For this assignment, we will work with real data that include observations with historical credit applicants who is rated as **Good** or **Bad** credit (encoded as 1 and 0 respectively in the response variable). The goal is obtain a model that may be used to determine if new applicants present a good or bad credit risk.
-For being able to do so, We will apply the CRISP-DM model and communicate the results in this report.
+```{r include=FALSE}
 
-There are a few milestones for our final project:
+#set some options for the chunks
 
+knitr::opts_chunk$set(
+  fig.align = 'center',
+  fig.topcaption=TRUE
+)
 
-| Date       | Assignment    |
-| :--------- |:-------------:|
-| December 18| Report        |
-| December 18| Presentation  |
+```
 
+```{r htmlTemplate, echo=FALSE}
+# Create the external file
+img <- htmltools::img(src = knitr::image_uri("data/Logo.png"), 
+               alt = 'logo', 
+               style = 'position:absolute; top:0; right:0; padding:10px; width: 255px; height: 130px')
+
+htmlhead <- paste0('
+<script>
+document.write(\'<div class="logos">',img,'</div>\')
+</script>
+')
+
+readr::write_lines(htmlhead, path = "header.html")
+
+```
+
+```{r message=TRUE, warning=TRUE, child='Introduction.rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='Business understanding.rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='EDA I.Rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='EDA I.Rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='EDA II.rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='Model.rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='Evaluation.rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='Conclusions.rmd'}
+```
+
+```{r message=TRUE, warning=TRUE, child='References.Rmd'}
+```

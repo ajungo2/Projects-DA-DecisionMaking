@@ -1,0 +1,7 @@
+"0",""
+"0","library(here)"
+"0","library(knitr)"
+"0","#we take this picture from here: "
+"0","#https://okanbulut.github.io/bigdata/supervised-machine-learning-part-i.html"
+"0",""
+"0","knitr::include_graphics(here::here(""data/DT.png""))"

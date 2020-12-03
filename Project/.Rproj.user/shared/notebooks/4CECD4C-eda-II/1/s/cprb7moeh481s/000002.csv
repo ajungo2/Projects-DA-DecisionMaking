@@ -1,0 +1,2 @@
+"0",""
+"0","cor(data[2:30], data$RESPONSE) %>% as.data.frame() %>% dplyr::arrange(abs(V1))"

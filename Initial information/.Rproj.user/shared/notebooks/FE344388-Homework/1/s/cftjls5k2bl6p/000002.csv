@@ -1,0 +1,3 @@
+"0",""
+"0","x<-inspect_num(data[,-32])"
+"0","show_plot(x, col_palette=3)"

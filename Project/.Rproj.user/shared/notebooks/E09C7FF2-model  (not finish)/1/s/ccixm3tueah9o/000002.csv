@@ -1,0 +1,3 @@
+"0",""
+"0","mda.pred <- predict(mod_mda_fit, newdata = TestData)  "
+"0",""

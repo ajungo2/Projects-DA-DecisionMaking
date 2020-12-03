@@ -1,0 +1,6 @@
+"0",""
+"0","#inspect the types of the variables"
+"0",""
+"0","x<-inspect_types(data[,-32])"
+"0",""
+"0","show_plot(x, col_palette=2)"

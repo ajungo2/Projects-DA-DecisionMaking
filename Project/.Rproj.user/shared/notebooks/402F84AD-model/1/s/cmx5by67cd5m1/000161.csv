@@ -1,0 +1,5 @@
+"0",""
+"0","##################### Important features###############"
+"0",""
+"0","imp_feature <- xgb.importance(colnames(train_xgb_matrix), model = model_xgboost)"
+"0","print(imp_feature)"

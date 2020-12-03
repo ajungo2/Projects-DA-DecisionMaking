@@ -1,0 +1,208 @@
+---
+title: "Homework"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DT)
+library(Hmisc)  
+library(tidyverse)
+library(tidyquant)
+library(ggthemes)
+library(RColorBrewer)
+library(corrplot)
+library(psych)
+library(GGally)
+library(corrr)
+library(corrplot)
+library(ggcorrplot)
+library(kableExtra)
+library(DataExplorer)
+library(inspectdf)
+
+```
+
+# Data Understanding 
+
+## Collect initial data
+
+In this case, we are going to use the German credit data.
+
+```{r, echo=FALSE}
+
+#data:
+
+data<-read.csv2("GermanCredit.csv", dec=".", header=T)
+
+#names of the columns 
+colnames(data)[colnames(data)=="OBS."] <- "OBS#"
+colnames(data)[colnames(data)=="RATIO.TV"] <- "RATIO/TV"
+colnames(data)[colnames(data)=="MALE_MAR_or_WID"] <- "MALE_MAR_WID"
+colnames(data)[colnames(data)=="CO.APPLICANT"] <- "CO-APPLICANT"
+
+
+
+```
+
+
+## Describe data
+
+
+```{r, echo=FALSE}
+
+#check the type of the attribute if this is integer or double...
+str(data)
+
+#Summary the data
+summary(data)
+#Here we use describe from the library(psych)
+describe(data)
+dim(data)
+
+```
+
+
+## Explore data
+
+This task tackles the data mining questions, which can be addressed using querying, visualization and reporting. These include: 
+
+1) distribution of key attributes, for example the target attribute of a prediction task; 
+2) relations between pairs or small numbers of attributes; 
+3) results of simple aggregations; properties of significant sub-populations; 
+4) simple statistical analyses. These analyses may address directly the data mining goals; they may also contribute to or refine the data description and quality reports and feed into the transformation and other data preparation needed for further analysis.
+
+
+```{r, echo=FALSE, fig.asp=2}
+
+x<-inspect_num(data[,-32])
+show_plot(x, col_palette=3)
+
+
+```
+
+
+```{r, echo=FALSE, fig.asp= 1.5 }
+
+library(DataExplorer)
+plot_correlation(data[, -32], type = "c", cor_args = list(use = "complete.obs"))
+
+```
+
+
+
+```{r, echo=FALSE}
+
+plot_histogram(data[,-32])
+plot_density(data[,-32], ggtheme = theme_bw())
+
+plot_boxplot(data, by= "RESPONSE",  ncol = 2, title = "Side-by-side boxplots")
+
+par(mfrow = c(2, 3))
+boxplot(CHK_ACCT ~ RESPONSE, data = data , xlab = "Checking account status", 
+        notch = T, varwidth = T, col = blues9)
+boxplot(data$DURATION ~ RESPONSE, data = data, xlab = "$", varwidth = T, col = blues9)
+boxplot(data$HISTORY ~ RESPONSE, data = data, xlab = "bang", varwidth = T, col = blues9)
+boxplot(data$NEW_CAR ~ RESPONSE, data = data, xlab = "money", varwidth = T, col = blues9)
+boxplot(data$USED_CAR ~ RESPONSE, data = data, xlab = "000", varwidth = T, col = blues9)
+boxplot(data$FURNITURE ~ RESPONSE, data = data, xlab = "make", varwidth = T, col = blues9)
+boxplot(data$RADIO.TV ~ RESPONSE, data = data, xlab = "$", varwidth = T, col = blues9)
+boxplot(data$EDUCATION ~ RESPONSE, data = data, xlab = "bang", varwidth = T, col = blues9)
+boxplot(data$RETRAINING ~ RESPONSE, data = data, xlab = "money", varwidth = T, col = blues9)
+boxplot(data$AMOUNT ~ RESPONSE, data = data, xlab = "000", varwidth = T, col = blues9)
+boxplot(data$SAV_ACCT ~ RESPONSE, data = data, xlab = "make", varwidth = T, col = blues9)
+boxplot(data$EMPLOYMENT ~ RESPONSE, data = data, xlab = "$", varwidth = T, col = blues9)
+boxplot(data$INSTALL_RATE ~ RESPONSE, data = data, xlab = "bang", varwidth = T, col = blues9)
+boxplot(data$MALE_DIV ~ RESPONSE, data = data, xlab = "money", varwidth = T, col = blues9)
+boxplot(data$MALE_SINGLE ~ RESPONSE, data = data, xlab = "000", varwidth = T, col = blues9)
+boxplot(data$MALE_MAR_WID ~ RESPONSE, data = data, xlab = "make", varwidth = T, col = blues9)
+boxplot(data$`CO-APPLICANT` ~ RESPONSE, data = data, xlab = "$", varwidth = T, col = blues9)
+boxplot(data$GUARANTOR ~ RESPONSE, data = data, xlab = "bang", varwidth = T, col = blues9)
+boxplot(data$PRESENT_RESIDENT ~ RESPONSE, data = data, xlab = "money", 
+        varwidth = T, col = blues9)
+boxplot(data$REAL_ESTATE ~ RESPONSE, data = data, xlab = "000", varwidth = T, col = blues9)
+boxplot(data$PROP_UNKN_NONE ~ RESPONSE, data = data, xlab = "make", varwidth = T, col = blues9)
+boxplot(data$AGE ~ RESPONSE, data = data, xlab = "$", varwidth = T, col = blues9)
+boxplot(data$OTHER_INSTALL ~ RESPONSE, data = data, xlab = "bang", varwidth = T, col = blues9)
+boxplot(data$RENT ~ RESPONSE, data = data, xlab = "money", varwidth = T, col = blues9)
+boxplot(data$OWN_RES ~ RESPONSE, data = data, xlab = "000", varwidth = T, col = blues9)
+boxplot(data$NUM_CREDITS ~ RESPONSE, data = data, xlab = "make", varwidth = T, col = blues9)
+boxplot(data$JOB ~ RESPONSE, data = data, xlab = "$", varwidth = T, col = blues9)
+boxplot(data$NUM_DEPENDENTS ~ RESPONSE, data = data, xlab = "bang", varwidth = T, col = blues9)
+boxplot(data$TELEPHONE ~ RESPONSE, data = data, xlab = "money", varwidth = T, col = blues9)
+boxplot(data$FOREIGN ~ RESPONSE, data = data, xlab = "000", varwidth = T, col = blues9)
+
+
+```
+
+How the answer is distributed ???
+
+```{r, echo=FALSE}
+
+library(tidyverse)
+
+# 0--> NO & 1--> YES 
+data %>% 
+  ggplot(aes(x = RESPONSE)) + geom_bar(aes(fill = factor(RESPONSE))) + 
+  labs(color = "", fill = "", x = "RESPONSE", y = "count", 
+       title = "xxxxx", subtitle = "xxxx", 
+       caption = "xxxxxxxx") + 
+  theme_bw()
+
+
+
+```
+
+
+
+## Verify data quality
+
+Examine the quality of the data, addressing questions such as: 
+
+1) Is the data complete (does it cover all the cases required)? 
+2) Is it correct or does it contain errors and if there are errors how common are they? 
+3) Are there missing values in the data? If so how are they represented,
+4) where do they occur and how common are they?
+
+
+
+```{r, echo=FALSE}
+
+introduce(data[,-32])
+plot_intro(data[,-32])
+
+
+```
+
+
+```{r, echo=FALSE}
+
+nrows<-nrow(data)
+n.missing<-rowSums(is.na(data))
+sum(n.missing > 0)/nrows
+n.complete<-sum(complete.cases(data))
+n.complete/nrows
+
+plot_missing(data[,-32])
+
+```
+
+
+
+```{r, echo=FALSE}
+
+#inspect the types of the variables
+
+x<-inspect_types(data[,-32])
+
+show_plot(x, col_palette=2)
+
+#Inspect the NA values
+
+x<-inspect_na(data[,-32])
+show_plot(x, col_palette=5)
+
+
+```
+
+

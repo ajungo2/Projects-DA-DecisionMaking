@@ -1,0 +1,5 @@
+"0","####################Training & Test Error Plot ####################"
+"0","#if they are more close better the accuracy"
+"0",""
+"0","e <- data.frame(model_xgboost$evaluation_log)"
+"0","plot(e$iter, e$train_mlogloss, col = 'blue')"

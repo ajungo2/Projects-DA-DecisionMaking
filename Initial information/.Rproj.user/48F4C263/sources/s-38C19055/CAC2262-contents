@@ -1,0 +1,427 @@
+# Exploratory data analysis
+
+## Description of the state of the spread
+
+Provide a high level description of the state of the spread. In particular, include
+
+  * the number of days that have passed since the first confirmed case/death,
+  * the current stage for confirmed cases/deaths/mortality (i.e., ratio of deaths to confirmed cases).
+  
+You can:
+
+  * use either words, or tables, or figures, or a bit of each,
+  * group your analysis per country, or region, or a bit of each.
+
+
+## Globally
+```{r echo=FALSE, warning=FALSE}
+#Confirmed case
+covid19_data %>% 
+      group_by(date) %>% #we want to show the date in the X-axis
+      summarise(confirmed =sum(confirmed))%>%
+      summarize(
+      "First Date" = min(date),
+      "Last Date" = max(date),
+      "Time period" = (min(date) %--% max(date)) %/%
+      days(1) %>% paste("Days")) %>%
+      kable(caption = "Number of days that have passed since the first confirmed case. COvid 19 is active since more than 2 Months world wide.") %>%
+      kable_styling(bootstrap_options = "striped", 
+                    full_width = FALSE)
+#Death case
+covid19_data %>% 
+      group_by(date) %>% #we want to show the date in the X-axis
+  filter(deaths >=	1) %>% 
+      summarise(deaths = sum(deaths))%>%
+      summarize(
+      "First Date" = min(date),
+      "Last Date" = max(date),
+      "Time period" = (min(date) %--% max(date)) %/%
+      days(1) %>% 
+        paste("Days")) %>%
+      kable(caption = "Number of days that have passed since the first death case") %>%
+      kable_styling(bootstrap_options = "striped", 
+                    full_width = FALSE)
+##Current stage
+covid19_data %>% 
+  summarise(Confirmed = sum(confirmed), 
+            Deaths = sum(deaths),
+            Mortality = sum(round(Deaths/Confirmed*100,2)),
+            First_case = min(covid19_data$date)) %>%
+  arrange(desc(Mortality)) %>%
+  kable(caption="Current number of confimed cases, death and mortality rate since the first case") %>%
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE)  
+```
+_More than 2 months have passed since the apparition of COVID19. The first mentioned day for the first confirmed case is the same as the first registered death case._
+
+
+```{r echo=FALSE}
+#Visual representation, graphs:
+covid19_data$date =  ymd(covid19_data$date)
+total_reported_covid  =  covid19_data %>% 
+                          group_by(date) %>% #we want to show the date in the X-axis
+                          summarise(confirmed =sum(confirmed),
+                                    deaths = sum(deaths)) 
+                   
+G1 = ggplot(total_reported_covid, 
+            aes(x=date , y = confirmed))+ 
+      geom_line(size=0.5) + 
+      geom_point(size=0.5)+
+  scale_y_continuous(limits=c(0, 1000000))+
+  scale_y_continuous(labels = scales::comma) +
+      theme(axis.line = element_line(size = 0.5, 
+                                     linetype = "solid"), 
+       panel.grid.major = element_line(colour = "gray74", 
+                                       linetype = "dotted"), 
+       panel.grid.minor = element_line(linetype = "blank"), 
+       panel.background = element_rect(fill = "white", 
+      colour = "gray2", 
+      linetype = "solid")) +
+      theme(plot.subtitle = element_text(size = 8, 
+      face = "bold.italic"), 
+      plot.title = element_text(size = 12, face = "bold"), 
+      panel.background = element_rect(fill = "aliceblue", 
+      size = 0.4)) +
+      labs(title = "Total reported cases 
+           in the world of Covid-19",
+           subtitle = "Linear scale",
+           x="Date",
+           y="Confirmed cases")
+
+G2 =ggplot(total_reported_covid, 
+           aes(x=date , y = deaths)) + 
+      geom_line(size=0.5) + 
+      geom_point(size=0.5) +
+  scale_y_continuous(limits=c(0, 1500000), 
+                     breaks = c(0, 500000, 1000000),
+                     labels = scales::comma)+
+      theme(axis.line = element_line(size = 0.5, 
+                                     linetype = "solid"), 
+      panel.grid.major = element_line(colour = "gray74", 
+                                      linetype = "dotted"), 
+      panel.grid.minor = element_line(linetype = "blank"), 
+      panel.background = element_rect(fill = "white", 
+        colour = "gray2", 
+        linetype = "solid")) +
+      labs(x = "Date", y = "Confirmed cases") + 
+      theme(plot.subtitle = element_text(size = 8, 
+      face = "bold.italic"), 
+      plot.title = element_text(size = 12, face = "bold"), 
+      panel.background = element_rect(fill = "aliceblue", 
+      size = 0.4)) +
+      labs(title = "Total reported death 
+           in the world by covid-19",
+           subtitle = "Linear scale",
+           y="Deaths")
+
+grid.arrange( G1, G2, nrow = 1)
+
+```
+_Globally we can observe an important increase in  confirmed cases around March 15th. 
+The number of deaths, start to inrease in the secodn half of March . 
+The number of cases is tremendously more important the the number of deaths_
+
+
+## Per Region
+_Europe and Middle East are above the global mortality rate. We can observe than North America has a very important number of cases but their Mortaility ratio stays low. Nevertheless it will probably increase in the near futur._
+
+```{r, fig.asp=2, echo=FALSE}  
+## Region 
+covid19_data_region = covid19_data %>% 
+  group_by(region) %>% 
+  filter(confirmed >= 1)
+
+covid19_data_region = covid19_data %>% 
+  group_by(country) %>% 
+  mutate(mortality = deaths/confirmed)
+
+covid19_data_region %>% 
+  group_by(region) %>% 
+  summarise(Confirmed = sum(confirmed), 
+            Deaths = sum(deaths),
+            Mortality = sum(round(Deaths/Confirmed*100,2))) %>%
+  arrange(desc(Mortality)) %>%
+  kable(caption="Europe has a Mortality rate of 6%, which is 1.5% above the mean.") %>%
+  kable_styling(bootstrap_options = "striped")
+##------------------------------------------------------------------------------
+##Visual representation
+deathsBYregion <- covid19_data %>% 
+      group_by(region, date)%>%
+      summarise( deaths= sum(deaths))  
+colnames(deathsBYregion)[colnames(deathsBYregion)=="deaths"] <- "confirmed"
+totalconfirmedBYregion <- covid19_data %>% 
+                  group_by(region, date)%>%
+                  summarise(confirmed = sum(confirmed)) 
+
+ggplot(totalconfirmedBYregion, 
+       aes(date, confirmed )) + 
+  geom_line(colour = "blue", size = 0.5) +
+  facet_wrap(~ region, 
+             ncol=2 , 
+             scales = "free" )  +
+  geom_line(data= deathsBYregion, colour = "red", size = 0.5) +
+  theme(axis.text.x =  element_text(angle=45, hjust=1), 
+        plot.title = element_text(size = 12, face = "bold")) +
+  labs ( title = "East Asia & Pacific's curve is different than the other regions.
+  Europe and North America are the second most affected with an 
+  exponential increase starting in March 2020.",
+         x="Dates",
+         y="Count",
+         subtitle = "Red: deaths  /  Blue: confirmed cases") + 
+  scale_y_continuous(limits=c(0, 130000), 
+                     breaks = c(0, 30000, 60000, 90000, 120000 ), 
+                     labels = scales::comma) +
+   theme(plot.subtitle = element_text(size = 10),
+         plot.title = element_text(size = 12), 
+      panel.background = element_rect(fill = "aliceblue", 
+      size = 0.4)) 
+
+```
+
+
+```{r, echo=FALSE} 
+##Mortality 
+Mortality_Ratio = covid19_data %>%                           
+                    group_by(region) %>% 
+                    summarise(confirmed =sum(confirmed),
+                    deaths= sum(deaths)) %>%
+                    mutate(ratio = round(deaths/confirmed ,3))%>% 
+                    arrange(desc(ratio))
+
+ggplot(Mortality_Ratio) +
+  geom_bar(aes(x=ratio, y=fct_reorder(region, ratio)), 
+           stat="identity",
+           fill="red4") +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title="Europe has the highest mortality rate. 
+       East Asia is third with a large margin.",
+       x="Mortality ratio",
+       y="Regions",
+       subtitle = "Mortality represents the proproiton of deaths among the confirmed cases") +
+   theme_bw() +
+  theme(plot.subtitle = element_text(size=8), 
+        plot.title = element_text(size = 12, face = "bold"))
+```
+
+_Afrika has the lowest mortality rate even if some indifivual countries had extreme high mortality rate such as 30 % in Sudan. This can be explained by the fact that people in Afrika are not tested as numerously as in other continents. In other words, there is propbably an important number of confirmed cases and deaths in Afrika that are not taken into considertaion in our study._
+
+## Per Country
+
+```{r, echo=FALSE} 
+## Per Country
+covid19_data_country = covid19_data %>% 
+  group_by(country) %>% 
+  filter(confirmed >= 1)
+
+covid19_data_country = covid19_data_country %>% 
+  group_by(country, region, income) %>% 
+  summarise(Confirmed = sum(confirmed), 
+            Deaths = sum(deaths),
+            Mortality = sum(round(Deaths/Confirmed*100,1))) %>%
+  arrange(desc(Mortality))
+covid19_data_country %>%  
+kable(caption="We can observe that the countries with the highest mortality rate are mainly in Afrika. It is important to mention that they also have very low numbers of confirmed cases.
+        Majority of the countries have a lower middle income, with Italy as the exception. ",
+        col.names = c("Country", "Region", "Income level", "Confirmed cases", "Deaths", "Mortality ratio")) %>% 
+  kable_styling(bootstrap_options = "striped") %>%
+      scroll_box(width = "100%", height = "500px")
+
+##Visual representation
+covid19_data_country %>% 
+  filter(Mortality>10)
+
+covid19_data_country = covid19_data %>% 
+  group_by(country) %>% 
+  filter(confirmed >= 1)
+
+totBYcountry = covid19_data_country %>% 
+  group_by(country, date) %>%
+  summarise(Confirmed = sum(confirmed))
+colnames(totBYcountry)[colnames(totBYcountry)=="Confirmed"] <- "confirmed"
+
+ggplot(totBYcountry, 
+       aes(date, confirmed, color=country)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Excluding one exception, the number of cases start 
+       increasing in majority of the country starting mid March. ",
+       x="Date",
+       y="confirmed") +
+  theme_light() +
+  theme(plot.title = element_text(size=12, face="bold"), legend.position = "none")
+ 
+```
+
+
+_We can easily point out China on the graph: China is where the virus first appeared. They had an important increase at the beggining but the curve flattens out around Februry 15th, even before the rest fo the world was really infected._
+
+## Worldwide map
+
+Produce a worlwide map of the __COVID-19__ spread at the latest date available in `covid19_data` for each country, and describe what you see.
+
+Hint: `ggplot2` package includes two helpful command for this part, namely
+
+  * `map_data()` to retrieve a map,
+  * and `geom_map()` to draw a map on a plot.
+  
+Use `expand_limits` to make sure you display the whole map of the world.
+
+```{r, echo=FALSE}
+Last_Date = covid19_data %>% 
+  filter(date == max(covid19_data$date))
+
+world_ggmap <- map_data("world")
+
+ggplot(Last_Date) +
+     geom_map(aes(map_id = country, fill = confirmed), 
+              map = world_ggmap) +
+     expand_limits(x = world_ggmap$long,
+                   y = world_ggmap$lat) +
+  labs(title = "Majority of new cases are in the USA including Alaska.
+       We can also observe some lighter areas in Europe and China. Those observations 
+       are alligned with the evolution of the covid19 graphs seen in the previous part. 
+       Europa and North America are the main affected region today.",
+      fill = "Confirmed cases") +
+  scale_fill_continuous(low="grey", 
+                        high="red4",
+                        breaks = c(3e+05, 2e+05 , 1e+05, 2e+04), 
+                        labels = c("300M","200M", "100M", "20M"))+
+   theme_bw() +
+  theme(axis.text = element_blank(), 
+        axis.title = element_blank(), 
+        plot.title = element_text(size=12, face="bold"))
+```
+
+
+
+
+_The majority of the worl has less than 100M affected cases. We can pay attention to the fact thatUSA, China and some European countries are the most affected countries. This can also be explained by the fact that they have tested many people in comparison to other region in the world._
+
+## Data selection and alignment
+
+
+To compare the speed of the infection spread between countries, we need to "align" the data. In other words, we model the epidemic using equivalent "starting conditions" for every country. To do that, we filter the data so that the number of confirmed cases (in any country) is greater or equal to the maximal number of confirmed cases at the first day of a specific country. 
+
+Let $C_{d, i}$ be the number of accumulated confirmed cases on day $d$ for country $i$. Let country $k$ be the one such that it had the highest number of reported cases on the first day in the dataset, that is $C_{1, k} \geq C_{1, i}$ for any other $i$. Find $k$ and discuss.
+
+From `covid19_data`, extract a new table `covid19_data_filtered`:
+
+* Select only the countries $i$, which on some day $d_{0,i}$ have $C_{d_{0,i}, i} \geq C_{0, k}$. We will call this time $d_{0,i}$ a day-zero for country $i$. In the next sections, we model $C_i(t) = C_{d_{0,i} + t,i}$, that is the spread of the epidemic in country $i$ with $t$ representing "event days". Remember, for every country the day-zero is, in general, different. However, when a country entered the epidemic stage, we are only interested in number of days that has passed from the date of entry (i.e. day-zero).
+
+* Remove countries who are left with less than two weeks of data, i.e. we keep those countries whose number of days that has passed from the day-zero of this country is 14 or more. 
+* Create a new column called `t` representing the number of days from the day-zero of this country.
+* Create a new column called `confirmed_1e5pop` representing the number of confirmed cases per 100,000 habitants. This is useful in order to compare how the spread of the epidemic differs between countries relative to their population.
+
+Discuss using either tables or visualizations or both: 
+
+* Which countries are left in `covid19_data_filtered`?
+* What is the state of the spread there?
+* What is the relationship between `t` and `confirmed_1e5pop`?
+
+
+_You can fin below the list of countries with sufficient amout of data.
+Concerning the state of spread, we can observe that China has an important number of cases and also has the most longest time period._
+
+```{r, echo=FALSE, warning= FALSE}
+#List of countries with less than two weeks of data
+CountryMORE2weeks<- covid19_data %>% 
+                        select(country, region, date, confirmed, population )%>%
+                        group_by(country, region)%>%
+                        filter(confirmed > 0)%>%
+                        summarize(First_date = min(date), 
+                                  Last_date = max(date), 
+                                  population = min(population),
+                                  confirmed = sum(confirmed))%>% 
+                        mutate(Time_period = 
+                                 ((First_date %--% Last_date) %/% days(1))+1) %>%
+                        filter(Time_period > 14)
+                     
+#Creation of the cum t and the cum confirmed
+covid19_data <- covid19_data %>%
+                mutate(t = NA)
+#For the t colum:
+t <- 0
+country <- "Afghanistan"
+for (i in 1:nrow(covid19_data)) {
+  if (covid19_data$country[i] == country) {
+        if (covid19_data$confirmed[i] > 0 ) {
+        t <- t + 1
+        covid19_data$t[i] <- t
+        }
+        else{
+        covid19_data$t[i] <- t
+        }}
+  else {country <- factor(covid19_data$country[i+1])
+    t<-0
+    }  }
+#For the Cum_confirmed values:
+Cum_confirmed <- 0
+country <- "Afghanistan"
+for (i in 1:nrow(covid19_data)) {
+  if (covid19_data$country[i] == country) {
+        if (covid19_data$confirmed[i] > 0 ) {
+        Cum_confirmed <- Cum_confirmed + covid19_data$confirmed[i]
+        covid19_data$Cum_confirmed[i] <- Cum_confirmed
+  }
+  else{
+    covid19_data$Cum_confirmed[i] <- Cum_confirmed
+        }}
+  else {country <- factor(covid19_data$country[i+1])
+        Cum_confirmed<-0
+    }  }
+
+covid19_data =  covid19_data %>% filter(t>0)
+#Countries with sufficient amout of data
+CountryMORE2weeks %>%
+        select(country, region, confirmed, Time_period)%>%
+  arrange(desc(CountryMORE2weeks$confirmed)) %>%
+        kable(col.names = c("Country", "Region", "Tot Confirmed cases", "Time period")) %>%
+        kable_styling(bootstrap_options = "striped") %>%
+  scroll_box(width = "100%", height = "500px")
+
+#COVID data filtered
+CountryMORE2weeks = CountryMORE2weeks%>%
+                    select(country)
+covid19_data_filtered = left_join(CountryMORE2weeks, covid19_data, by="country" )%>%
+                        mutate(confirmed_1e5pop = round(Cum_confirmed/population*100000,3))
+```
+
+
+
+
+_Relationship between 't' and and `confirmed_1e5pop` with 2 different scales_
+
+```{r, echo=FALSE, warning= FALSE}
+#Confirmed
+ggplot(covid19_data_filtered, 
+       aes(t, confirmed_1e5pop, color=country)) +
+  geom_line(size=0.2) +
+  labs(title = "Majority of the countries have an exponentially increase
+       in number of cases but at different times.",
+       x="Days passed",
+       y="Confirmed / pop * 100,000") +
+  theme_light() +
+   theme(legend.position = "none", 
+         plot.title = element_text(size=12, face="bold"))
+
+##Same with log scale
+ggplot(covid19_data_filtered,
+       aes(log10(t), log10(confirmed_1e5pop), color=country)) +
+  geom_line(size=0.2) +
+  labs(title = "Thanks to the log scale we can better observe the increasing number of cases
+       in all countries",
+       x="log(Days passed)",
+       y="log(Confirmed / pop * 100,000)") +
+  theme_light() +
+   theme(legend.position = "none", 
+         plot.title = element_text(size=12, face="bold"))
+
+
+```
+
+_The Log transformation allow us to better observe and interpret the pattern. The transformation also highlights the relationship between time and ocnfirmed cases. In our case we can now affirm that all the countries observe an increase in number of cases as time passes by._
+
+
+
+
+

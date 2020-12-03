@@ -1,0 +1,5 @@
+"0","predict_nn_balance <- predict(nn.fit_balance, TestData, type=""class"")
+"
+"2","Error in predict.train(nn.fit_balance, TestData, type = ""class"") : 
+  type must be either ""raw"" or ""prob""
+"

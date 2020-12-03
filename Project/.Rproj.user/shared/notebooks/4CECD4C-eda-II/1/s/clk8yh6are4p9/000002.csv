@@ -1,0 +1,5 @@
+"0",""
+"0","colnames(data_sel)[colnames(data_sel)==""OBS.""] <- ""OBS"""
+"0","colnames(data_sel)[colnames(data_sel)==""MALE_MAR_or_WID""] <- ""MALE_MAR_WID"""
+"0","colnames(data_sel)[colnames(data_sel)==""CO.APPLICANT""] <- ""CO_APPLICANT"""
+"0",""

@@ -1,0 +1,5 @@
+"0",""
+"0","#Inspect the NA values"
+"0",""
+"0","x<-inspect_na(data[,-32])"
+"0","show_plot(x, col_palette=5)"

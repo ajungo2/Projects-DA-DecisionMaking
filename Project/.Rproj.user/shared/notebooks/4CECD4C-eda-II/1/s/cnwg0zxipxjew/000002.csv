@@ -1,0 +1,3 @@
+"0",""
+"0","data<-read.csv2(here::here(""data/GermanCredit.csv""), dec=""."", header=T)"
+"0",""

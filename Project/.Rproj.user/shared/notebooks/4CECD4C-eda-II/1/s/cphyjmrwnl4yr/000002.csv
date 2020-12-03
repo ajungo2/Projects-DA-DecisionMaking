@@ -1,0 +1,8 @@
+"0",""
+"0","data %>% "
+"0","  ggplot(aes(PURPOSE)) + "
+"0","  geom_bar(aes(reorder(PURPOSE, -table(PURPOSE)[PURPOSE]), fill = PURPOSE)) +"
+"0","  scale_fill_discrete(name = ""PURPOSE"", "
+"0","                      labels = c(""OTHER"", ""NEW_CAR"", ""USED_CAR"", ""FURNITURE"", "
+"0","                                 ""RADIO/TV"", ""EDUCATION"", ""RETRAINING"")) + "
+"0","  geom_label(stat = 'count', aes(label =..count..)) "

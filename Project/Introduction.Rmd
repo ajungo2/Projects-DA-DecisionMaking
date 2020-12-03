@@ -1,0 +1,109 @@
+---
+title: "Introduction"
+output: 
+  html_document:
+    css: style.css
+---
+
+# Introduction
+
+## Our principal goal
+
+**Our main goal** is evaluate different models and choose the best within them to determine if new applicants represent a good or bad credit risk.  
+
+Under this context, we decided to use the methology named "Cross-industry standard process for data mining" (CRISP-DM). This model consists in six phases that naturally describes the data science life cycle. Below, you will find a picture that describe this process.   
+
+```{r, include=FALSE}
+
+library(here)
+library(knitr)
+#we take this picture from here: 
+#https://medium.com/@akanesen/how-to-manage-machine-learning-deep-learning-project-51f9b0fe164f
+```
+
+
+```{r, echo=FALSE, fig.cap="CRISP-DM Process", paged.print=FALSE, out.width = '50%', message=FALSE, warning=FALSE}
+
+knitr::include_graphics(here::here("data/CRISP-DM.png"))
+
+```
+
+
+## The data
+
+For this project, we will use the data "GermanCredit.csv" provided in the course Projects in Data Analytics for Decision Making given by Professor Jacques Zuber, which contains 1'000 past credit applicants, described by 30 variables.
+
+```{r, include=FALSE}
+
+library(here)
+library(knitr)
+library(tidyverse)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(tidyverse)
+library(broom)
+library(modelr)
+library(forcats)
+library(ggrepel)
+library(lubridate)
+library(gridExtra)
+library(kableExtra)
+library(scales)
+library(magrittr)
+library(readxl)
+library (openxlsx) #for reading the excel
+library(rworldmap)
+library(ggforce)
+library(mapdata)
+library(maps)
+library(ggpmisc)
+library(xts)
+library(gridExtra)
+library(grid)
+library(lattice)
+library(reshape2)
+library(plyr)
+library(RColorBrewer)
+library(DT)
+library(Hmisc)  
+library(tidyquant)
+library(ggthemes)
+library(RColorBrewer)
+library(corrplot)
+library(psych)
+library(GGally)
+library(corrr)
+library(corrplot)
+library(ggcorrplot)
+library(DataExplorer)
+library(inspectdf)
+library(caret)
+library(MASS)
+library(rpart)
+library(mda)
+library(randomForest)
+library(explore)
+library(rpart.plot)
+library(parsnip)
+library(xgboost)
+
+```
+
+```{r, echo=TRUE}
+
+data<-read.csv2(here::here("data/GermanCredit.csv"), dec=".", header=T)
+
+```
+
+## Our questions
+
+In order to make a better analysis, we ask ourselves some questions that we will try to solve through the EDA and the applied models. We will seek to answer to these questions in the conclusions section:
+
+1) Are there any variables that could be grouped?
+2) Have we used all the original independent variables of the model?
+3) Is the data balanced regarding the answer variable?
+4) Does it make sense to balance the data to avoid the model being biased?
+5) Accuracy, sensivity or specificity, which we need to be more focus on?
+6) Which model fit better?
