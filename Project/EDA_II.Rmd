@@ -29,7 +29,7 @@ We have already decided how to correct them, hence we will move on to that direc
 
 We will start by correcting the noises of `EDUCATION`, `GUARANTOR` and `PRESENT_RESIDENT`, by simply replacing the value -1 and 2 with value 1 for the first two and by changing the numbers of the categories for the latter by dimishing each value by 1, this is going to give us the true value corresponding to the data description that was given to us. 
 
-```{r noise correction}
+```{r}
 
 #EDUCATION
 data %<>% 
@@ -49,7 +49,7 @@ data %<>%
 
 This is specifically for the case of `AGE`. As previously said, we believe that the 125 age is an error, hence we will discard it by selecting only the observation with value lower then 76 (as 75 is the second highest value).
 
-```{r age correction}
+```{r}
 
 #AGE
 data %<>% 

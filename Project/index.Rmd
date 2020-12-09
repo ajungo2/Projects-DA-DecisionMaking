@@ -51,16 +51,13 @@ readr::write_lines(htmlhead, path = "header.html")
 ```{r message=TRUE, warning=TRUE, child='Introduction.rmd'}
 ```
 
-```{r message=TRUE, warning=TRUE, child='Business understanding.rmd'}
+```{r message=TRUE, warning=TRUE, child='Business_understanding.rmd'}
 ```
 
-```{r message=TRUE, warning=TRUE, child='EDA I.Rmd'}
+```{r message=TRUE, warning=TRUE, child='EDA_I.Rmd'}
 ```
 
-```{r message=TRUE, warning=TRUE, child='EDA I.Rmd'}
-```
-
-```{r message=TRUE, warning=TRUE, child='EDA II.rmd'}
+```{r message=TRUE, warning=TRUE, child='EDA_II.rmd'}
 ```
 
 ```{r message=TRUE, warning=TRUE, child='Model.rmd'}

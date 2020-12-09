@@ -275,7 +275,7 @@ plot_missing_variable<- plot_missing(data[,-32],
 inspect_types(data[,-32])
 
 #delete variables
-rm(model1, x, i, n.complete, n.missing, nrows)
+rm(x, i, n.complete, n.missing, nrows)
 
 ```
 
