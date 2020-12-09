@@ -1,7 +1,0 @@
-"0","#getting the overall predictions"
-"0","qda.pred <- predict(qda.fit, newdata = TestData)"
-"0","#extracting only the prediciton values"
-"0","qda.class <- qda.pred$class"
-"0","#plotting predictions against real data"
-"0","par(mfrow=c(1,1))"
-"0","plot(qda.pred$posterior[,2], qda.pred$class, col=TestData$RESPONSE)"

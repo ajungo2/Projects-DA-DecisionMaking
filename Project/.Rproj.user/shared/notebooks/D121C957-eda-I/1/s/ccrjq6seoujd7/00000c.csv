@@ -1,4 +1,0 @@
-"0","par(mfrow=c(3,3))"
-"0","for (i in 1:length(data)) {"
-"0","        boxplot(data[,i], horizontal = TRUE, pars=list(outcol=""red""), "
-"0","                main=names(data[i]), type=""l"")}"

@@ -1,4 +1,0 @@
-"0","#bulding cm"
-"0","cm <- confusionMatrix(as.factor(fda.pred), as.factor(TestData$RESPONSE))"
-"0","#drawing cm"
-"0","draw_confusion_matrix(cm)"

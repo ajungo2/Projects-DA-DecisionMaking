@@ -1,2 +1,0 @@
-"0","#prediction given the model"
-"0","lg.pred <- predict(mod_lg_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer"

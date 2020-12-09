@@ -4,15 +4,15 @@
 
 In this chapter we will assesses the degree to which the model we have chosen meets the business objectives and we will try to determine if there is some business reason why this model is deficient. 
 
-The process will be to compare the results with the evaluation criteria we determined in chapter 3, business understanding. 
+The process will be to compare the results with the evaluation criteria we determined in chapter 3. 
 
 The business goal of this analysis was to determine whether a client was at risk of not being able to pay back the credit that has been granted to them, as it would mean a loss for the company and the shareholders.
 
-We will determine it by considering that the copmany will grant a credit only to those who a have a good credite score, which is those who have the response variable positive, and not giving it to those who have a response of zero.
+We will determine it by considering that the company will grant a credit only to those who a have a good credit score, which is those who have the response variable positive, and not giving it to those who have a response of zero.
 
-In order to do it, we will have a look at the quantity of false positive that the model generated, as they would be the people that would not be able to pay back the company, and we will try to make an evaluation of the potential losses that the company could make in using the specific model, they should be lower than the 10% of the total amount of credits that the company would be willing to accept.
+In order to do it, we will have a look at the quantity of false positive that the model generated, as they would be the people to which a credit has been granted but that would not be able to pay back the company, and we will try to make an evaluation of the potential losses that the firm could make in using the specific model, which should be lower than the 10% of the total amount of credits that the company would be willing to accept.
 
-The one we will look at in the specific are the balanced versions of the neural network, random forest and the xgboot, as they were the ones having the highest performance in terms of all the parameters we are looking at: specificity, sensitivity, accuracy. 
+The ones we will look at in the specific are the balanced versions of the neural network, random forest and the xgboot, as they were the ones having the highest performance in terms of all the parameters we are looking at: specificity, sensitivity, accuracy, the others had good values in one, but performed poorly in the other parameters.
 
 ```{r false positive}
 
@@ -28,7 +28,7 @@ FP
 
 ```
 
-The table shows the number of false positive instances in the predictions given by each models. As we can see, the lowest value belongs to the neural network, and it's equal to `r NN`. This means that at least in 14 cases, the model would falsly predict a person belonging to the category that should have a credit granted, while it should not. These cases are risky for the company, as they could result in a default in the payback of the credit and hence in a loss of the company. 
+The table shows the number of false positive instances in the predictions given by each models. As we can see, the lowest value belongs to the random forest, and it's equal to `r RF`. This means that at least in `r RF` cases, the model would falsly predict a person belonging to the category that should have a credit granted, while it should not. These cases are risky for the company, as they could result in a default in the payback of the credit and hence in a loss of the company. 
 
 However, the models are still quite satisfying, as the false positive are only a low percentage compared to the number of observations that are tested, you can find the values in the following tables.
 
@@ -37,6 +37,7 @@ However, the models are still quite satisfying, as the false positive are only a
 FP %<>% dplyr::mutate(Model = c("RF", "NN", "XGB"), 
                      FP_Perc = (FP[,1]/nrow(TestData))) %>% dplyr::select("Model", everything())
 FP
+
 ```
 
 We can see that the 3 models we have chosen have a percentage of false positive that is lower than 10%. However, the test set is quite small, hence we should repeat the testing with more data to make sure that the values are kept this low. 
@@ -45,26 +46,26 @@ We can calculate the maximum losses that could happen if all the people that bel
 
 ```{r losses}
 
-amount <- data_sel[-val_index,]$AMOUNT
+amount <- data_sel[-val_index,]$AMOUNT #get the amount from the unscaled data corresponding to the test set
 
-fp.rf <- (ifelse(rf.pred.b == 1 & TestData$RESPONSE == 0, 1, 0))
-losses.rf <- sum(fp.rf * amount)
+fp.rf <- (ifelse(rf.pred.b == 1 & TestData$RESPONSE == 0, 1, 0)) #selecting the false positive observations 
+losses.rf <- sum(fp.rf * amount) #calculating the losses 
 
-fp.nn <- (ifelse(nn.pred.b == 1 & TestData$RESPONSE == 0, 1, 0))
-losses.nn <- sum(fp.nn * amount)
+fp.nn <- (ifelse(nn.pred.b == 1 & TestData$RESPONSE == 0, 1, 0)) #selecting the false positive observations 
+losses.nn <- sum(fp.nn * amount) #calculating the losses 
 
-fp.xgb <- (ifelse(xgb.pred.b == 1 & TestData$RESPONSE == 0, 1, 0))
-losses.xgb <- sum(fp.xgb * amount)
+fp.xgb <- (ifelse(xgb.pred.b == 1 & TestData$RESPONSE == 0, 1, 0)) #selecting the false positive observations 
+losses.xgb <- sum(fp.xgb * amount) #calculating the losses 
 
-Losses <- data.frame(losses.rf, losses.nn, losses.xgb)
-Losses <- data.frame(t(Losses))
-names(Losses) <- "Losses"
-Losses %<>% dplyr::mutate(Model = c("RF", "NN", "XGB")) %>% dplyr::select(Model, Losses)
+Losses <- data.frame(losses.rf, losses.nn, losses.xgb) #create a df 
+Losses <- data.frame(t(Losses)) #transpose df 
+names(Losses) <- "Losses" #naming the cols of the df
+Losses %<>% dplyr::mutate(Model = c("RF", "NN", "XGB")) %>% dplyr::select(Model, Losses) 
 Losses
 
 ```
 
-As we can see, the amounts ranges from `r losses.nn` to `r losses.rf`. What is surprising is the fact that the random forest model performs better in terms of predicting the false positives (the percentage is lower compared to the one of the xgb for example), however, it has a higher value for the losses. This means that the XGB probably puts a higher importance on the variable of amount to predict the category of a new person, and tries to minimize the losses as much as possible. It should hence be preferred to the random forest. 
+As we can see, the amounts ranges from `r losses.xgb` to `r losses.rf`. The random forest model performs the best both in terms of predicting the false positives (the percentage is lower compared to the one of the xgb and nn) and it has the lowest value for the losses. This means that the it probably puts a higher importance on the variable of amount to predict the category of a new person, and tries to minimize the losses as much as possible. It should hence be preferred.
 
 We want to determine whether these losses represent a high percentage of the total amount of credit that would be granted to the people belonging to the test set. 
 
@@ -78,10 +79,10 @@ Losses
 
 ```
 
-As we can see, the model that as the lowest percentage is the neural network and it does meet our criteria for the selection of the model. i.e.: having the losses lower than the 10% of the total amount of the credits that would be granted. 
+As we can see, the model that as the lowest percentage is the random forest and it does meet our criteria for the selection of the model. i.e.: having the losses lower than the 10% of the total amount of the credits that would be granted. 
 
-However, we can also say that the percentage of the losses given by the random forest and the XGB are exceeding the threshold by less than 2%, hence it could be discussed to also use one of these models if it would mean a lower cost for the company in terms of complexity and computation time. 
-This applies more for the random forest than for the XGB, as we could see that the latter was taking quite some time to be fitted. What is more, the random forest allows for a higher degree of interpretation, while the neural network is more used as a *black box*. 
+However, we can also say that the percentage of the losses given by the neural network are exceeding the threshold by less than 1%, hence it could be discussed to also use one of these models if it would mean a lower cost for the company in terms of complexity and computation time. 
+This applies only for the neural network and not for the XGB, not only it performed worse, but also was taking quite some time to be fitted. What is more, the random forest allows for a higher degree of interpretation, while the neural network is more used as a *black box*. 
 
 ```{r evaluation}
 
@@ -89,26 +90,26 @@ cbind(FP, Losses[,-1])
 
 ```
 
-We would hence suggest to use a **random forest model**, as it has among the highest sensitivity, lowest amount of false positive predictions and a percentage of losses that is equal to `r Losses[1,3]`, while having also a higher degree of interpretability and lower complexity, compared to the other methods that were selected at the end of our modelization chapter. 
+We would hence suggest to use a **random forest model**, as it has among the highest sensitivity, lowest amount of false positive predictions and lowest percentage of losses, equal to `r Losses[1,3]`, while having also a higher degree of interpretability and lower complexity, compared to the other methods that were selected at the end of our modelization chapter. 
 
-Moreover, we have seen that not all the variables that are included in the dataset are actually useful for the prediction of the response. This means that the copmany, when evaluating a new customer, should rather focus on getting the information regarding the variables that have been selected, namely `r names(data_sel[,-1])`. This would mean lower costs for the company, as they would spend less time on getting useless information and less space to store them. 
+Moreover, we have seen that not all the variables that are included in the dataset are actually useful for the prediction of the response. This means that the company, when evaluating a new customer, should rather focus on getting the information regarding the variables that have been selected, namely `r names(data_sel[,-1])`. This would mean lower costs for the company, as they would spend less time on getting useless information and less space to store them. 
 
 ## Review the process 
 
 ### Overview 
 
 We started our data mining with an exploratory data analysis.
-We looked at the structure of the dataset that we used, which had 32 variables and 1'000 observations. Then, we had a more detailed look at the output variable and we could conclude that we had a binary with a majority of positive instances. Looking at the independent variables, we could see that the continuous ones were skewed and had different scales. We could also identify some errors in the data that were fixed, while no missing values were founded. In the second part of our EDA we built a few category variables, so that we could diminish the number of variables that we needed to use in the modelling, more specifically we built a binary describing the sex of the person, one categorical for the purpose of the credit, one categorical for the property and another one for the residence, to assess if it made sense to aggregate the variables, some chi-squared test were run. To further select the data, we created a simple linear regression and we used the AIC to select only the most significant ones. 
-We were then able to move on to the modelling part, in which we used 6 different models, namely: logistic regression, decision trees, discriminate analysis, random forest, neural network and xgboost. For each of them we fit a model on the unbalanced training set (containing 75% of the data randomly selected) and then compared the predictions it gave to the test set (conatining the remaining 25% of the data). We did also a balancing of the dataset, in order to have around the same amount of the positive and negative values for the response, and we fit the same models on the training set based on this data, built in the same way as before, and compared the predictions to the test set. 
+We looked at the structure of the dataset that we used, which had 32 variables and 1'000 observations. Then, we had a more detailed look at the output variable and we could conclude that we had a binary with a majority of positive instances. Looking at the independent variables, we could see that the continuous ones were skewed and had different scales. We could also identify some errors in the data that were fixed, while no missing values were founded. In the second part of our EDA we built a few category variables, so that we could diminish the number of variables that we needed to use in the modelling, more specifically we built a binary describing the sex of the person, one categorical for the purpose of the credit, one categorical for the property and another one for the residence. To assess if it made sense to aggregate the variables, chi-squared test were run. To further select the data, we created a simple linear regression and we used the AIC to select only the most significant ones. 
+We were then able to move on to the modelling part, in which we used 6 different models, namely: logistic regression, decision trees, discriminate analysis, random forest, neural network and xgboost. For each of them we fit a model on the unbalanced training set (containing 75% of the data randomly selected) and then compared the predictions it gave to the test set (containing the remaining 25% of the data). We did also a balancing of the dataset, in order to have around the same amount of the positive and negative values for the response, and we fit the same models on the training set based on this data, built in the same way as before, and compared the predictions to the test set. For each model we built a confusion matrix and we took into consideration the accuracy, specificity, and sensitivity, with a higher weight put on the latter, which allowed us to select the models for the evaluation part, in which we considered the false positive amount in the prediction and the losses that would have been associated. The result was a selection of the random forest model, which outperformed all the other ones. 
 
 ### Improvements 
 
 We believe that what has been done was an accurate analysis of the data, however some improvements could be done in terms of process performance.
-More specifically, we could see that the variable created describing the sex of the person was not selected, hence it was not necessary to create it. Moreover, the correlation were calculated but not really used for the selection of the variables, they could have been avoided too. 
+More specifically, we could see that the variable created describing the sex of the person was not selected, hence it was not necessary to create it. Moreover, the correlations were calculated but not really used for the selection of the variables, they could have been avoided too. 
 We also believe that the coding could have been executed in a more efficient way, as a lot of repetitions were done, specifically in the modelling part. We could have created either a function for the modelling and use is to diminish the lines of code, or find another way to optimize it, e.g. the use of a different library. However, thanks to the `caret` package, we were already able to optimize a good part of the code, which would have been even longer and more complicated otherwise. 
-What is more, we could have included different models, as some of the ones we used are elementary and were expected to perform poorly compared to more complex ones such as the neural network or the random forest. We could have chosen *one* simple model in order to compare the results and see if the increase in accuracy, sensitivy and specificity was high enough and then only keep the most performing ones and select some others. 
+What is more, we could have included different models, as some of the ones we used were elementary and were expected to perform poorly compared to more complex ones, such as the neural network or the random forest. We could have chosen *one* simple model in order to compare the results and see if the increase in accuracy, sensitivy and specificity was high enough to excuse the increase in complexity, and then only keep the most performing ones and select some others. 
 
-In any case, the results we have found are quite satisfying, as we could still find three models that are giving a prediction that is meeting (or almost) our business success criteria. 
+In any case, the results we have found are quite satisfying, as we could still find two models that are giving a prediction that is meeting (or almost) our business success criteria. 
 
 ## Next Steps
 
@@ -121,6 +122,7 @@ An alternative way could be to gather other information from other credit compan
 ### Decision 
 
 With our analysis, the company should be able to assess the quality of a new customer and predict if it should be a good idea to give them a credit or not. 
+
 We believe that the company should follow these steps, each time a new customer approaches the firm from now on:
 1. Collect the information only regarding the variables that have been selected, namely `r names(data_sel[,-1])`
 2. With the information gathered, run a random forest model prediction and determine whether the credit should be granted or not
@@ -128,5 +130,3 @@ We believe that the company should follow these steps, each time a new customer 
 4. In case the credit was given, wait and see if it will be paid back 
 5. Store the result of the debt settlement 
 6. Use the new data to fit an upgraded model 
-
-

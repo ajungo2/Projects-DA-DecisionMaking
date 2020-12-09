@@ -1,5 +1,0 @@
-"0",""
-"0","lda.pred <- predict(lda.fit, newdata = TestData)"
-"2","Error in predict(lda.fit, newdata = TestData) : 
-  object 'lda.fit' not found
-"

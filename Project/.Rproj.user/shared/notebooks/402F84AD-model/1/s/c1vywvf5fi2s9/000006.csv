@@ -1,4 +1,0 @@
-"0","rf.fit <- randomForest(RESPONSE ~., TrainData, ntree = 500, 
-                       mtry = 4, importance = TRUE, replace = FALSE)
-"
-"2","The response has five or fewer unique values.  Are you sure you want to do regression?"

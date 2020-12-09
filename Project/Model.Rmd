@@ -81,12 +81,11 @@ $H_ {0}$: The $Model_n$ give the best accuracy and sensitivity.
 
 $H_ {1}$: It do not give the best values. 
 
-Where $n= (1,2,3,4,5,6)$ and it represent each listed model in the selection technique part.
-
+Where $n= (1,2,3,4,5,6)$ and it represents each listed model in the selection technique part.
 
 ## Build model
 
-To be able to generate the model, first, we need to standardize the data, as the variables have different scales. Nevertheless, We will normalize only the continuous variables, as the categorical and dummy variables have only few different levels.  
+To be able to generate the model, first, we need to standardize the data, as the variables have different scales. Nevertheless, we will normalize only the continuous variables, as the categorical and dummy variables have only few different levels.  
 
 ```{r scaling, warning=FALSE, message=FALSE, echo=FALSE}
 
@@ -217,6 +216,7 @@ p3<- ggplot2::ggplot(data=TestData, aes(x= RESPONSE, fill=RESPONSE)) +
            x = "Response [no=0 /yes=1]", y = "Frequency (%)")
 
 ```
+
 ```{r , warning=FALSE, message=FALSE, echo=FALSE}
 
 grid.arrange(p0, p1, p2, p3, ncol=2)
@@ -226,13 +226,13 @@ rm(p1, p0, p2, p3, Data_set, Number_of_obs) #delete variables
 
 ```
 
-As you can see above, the data have the same proportion in the dataset, the training and the testing set, in all of them the dependent variable is biased since it shows a greater tendency for a positive response, for this reason we will evaluate two fits for each algorithm, one with the skewed data and the other with the balance of it. Finally, for being able to compare within them we are going to compute the confussion matrix which include the following information: 
+As you can see above, the data have the same proportion in the dataset, the training and the test set. Specifically, in all of them the dependent variable is biased, since it shows a greater tendency for a positive response. For this reason we will evaluate two fits for each algorithm, one with the skewed data and the other with a balanced one. Finally, to be able to compare them we are going to compute the confusion matrix, which includes the following information: 
 
 - \[ Accuracy = \frac{TruePositive+TrueNegative} {TruePositive+TrueNegative+FalsePositive+FalseNegative}\] , 
 - \[ Sensitivity = \frac{TruePositive} {TruePositive+FalseNegative}\]
 -\[ Specifity = \frac{TrueNegative} {TrueNegative+FalsePositive}\]
 
-In short words, the sensitivity measure the true positive rate which is key for this project, since a false positive has a negative impact on our main objective because it would increase the risk of not being able to make agreed payments. Meaning that, in addition to balancing the data, we will focus the second model on **maximizing sensitivity**.
+In synthesis, the sensitivity measures the true positive rate, which is key for this project, since a false positive has a negative impact on our main objective, as it would increase the risk of not being able to refund agreed payments. Meaning that in addition to balancing the data we will focus the second model on **maximizing sensitivity**.
 
 ### M1: Logistic regression
 
@@ -244,8 +244,8 @@ For the application of the algorithm we will apply the following steps:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data   | As we see earlier the output variable is unbalance. We are going to evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 1) Fit the model. <br /> 2) Coefficient analysis <br /> 3) Predict . <br /> 4)Confusion matrix .| 
-| Balanced data | In this step, we are going to balance the data with the *training.control* function and, then, we will evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 5) Fit the model. <br /> 6) Predict <br /> 7)Confusion matrix |
+| Unbalanced data   | As we have sees earlier, the output variable is unbalanced. We are going to evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 1) Fit the model. <br /> 2) Coefficient analysis <br /> 3) Predict . <br /> 4) Confusion matrix .| 
+| Balanced data | In this step, we are going to balance the data with the *training.control* function and, then, we will evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 5) Fit the model. <br /> 6) Predict <br /> 7) Confusion matrix |
 
 #### Unbalanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -271,7 +271,6 @@ mod_lg_fit <- caret::train(RESPONSE ~ ., TrainData, method="glm",
 
 ################check outputs################################
 summary(mod_lg_fit)
-
 
 ```
 
@@ -303,25 +302,24 @@ rm(temp)
 
 ```
 
-If we look at the coeffiecient of the different variables we can conclude that, among the significant one that we described before, `CHK_ACCT`, `HISTORY` (all but the first level), `SAV_ACCT`, `EMPLOYMENT` and `MALE_SINGLE`, have a positive impact on the output, meaning that the higher is their level or if they are positive, the probability of having `RESPONSE` = 1 will increase. 
+If we look at the coeffiecients of the different variables we can conclude that, among the significant one that we described before, `CHK_ACCT`, `HISTORY` (all but the first level), `SAV_ACCT`, `EMPLOYMENT` and `MALE_SINGLE`, have a positive impact on the output, meaning that the higher is their level, or if they are positive, the probability of having `RESPONSE` = 1 will increase. 
 
 On the other hand, among the significant variables, `DURATION`, `PURPOSE` (all but level two and four), `AMOUNT` and `OTHER_INSTALL` have a negative effect on the output, meaning that if they increase their level or value, or if they have a positive value (for the dummies), the probability of having a positive response will decrease.
 
 The linear predictor is given by 
 $$ \eta  = - 0.9 + 0.3 * CHKACCT_1 + 1.2 * CHKACCT_2  + 1.7 * CHKACCT_3 - 0.3 * DURATION - 0.4 * HISTORY_1 + 0.5 * HISTORY_2 +  0.7 * HISTORY_3 + 1.4 * HISTORY_4 - 0.9 * PURPOSE_1 + 0.8 * PURPOSE_2 - 0.08 * PURPOSE_3 + 0.05 * PURPOSE_4 - 0.7 * PURPOSE_5 - 0.08 * PURPOSE_6 - 0.3 * AMOUNT - 0.5 * SAVACCT_1 + 0.2 * SAVACCT_2 + 0.7 * SAVACCT_3 + 1.3 * SAVACCT_4 + 0.25 * EMPLOYMENT_1 + * 0.6 EMPLOYMENT_2 + 1.1 * EMPLOYMENT_3 + 0.7 * EMPLOYMENT_4 - 0.4 * INSTALLRATE + 0.5 * MALESINGLE_1 + 0.9 * GUARANTOR_1 + 0.06 * PROPERTY_1 - 0.5 * PROPERTY_2 - 0.6 * OTHERINSTALL_1 - 0.8 * RESIDENCE_1 - 0.3 * RESIDENCE_2 - 0.1 * NUMCREDITS + 0.4426 * TELEPHONE_1 $$
 
-To be clear, if for example the purpose variable takes value 3, only the coefficient of PURPOSE_3 will be added to the others. The same goes for each other categorical variable. For the dummies the coefficient is added only if the value is equal to 1 for the variable, otherwise no. While for the continuous variables the coefficient is multiplied by the value is recorded in the observation.
+To be clear, if for example the purpose variable takes value 3, only the coefficient of PURPOSE_3 will be added to the others. The same goes for each other categorical variable. For the dummies the coefficient is added only if the value is equal to 1 for the variable, otherwise no. While for the continuous variables the coefficient is multiplied by the value that is recorded in the observation.
 
 ##### 3) Prediction 
 
 Now we will get the predictions using this model. To being able to do it, we will start by getting the probabilities of the output given the coefficients we have found by fitting the model, then we will use a cut point of 0.5 to decide whether the value will be equal to 1 (if the probability it higher than 0.5) or 0 (otherwise).
-The model basically fit the information of the new observation in the function that is given above, and then it finds a value *eta* that is then used to get the prediction of the probability of the output by doint p = 1 / (1 + eta). We use this probability to determine whether the prediciton will by 1 or 0, by taking a cut point of 0.5.
+The model basically fit the information of the new observation in the function that is given above, and then it finds a value *eta* that is then used to get the prediction of the probability of the output by doint p = 1 / (1 + eta), which we will use to determine the class predicted for the outcome.
 
 ```{r predictions lg, echo=TRUE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 lg.pred <- predict(mod_lg_fit, newdata = TestData)  
-
 
 ```
 
@@ -349,6 +347,7 @@ rm(plot_pred_unbalance, p)
 
 ```
 
+The unbalance towards the positive value prediction is more than clear, in this graph. 
 
 ##### 4) Diagnosis 
 
@@ -371,6 +370,8 @@ logistic<- c(sens , sp, acc)
 rm(cm, sens, sp, acc)
 
 ```
+
+The sensitivity is quite low, at 52%, the specificity, though, is high, almost 90%, while the accuracy is at 78%. The number of false positive is quite high, being 36.
 
 #### {.toc-ignore}
 
@@ -431,7 +432,7 @@ rm(plot_pred_balance, p)
 
 ```
 
-Contrary to the output of the first model we can see that the proportion of the prediction is better balanced.
+Contrary to the output of the first model, we can see that the proportion of the prediction is better in the balanced case.
 
 ##### 7) Diagnosis
 
@@ -455,6 +456,8 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
+The sensitivity is 72%, the specificity is 64% and the accuracy only 66%. The number of false positive is equal to 21. 
+
 #### {.toc-ignore}
 
 
@@ -473,7 +476,7 @@ knitr::include_graphics(here::here("data/DT.png"))
 
 ```
 
-The process consist in the minimization of the classification error rate 
+The process consists in the minimization of the classification error rate:
 
 \[E=\ 1-max_{k}(p_{mk})\] where $p_{mk}$ is the proportion of training observation.
 
@@ -482,10 +485,9 @@ For the application of the algorithm we will apply the following steps:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data   | As we see earlier the output variable is unbalance. We are going to evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 1) Fit the model. <br /> 2) Plot the best tree <br /> 3) Predict . <br /> 4)Confusion matrix .| 
-| Balanced data | In this step, we are going to balance the data with the *training.control* function and, then, we will evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 5) Fit the model. <br /> 6) Plot the best tree <br /> 6) Predict <br /> 7)Confusion matrix |
-
-
+| Unbalanced data   | As we have seen earlier, the output variable is unbalanced. We are going to evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 1) Fit the model. <br /> 2) Plot the best tree <br /> 3) Predict . <br /> 4) Confusion matrix .| 
+| Balanced data | In this step, we are going to balance the data with the *training.control* function and, then, we will evaluate the accuracy and the sensitivity of the model, with the following steps: <br /> 5) Fit the model. <br /> 6) Plot the best tree <br /> 6) Predict <br /> 7)
+Confusion matrix |
 
 #### Unbalanced Data {.tabset .tabset-fade .tabset-pills}
 
@@ -506,7 +508,6 @@ train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5)
 mod_dt_fit <- caret::train(RESPONSE ~ ., TrainData, method="rpart", 
                            trControl= train_params)
 
-
 ```
 
 ```{r ,echo=FALSE, message=FALSE, warning=FALSE}
@@ -516,7 +517,6 @@ summary(mod_dt_fit$finalModel$frame)
 
 ```
 
-
 ##### 2) Plot 
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
@@ -524,7 +524,6 @@ summary(mod_dt_fit$finalModel$frame)
 #######plot #########################
 suppressMessages(library(rattle))
 rattle::fancyRpartPlot(mod_dt_fit$finalModel)
-
 
 ```
 
@@ -560,7 +559,7 @@ rm(plot_pred_unbalance, p)
 
 ```
 
-The prediction is clearly bias to a positive answer.
+The prediction is clearly biased to a positive answer.
 
 ##### 4) Diagnosis 
 
@@ -585,7 +584,7 @@ rm(cm, sens, sp, acc)
 
 ```
 
-We can see that here the sensitivity is really low, while the specificity is higher, reaching a value above 92%, which is in any case the one in which we are the most interested. The accuracy is around 74%. Here, in 30 cases in which the model should have given a negative value, it actually predicted a positive one, and it could cost quite a lot to the company.
+We can see that here the sensitivity is really low, while the specificity is higher, reaching a value above 92%, which is in any case the one in which we are the most interested. The accuracy is around 74%. Here, in 52 cases in which the model should have given a negative value, it actually predicted a positive one, and it could cost quite a lot to the company.
 
 #### {.toc-ignore}
 
@@ -601,8 +600,7 @@ set.seed(1234)
 #########################model######################################
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down")
 
 mod_dt_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rpart", 
                                   metric = "Sens", #optimize sensitivity
@@ -638,8 +636,8 @@ rattle::fancyRpartPlot(mod_dt_fitbalance$finalModel)
 ##### 7) Prediction
 
 ```{r predictions rpartb, echo=FALSE, message=FALSE, warning=FALSE}
-#probability given the model
 
+#probability given the model
 dt.pred.b <- predict(mod_dt_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
@@ -668,6 +666,7 @@ rm(plot_pred_balance, p)
 
 ```
 
+We can see that it is a bit more balanced, even if the number of positive predictions is still higher. 
 
 ##### 8) Diagnosis 
 
@@ -691,15 +690,13 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-We can see that here the sensitivity have been improve, however the specificity is lower, reaching a value above 55%, which is in any case the one in which we are the most interested. The accuracy is around 60%. 
+We can see that here the sensitivity has improved, however the specificity is lower, reaching a value above 63%, which is in any case the one in which we are the most interested. The accuracy is around 60%. 
 
 #### {.toc-ignore}
-
 
 ### M3: Discriminate analysis
 
 There are four types of discriminate analysis, we will explain them in the following table:
-
 
 | n° | Model  |  Definition                                                       | 
 |:--:|:-------|:------------------------------------------------------------------|   
@@ -724,12 +721,12 @@ knitr::include_graphics(here::here("data/LDA-QDA-MDA.png"))
 
 #### Linear Discriminant Analysis 
 
-Steps for the aplication of the algorithm:
+Steps for the application of the algorithm:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
-| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3) Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6) Confusion matrix |
 
 
 #### Unbalanced {.tabset .tabset-fade .tabset-pills}
@@ -747,7 +744,6 @@ train_params <- caret::trainControl(method = "repeatedcv", number = 10, repeats=
 mod_lda_fit <- caret::train(RESPONSE ~ ., TrainData, method="lda", 
                            family="binomial",trControl= train_params)
 
-
 ```
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
@@ -756,8 +752,6 @@ mod_lda_fit <- caret::train(RESPONSE ~ ., TrainData, method="lda",
 summary(mod_lda_fit)
 
 ```
-
-We can see from the graph that the model seems to be better at predict the positive value as the mean seems to be around the value 1, while for the negative output the mean seems to be a bit lower than 0, which is the value it should take, and it is around -1.
 
 The linear combination of predictor variables that are used to form the decision rule is the following: 
 
@@ -798,7 +792,7 @@ rm(plot_pred_unbalance, p)
 
 ```
 
-With this graph we confirm the explained in the fit part that the prediction tends to give us a positive response. 
+With this graph we confirm what has been explained in the fit part, which is the prediction tending to give a positive response. 
 
 ##### 3) Diagnosis (Unbalance)
 
@@ -821,7 +815,7 @@ rm(cm, sens, sp, acc)
 
 ```
 
-Here the sensitivity is higher with respect to the previous unbalance models (above 40%), but it is still quite low. If we look at the preicision, is quite low, as it is only around 78%. What is important to note is that 22 times in which the model would have predicted a positive value for the output, it should have been negative, which is something that could cost quite a lot to the copmany. 
+Here the sensitivity is higher with respect to the previous unbalance models (above 40%), but it is still quite low. If we look at the accuracy, is quite low, as it is only around 78%. What is important to note is that 36 times in which the model would have predicted a positive value for the output, it should have been negative, which is something that could cost quite a lot to the copmany. 
 
 #### {.toc-ignore}
 
@@ -833,8 +827,7 @@ Here the sensitivity is higher with respect to the previous unbalance models (ab
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down") 
 
 
 mod_lda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="lda", 
@@ -850,7 +843,6 @@ mod_lda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="lda",
 
 ################check outputs################################vv
 summary(mod_lda_fitbalance)
-
 
 ```
 
@@ -887,6 +879,7 @@ rm(plot_pred_balance, p)
 
 ```
 
+We can see that the situation is more balanced.
 
 ##### 6) Diagnosis (balance)
 
@@ -908,8 +901,9 @@ lda_balance<- c(sens.b , sp.b, acc.b)
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
-
 ```
+
+The sensitivity is 73%, the specificity is only 65% and the accuracy is also low, at 67%. The number of false positive, though, is only 20. 
 
 #### {.toc-ignore}
 
@@ -920,8 +914,8 @@ Steps for the aplication of the algorithm:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
-| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3) Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6) Confusion matrix |
 
 #### Unbalanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -943,7 +937,6 @@ mod_qda_fit <- caret::train(RESPONSE ~ ., TrainData, method="qda",
 
 ################check outputs################################
 summary(mod_qda_fit)
-
 
 ```
 
@@ -1001,13 +994,13 @@ qda<- c(sens , sp, acc)
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
-
-
 ```
+
+The sensitivity is 54%, the specificity is high, reaching almost 84%, and the accuracy is 75%. The number of false positive, however, is 34. 
 
 #### {.toc-ignore}
 
-As we predicted, the model performs a little bit worse than the LDA, but for the sensitivity, which is the highest up to now (over 50%), is still quite low, though. The specificity is moderately high (above 85%) as it is the accuracy (above 70%). As we want to have a value for the false positive low, the 35 here is still quite high.
+As we predicted, the model performs a little bit worse than the LDA, but for the sensitivity, which is the highest up to now (over 50%), is still quite low, though. The specificity is moderately high (above 80%) as it is the accuracy (above 70%). As we want to have a value for the false positive low, the 34 here is still quite high.
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -1017,8 +1010,7 @@ As we predicted, the model performs a little bit worse than the LDA, but for the
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down")
 
 
 mod_qda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="qda", 
@@ -1026,8 +1018,8 @@ mod_qda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="qda",
                            metric = "Sens", #optimize sensitivity
                            maximize = TRUE, #maximize the metric
                            trControl= train_params)
-```
 
+```
 
 ##### 5) Prediction
 
@@ -1060,6 +1052,8 @@ rm(plot_pred_balance, p)
 
 ```
 
+We can see that there is still some unbalance towards the positive value.
+
 ##### 6) Diagnosis (balance)
 
 ```{r confusion matrix qdab, echo=FALSE, message=FALSE, warning=FALSE}
@@ -1079,20 +1073,20 @@ qda_balance<- c(sens.b , sp.b, acc.b)
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
-
-
 ```
+
+The sensitivity is 65%, the specificity is 71% and the accuracy almost 70&, while the false positive are 26. 
 
 #### {.toc-ignore}
 
 #### Functional data analysis (FDA) 
 
-Steps for the aplication of the algorithm:
+Steps for the application of the algorithm:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
-| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3) Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6) Confusion matrix |
 
 #### Unbalanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -1117,11 +1111,7 @@ mod_fda_fit <- caret::train(RESPONSE ~ ., TrainData, method="fda",
 ################check outputs################################vv
 mod_fda_fit
 
-
 ```
-
-Here we see that this model has only one dimensino that, obviously, explains the 100% of the between group variance. We expect that it will perfom poorly in the predicitons.
-
 
 ##### 2) Prediction (unbalance)
 
@@ -1154,6 +1144,7 @@ rm(plot_pred_unbalance, p)
 
 ```
 
+The unbalance towards the positive value is more than clear in this graph.
 
 ##### 3) Diagnosis (Unbalance)
 
@@ -1174,10 +1165,9 @@ fda<- c(sens , sp, acc)
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
-
 ```
 
-Contrary to what it is expected, this model has a sensitivity of almost 55%, among one of the highest up to now, and the specificity is higher than 85%. The accuracy is around 76%. The false positive observations are 36.
+This model has a sensitivity of almost 55%, among one of the highest up to now, and the specificity is higher than 85%. The accuracy is around 76%. The false positive observations are 34.
 
 #### {.toc-ignore}
 
@@ -1189,8 +1179,7 @@ Contrary to what it is expected, this model has a sensitivity of almost 55%, amo
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down")
 
 mod_fda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="fda", 
                                    metric = "Sens", #optimize sensitivity
@@ -1204,13 +1193,11 @@ mod_fda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="fda",
 ################check outputs################################vv
 summary(mod_fda_fitbalance)
 
-
 ```
-
 
 ##### 5) Prediction
 
-Using the model we get the prediction for the `RESPONSE` variable and we can construct the confidence matrix for this case.
+Using the model we get the predictions for the `RESPONSE` variable and we can construct the confidence matrix for this case.
 
 ```{r predictions fdab, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -1241,6 +1228,7 @@ rm(plot_pred_balance, p)
 
 ```
 
+We can see that the situation is more balanced. 
 
 ##### 6) Diagnosis (balance)
 
@@ -1262,21 +1250,21 @@ fda_balance<- c(sens.b , sp.b, acc.b)
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
-
-
 ```
+
+Here, the sensitivity is almost 79%, while the specificity is 66%, with an accuracy of almost 70%. The false positive are really low, reaching 16 observations. 
 
 #### {.toc-ignore}
 
 
 #### Mixture discriminant analysis (MDA) {.tabset .tabset-fade .tabset-pills}
 
-Steps for the aplication of the algorithm:
+Steps for the application of the algorithm:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3)Confusion matrix .| 
-| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
+| Unbalanced data |  1) Fit the model. <br /> 2) Predict . <br /> 3) Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6) Confusion matrix |
 
 #### Unbalanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -1292,20 +1280,15 @@ train_params <- trainControl(method = "repeatedcv", number = 10, repeats=5) #K-F
 mod_mda_fit <- caret::train(RESPONSE ~ ., TrainData, method="mda", 
                            family="binomial",trControl= train_params)
 
-
 ```
 
 
 ```{r ,echo=FALSE, message=FALSE, warning=FALSE}
 
-
 ################check outputs################################vv
 summary(mod_mda_fit)
 
-
 ```
-
-The summary gives the percentage of the variance that there is inside the different groups that has been created (which in this case are 3), and we can see that the vast majority of the variance is explained thanks to the first three groups (reaching more than 90%), but we could also be satisfied only considering the first two groups (as they each almost 80% of the variance explained).
 
 ##### 2) Prediction (unbalance)
 
@@ -1338,6 +1321,7 @@ rm(plot_pred_unbalance, p)
 
 ```
 
+The unbalance towards the positive value is more than clear in this graph. 
 
 ##### 3) Diagnosis (Unbalance)
 
@@ -1357,10 +1341,9 @@ mda<- c(sens , sp, acc)
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
-
 ```
 
-The sensitivity in this case is around 55%, while the specificity is higher, reaching almost 85%. The accurary is around 75%. 
+The sensitivity in this case is around 55%, while the specificity is higher, reaching 85%. The accurary is around 75% and there are 34 false positive.
 
 #### {.toc-ignore}
 
@@ -1372,8 +1355,7 @@ The sensitivity in this case is around 55%, while the specificity is higher, rea
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down")
 
 mod_mda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="mda", 
                            family="binomial",
@@ -1381,10 +1363,7 @@ mod_mda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="mda",
                            maximize = TRUE,
                            trControl= train_params)
 
-
 ```
-
-
 
 ```{r , echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -1392,7 +1371,6 @@ mod_mda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="mda",
 mod_mda_fitbalance
 
 ```
-
 
 ##### 5) Prediction
 
@@ -1425,6 +1403,7 @@ rm(plot_pred_balance, p)
 
 ```
 
+We have still some unbalance toward the positive value. 
 
 ##### 6) Diagnosis 
 
@@ -1446,23 +1425,20 @@ mda_balance<- c(sens.b , sp.b, acc.b)
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
-
 ```
+
+Here the sesntitivty is 72%, the specificity 74% and the accuracy 73%. The false positive are decreasing, with a value of 21. 
 
 #### {.toc-ignore}
 
-
-
 ### M4: Random Forest
 
-
-Steps for the aplication of the algorithm:
+Steps for the application of the algorithm:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data |  1) Fit the model. <br /> 2)Checking Variables. <br /> 3) Predict . <br /> 4)Confusion matrix .| 
-| Balanced data   | 5) Fit the model. <br /> 6) Predict <br /> 7)Confusion matrix |
-
+| Unbalanced data |  1) Fit the model. <br /> 2)Checking Variables. <br /> 3) Predict . <br /> 4) Confusion matrix .| 
+| Balanced data   | 5) Fit the model. <br /> 6) Predict <br /> 7) Confusion matrix |
 
 #### Unbalanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -1480,21 +1456,31 @@ mod_rf_fit <- caret::train(RESPONSE ~ ., TrainData, method="rf",
 
 ```
 
-
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################vv
 print(mod_rf_fit)
 
-
 ```
 
+The summary of the model gives the decrease in accuracy and the decrease of the gini index for each variable in the model, along with the number of trees that are built (500 in our case), the number of variabes that are randomly chosen to be tried at each split before determining which one is the best one to describe the node. Moreover, we can already find the confusion matrix (we will show it better again afterwards to keep the coherence of the analysis throuhgout all the models), with the class errorand the Out-Of-Bag estimate of the error rate. 
+
+Let's give some definitions to be clearer:
+
+> Variable importance is the mean decrease of accuracy over all out-of-bag cross validated predictions, when a given variable is permuted after training, but before prediction.
+
+> GINI importance measures the average gain of purity by splits of a given variable. If the variable is useful, it tends to split mixed labeled nodes into pure single class nodes. Splitting by a permuted variables tend neither to increase nor decrease node purities. 
+
+source:https://stats.stackexchange.com/questions/197827/how-to-interpret-mean-decrease-in-accuracy-and-mean-decrease-gini-in-random-fore
+
+> Out-of-bag (OOB) error, also called out-of-bag estimate, is a method of measuring the prediction error of random forests, boosted decision trees, and other machine learning models utilizing bootstrap aggregating (bagging) to sub-sample data samples used for training. OOB is the mean prediction error on each training sample xᵢ, using only the trees that did not have xᵢ in their bootstrap sample.
+source: https://en.wikipedia.org/wiki/Out-of-bag_error
 
 ##### 2) Checking Variables
 
 ```{r , echo=FALSE, fig.asp=1.5}
-#Variable importance analysis
 
+#Variable importance analysis
 rf.fit <- randomForest::randomForest(RESPONSE ~., 
                        TrainData, 
                        ntree = 500, 
@@ -1509,19 +1495,7 @@ randomForest::varImpPlot(rf.fit, main ='Variable Importance')
 
 ```
 
-
-The summary of the models gives the decrease in accuracy and the decrease of the gini index for each variable in the model, along with the number of trees that are built (500 in our case), the number of variabes that are randomly chones to be tried at each split before choosing which one is the best one to describe the node. Moreover, we can already find the confusion matrix (we will show it better again afterwards to keep the coherence of the analysis throuhgout all the models), with the class errorand the Out-Of-Bag estimate of the error rate. 
-
-Let's give some definitions to be clearer:
-
-> Variable importance is the mean decrease of accuracy over all out-of-bag cross validated predictions, when a given variable is permuted after training, but before prediction.
-
-> GINI importance measures the average gain of purity by splits of a given variable. If the variable is useful, it tends to split mixed labeled nodes into pure single class nodes. Splitting by a permuted variables tend neither to increase nor decrease node purities. 
-
-source:https://stats.stackexchange.com/questions/197827/how-to-interpret-mean-decrease-in-accuracy-and-mean-decrease-gini-in-random-fore
-
-> Out-of-bag (OOB) error, also called out-of-bag estimate, is a method of measuring the prediction error of random forests, boosted decision trees, and other machine learning models utilizing bootstrap aggregating (bagging) to sub-sample data samples used for training. OOB is the mean prediction error on each training sample xᵢ, using only the trees that did not have xᵢ in their bootstrap sample.
-source: https://en.wikipedia.org/wiki/Out-of-bag_error
+The most important variables appear to be CHK_ACC, DURATION and HISTORY in terms of Accuracy and AMOUNT, CHK_ACC and DURATION in terms of gini index, which is consistent with what we have found up to now. 
 
 ##### 3) Prediction (unbalance)
 
@@ -1555,6 +1529,8 @@ rm(plot_pred_unbalance, p)
 
 ```
 
+The predictions shows a clear preference towards the positive value.
+
 ##### 4) Diagnosis (Unbalance)
 
 ```{r confusion matrix rf, echo=FALSE, message=FALSE, warning=FALSE}
@@ -1573,10 +1549,9 @@ rf<- c(sens , sp, acc)
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
-
 ```
 
-Here the sensitivity is around 46%, the specificity is high (more than 87%) and the accuracy is aroun 75%, while the number of false positive is the highest, having 36 observations.
+Here the sensitivity is around 46%, the specificity is high (more than 87%) and the accuracy is around 75%, while the number of false positive is 40 observations.
 
 #### {.toc-ignore}
 
@@ -1587,8 +1562,7 @@ Here the sensitivity is around 46%, the specificity is high (more than 87%) and 
 ```{r rfb-model, echo=TRUE, warning=FALSE, message=FALSE}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down")
 
 mod_rf_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rf", 
                            family="binomial",
@@ -1637,6 +1611,7 @@ rm(plot_pred_balance, p)
 
 ```
 
+We can see that the predictions are more balanced.
 
 ##### 7) Diagnosis
 
@@ -1657,24 +1632,20 @@ rf_balance<- c(sens.b , sp.b, acc.b)
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
-
-
 ```
+
+Here the sensitivity is 78%, the specificity is 65% and the accuracy almost 70%. However the false positive are really low, being only 16 cases. 
 
 #### {.toc-ignore}
 
-
-
-
 ### M5: Neural Networks
 
-Steps for the aplication of the algorithm:
+Steps for the application of the algorithm:
 
 | Data set        | Steps                                                        | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data |  1) Fit the model. <br /> 2) Plot <br /> 3) Predict . <br /> 4)Confusion matrix .| 
-| Balanced data   | 5) Fit the model. <br /> 6) Plot<br /> 7) Predict <br /> 8)Confusion matrix |
-
+| Unbalanced data |  1) Fit the model. <br /> 2) Plot <br /> 3) Predict . <br /> 4) Confusion matrix .| 
+| Balanced data   | 5) Fit the model. <br /> 6) Plot<br /> 7) Predict <br /> 8) Confusion matrix |
 
 #### Unbalanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -1692,24 +1663,19 @@ mod_nn_fit <- caret::train(RESPONSE ~ ., TrainData, method="nnet",
 
 ```
 
-
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################
-
 print(mod_nn_fit)
 
 ```
-
 
 ##### 2) Plot
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=2}
 
-library(nnet)
 NeuralNetTools::plotnet(mod_nn_fit$finalModel, y_names = "yes/no")
 title("Graphical Representation of our Neural Network")
-
 
 ```
 
@@ -1720,7 +1686,6 @@ title("Graphical Representation of our Neural Network")
 nn.pred <- predict(mod_nn_fit, newdata = TestData)  
 
 ```
-
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1745,6 +1710,7 @@ rm(plot_pred_unbalance, p)
 
 ```
 
+We can see an unblanced result toward the positive value.
 
 ##### 4) Diagnosis (Unbalance)
 
@@ -1766,8 +1732,9 @@ nn<- c(sens , sp, acc)
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
-
 ```
+
+Here, the sensitivity is 53%, but the specificity is almost 88%, with an accuracy of 77%. The false positive, however, are still 35. 
 
 #### {.toc-ignore}
 
@@ -1778,8 +1745,7 @@ rm(cm, sens, sp, acc)
 ```{r nnb-model, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down")
 
 mod_nn_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="nnet", 
                            family="binomial",
@@ -1787,18 +1753,14 @@ mod_nn_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="nnet",
                            maximize = TRUE,
                            trControl= train_params)
 
-
 ```
-
 
 ```{r , echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################
 print(mod_nn_fitbalance)
 
-
 ```
-
 
 ##### 6) Prediction
 
@@ -1807,7 +1769,6 @@ print(mod_nn_fitbalance)
 nn.pred.b <- predict(mod_nn_fitbalance, newdata = TestData)  
 
 ```
-
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1832,7 +1793,6 @@ rm(plot_pred_balance, p)
 
 ```
 
-
 ##### 7) Diagnosis (balance)
 
 ```{r confusion matrix nnb, echo=FALSE, message=FALSE, warning=FALSE}
@@ -1855,20 +1815,18 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-#### {.toc-ignore}
+Here we see a sesitivity of 77%, a really high specificity among the ones we have found (61%) and an accuracy of only 66%. However, the false positive are quite low, being only 17.
 
+#### {.toc-ignore}
 
 ### M6: XGBoost
 
-
-Steps for the aplication of the algorithm:
+Steps for the application of the algorithm:
 
 | Data set        | Steps                                                       | 
 | :--------------:|:-------------------------------------------------------------|
-| Unbalanced data |  1) Fit the model. <br /> 2) Plot  <br /> 3) Predict . <br /> 3)Confusion matrix .| 
-| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6)Confusion matrix |
-
-
+| Unbalanced data |  1) Fit the model. <br /> 2) Plot  <br /> 3) Predict . <br /> 3) Confusion matrix .| 
+| Balanced data   | 4) Fit the model. <br /> 5) Predict <br /> 6) Confusion matrix |
 
 #### Unbalanced data {.tabset .tabset-fade .tabset-pills}
 
@@ -1876,7 +1834,6 @@ Steps for the aplication of the algorithm:
 
 ```{r xgb-model, echo=TRUE, message=FALSE, warning=FALSE, results="hide"}
 
-library(dplyr)
 ######################### transform data ############
 data_xgboost <- purrr::map_df(data_scale, function(columna) {
                           columna %>% 
@@ -1913,23 +1870,20 @@ mod_xgb_fit <- caret::train(RESPONSE ~ ., TrainData,
                            method="xgbTree", 
                            trControl= train_params)
 
-
 ```
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
-################check outputs################################vv
+################check outputs################################
 print(mod_xgb_fit)
 
 ```
-
 
 ##### 2) Plot
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
 mod_xgb_fit$bestTune
-
 
 ```
 
@@ -1940,7 +1894,6 @@ mod_xgb_fit$bestTune
 xgb.pred <- predict(mod_xgb_fit, newdata = TestData)  
 
 ```
-
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1965,6 +1918,8 @@ rm(plot_pred_unbalance, p)
 
 ```
 
+We can see that there is a higher probability of predicting a positive value. 
+
 ##### 4)  Diagnosis (Unbalance)
 
 ```{r confusion matrix xgb, echo=FALSE, message=FALSE, warning=FALSE}
@@ -1985,8 +1940,9 @@ xgb<- c(sens , sp, acc)
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
-
 ```
+
+Here the sensitivity is quite low, 53%, the specificity is at 87% though and the accuracy at 77%. The number of false positive is high, being 35. 
 
 #### {.toc-ignore}
 
@@ -1997,17 +1953,14 @@ rm(cm, sens, sp, acc)
 ```{r xgbb-model, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
-                                    repeats=5, sampling = "down", 
-                                    summaryFunction = twoClassSummary)
+                                    repeats=5, sampling = "down")
 
 mod_xgb_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="xgbTree", 
                             metric = "Sens", #optimize sensitivity
                            maximize = TRUE,
                            trControl= train_params)
 
-
 ```
-
 
 ```{r , echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -2015,7 +1968,6 @@ mod_xgb_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="xgbTree",
 print(mod_xgb_fitbalance)
 
 ```
-
 
 ##### 6) Prediction
 
@@ -2048,6 +2000,8 @@ rm(plot_pred_balance, p)
 
 ```
 
+We can see that it is indeed a bit more balanced, however there is still a majoritiy of positive values predicted. 
+
 ##### 7) Diagnosis (balance)
 
 ```{r confusion matrix xgbb, echo=FALSE, message=FALSE, warning=FALSE}
@@ -2071,9 +2025,9 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
+The sensitivity is almost 67%, the specificity is at 70% and the accuracy is almost 70%. The number of false positive is still at 25. 
+
 #### {.toc-ignore}
-
-
 
 ## Assess model
 
@@ -2099,7 +2053,9 @@ names(summary_table) <- c("Sensitivity", "Specificity", "Accuracy")
 kableExtra::kable(summary_table, caption = "Summary table for assess the model")%>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
-
 ```
 
+We can see that in temrs of sensitivity, the best models are the balanced FDA, Random Forest and Neural Networks, in terms of specificity the unbalanced decision tree, LDA and logistic regression (we were expecting the unbalanced version to perform better in terms of specificity as we have a majority of positive values in the predictions, hence there will be more positive value predicted which will increase the value of the specificity), while in terms of accuracy the unbalanced LDA, logistic and Random Forest (same reasoning as for the specificity). 
+We were quite surprised by the results we have found, we were expecting the XGB to perform better then the random forest, but we can see that it is actually giving lower values both for specificity and accuracy in the unbalanced case, while the balanced case is only worse in terms of sensitivity compared to the balanced random forest. 
 
+More details on the evaluation of the models in the next chapter. 

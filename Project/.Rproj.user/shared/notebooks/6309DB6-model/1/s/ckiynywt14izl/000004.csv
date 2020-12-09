@@ -1,6 +1,0 @@
-"0","#removing temporary element"
-"0","rm(cm)"
-"0","#confusion matrix of pruned model"
-"0","cm <- confusionMatrix(as.factor(ct.prune.pred), as.factor(TestData$RESPONSE))"
-"0","#draw cm of pruned model"
-"0","draw_confusion_matrix(cm)"

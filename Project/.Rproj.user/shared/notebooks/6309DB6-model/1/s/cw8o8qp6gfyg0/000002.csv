@@ -1,4 +1,0 @@
-"0","#building the confusion matrix for the QDA"
-"0","cm <- confusionMatrix(as.factor(qda.class), as.factor(TestData$RESPONSE))"
-"0","#drwaing the matrix"
-"0","draw_confusion_matrix(cm)"

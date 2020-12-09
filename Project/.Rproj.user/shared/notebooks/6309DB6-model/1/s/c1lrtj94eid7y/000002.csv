@@ -1,1 +1,0 @@
-"0","mda.pred <- predict(mda.fit, newdata = TestData)"

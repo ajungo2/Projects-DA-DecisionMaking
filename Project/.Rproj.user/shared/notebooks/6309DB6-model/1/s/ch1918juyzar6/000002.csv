@@ -1,5 +1,0 @@
-"0","lda.pred <- predict(lda.fit, newdata = TestData)"
-"0","lda.class <- lda.pred$class"
-"0","#plot the error of the predictions"
-"0","par(mfrow=c(1,1))"
-"0","plot(lda.pred$x[,1], lda.pred$class, col=TestData$RESPONSE)"

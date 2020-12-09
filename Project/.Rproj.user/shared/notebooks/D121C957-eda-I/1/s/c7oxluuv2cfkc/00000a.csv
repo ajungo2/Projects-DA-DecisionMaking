@@ -1,4 +1,0 @@
-"0","plot_boxplot(data[,c(-1)], by= 'RESPONSE',  "
-"0","             ncol = 2,  ggtheme =theme_bw(), "
-"0","             title = ""Side-by-side boxplots"","
-"0","             geom_boxplot_args = list(""outlier.color"" = ""red""))"

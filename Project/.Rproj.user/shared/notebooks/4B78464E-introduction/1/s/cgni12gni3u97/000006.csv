@@ -1,4 +1,0 @@
-"0","data<- read_excel(here::here(""data/GermanCredit.csv""), skip=1) 
-"
-"2","Error: Can't establish that the input is either xls or xlsx.
-"

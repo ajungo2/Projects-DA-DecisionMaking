@@ -1,4 +1,0 @@
-"0",""
-"0","data %>% "
-"0","  ggplot(aes(RESPONSE)) + geom_bar(aes(fill = PROPERTY), position = ""dodge"") + scale_fill_discrete(name = ""PROPERTY"", labels = c(""OTHER"", ""REAL_ESTATE"", ""PROP_UNKN_NONE""))"
-"0",""

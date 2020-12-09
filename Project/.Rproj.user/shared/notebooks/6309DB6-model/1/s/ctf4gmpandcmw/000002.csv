@@ -1,3 +1,0 @@
-"0","#cp graph"
-"0","par(pty = ""s"")"
-"0","plotcp(ct.fit)"

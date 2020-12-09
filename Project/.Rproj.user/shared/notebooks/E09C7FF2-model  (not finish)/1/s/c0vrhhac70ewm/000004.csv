@@ -1,3 +1,0 @@
-"0",""
-"0","qda.pred.b <- predict(mod_qda_fitbalance, newdata = TestData)  "
-"0",""

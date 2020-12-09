@@ -1,5 +1,0 @@
-"0","####################Confusion Matrix#################"
-"0","#bulding cm"
-"0","cm <- caret::confusionMatrix(as.factor(xgboost.pred_balance), as.factor(TestData$RESPONSE))"
-"0","#################draw of confusion matrix"
-"0","draw_confusion_matrix(cm)"

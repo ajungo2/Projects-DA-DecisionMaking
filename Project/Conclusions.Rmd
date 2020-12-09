@@ -10,13 +10,11 @@ output:
 
 > Goal: Losses < 10% amount of credit
 
-According to the [NASA Technical Reports](https://ntrs.nasa.gov/citations/20140008715), human error has been reported as being responsible for 60%‐80% of failure, which means that an automation of the selection process would reduce the error and the risk of the no collecting of the interest generated for the loans. However, the application of this tool must co-exist with experienced personal because there are some factors that must be taken into account for example the verification of the documents provided for the application. In addition, there would be an improvement in response times and the workload towards staff.
-
+According to the [NASA Technical Reports](https://ntrs.nasa.gov/citations/20140008715), human error has been reported as being responsible for 60%‐80% of failure, which means that an automation of the selection process would reduce the error and the risk of the not repayment of the loans. However, the application of this tool must co-exist with experienced staff, because there are some factors that must be taken into account, for example the verification of the documents provided for the application. In addition, there would be an improvement in response times and a decrease of the workload for the staff.
 
 ## Conclusions for data mining
 
-At the beginning of the project, we asked ourselfs  some questions that would help us meet our main objective, through which we will provide some conclusions. 
-
+At the beginning of the project, we asked ourselfs some questions that would have helped us meet our main objective, through which we will provide our conclusions. 
 
 > Are there any variables that could be grouped?
 
@@ -24,11 +22,11 @@ Yes, we have tested the independence of some variables and we have grouped them.
 
 > Have we used all the original independent variables of the model?
 
-No, at the end we select the 15 variables which brings more information to the model, they are: `r names(data_sel[,-1])`
+No, at the end we select the 15 variables which brings the most of the information to the model, they are: `r names(data_sel[,-1])`
 
 > Is the data balanced regarding the answer variable?
 
-No, the data is not balance. At the beginning of the model we detect a greater inclination for the prediction of positives, which means that the data is bias and to correct it we change the parameters for the training of each model to balance the data and maximize the sensitivity.
+No, the data is not balance. At the beginning of the model we detect a greater inclination for the prediction of positives, which means that the data is biased. To correct it, we changed the parameters for the training of each model in order to balance the data and maximize the sensitivity.
 
 > Does it make sense to balance the data to avoid the model being biased?
 
@@ -36,8 +34,8 @@ Yes, the new solutions with balanced data, in general, showed greater accuracy a
 
 > Accuracy, sensivity or specificity, which we need to be more focus on?
 
-In our case, we focus on maximizing the *sensitivity*, the positive prediction ratio is key to avoid the prediction of a false positive, this could increases the risk of giving the credit to a client cannot meet the payments, therefore, the bank could not collect the interest.
+In our case, we focused on maximizing the *sensitivity*, the positive prediction ratio is key to avoid the prediction of a false positive, this could increases the risk of giving the credit to a client that cannot afford the repayments, therefore, the bank could not collect the interest.
 
 > Which model fit better?
 
-As, we mention earlier in the evaluation section, we decided to go for the **random forest model**. It is the model that best manages the trade-off between the accuracy and sensitivity and with the lowest percentage of losses 
+As we mention earlier in the evaluation section, we decided to go for the **random forest model**. It is the model that best manages the trade-off between the accuracy and sensitivity and with the lowest percentage and value of losses.  

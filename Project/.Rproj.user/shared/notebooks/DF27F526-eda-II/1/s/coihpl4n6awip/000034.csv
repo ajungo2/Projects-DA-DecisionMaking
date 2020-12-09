@@ -1,5 +1,0 @@
-"0","#Representation of output variable in terms of SEX_MALE"
-"0","data %>% "
-"0","  ggplot(aes(RESPONSE)) + "
-"0","  geom_bar(aes(fill = factor(SEX_MALE)), position = ""dodge"")+ "
-"0","  labs(color = """", fill = ""SEX_MALE"", x = ""RESPONSE"", y = ""count"") "

@@ -1,3 +1,0 @@
-"0",""
-"0","xgb.pred <- predict(mod_xgb_fit, newdata = TestData)  "
-"0",""

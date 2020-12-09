@@ -1,7 +1,0 @@
-"0",""
-"0","#Respesentation of SEX_MALE per value"
-"0","data %>% "
-"0","  ggplot(aes(SEX_MALE)) + "
-"0","  geom_bar(aes(fill = factor(SEX_MALE))) + "
-"0","  theme(legend.position = ""none"")  + "
-"0","  geom_label(stat = 'count', aes(label =..count..)) "

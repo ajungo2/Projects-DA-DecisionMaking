@@ -1,3 +1,0 @@
-"0",""
-"0","data %>% "
-"0","ggplot(aes(PROPERTY)) + geom_bar(aes(fill = PROPERTY)) + scale_fill_discrete(name = ""PROPERTY"", labels = c(""OTHER"", ""REAL_ESTATE"", ""PROP_UNKN_NONE"")) + geom_label(stat = 'count', aes(label =..count..))  "

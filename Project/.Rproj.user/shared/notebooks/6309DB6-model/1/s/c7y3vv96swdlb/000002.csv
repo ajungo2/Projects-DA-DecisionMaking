@@ -1,4 +1,0 @@
-"0","#####################Predictions with the model ##########################################"
-"0","predict_xgb1_balance <- predict(model_xgboost_balance, test_xgb_matrix)"
-"0","#predict_xgb1 <- as.data.frame(predict_xgb1) #---> if we want to create a kagle"
-"0","xgboost.pred_balance <- ifelse(predict_xgb1_balance > 0.5, 1, 0) #change the probability to binary output"

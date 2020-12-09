@@ -9,7 +9,7 @@ output:
 
 ## Our principal goal
 
-**Our main goal** is evaluate different models and choose the best within them to determine if new applicants represent a good or bad credit risk.  
+**Our main goal** is to evaluate different models and choose the best within them to determine if new applicants represent a good or bad credit risk.
 
 Under this context, we decided to use the methology named "Cross-industry standard process for data mining" (CRISP-DM). This model consists in six phases that naturally describes the data science life cycle. Below, you will find a picture that describe this process.   
 
@@ -31,7 +31,7 @@ knitr::include_graphics(here::here("data/CRISP-DM.png"))
 
 ## The data
 
-For this project, we will use the data "GermanCredit.csv" provided in the course Projects in Data Analytics for Decision Making given by Professor Jacques Zuber, which contains 1'000 past credit applicants, described by 30 variables.
+For this project, we will use the data `GermanCredit.csv` provided in the course Projects in Data Analytics for Decision Making given by Professor Jacques Zuber, which contains 1'000 observations about credit applicants, described by 30 variables.
 
 ```{r, include=FALSE}
 
@@ -88,6 +88,7 @@ library(explore)
 library(rpart.plot)
 library(parsnip)
 library(xgboost)
+library(nnet)
 
 ```
 
@@ -105,5 +106,5 @@ In order to make a better analysis, we ask ourselves some questions that we will
 2) Have we used all the original independent variables of the model?
 3) Is the data balanced regarding the answer variable?
 4) Does it make sense to balance the data to avoid the model being biased?
-5) Accuracy, sensivity or specificity, which we need to be more focus on?
-6) Which model fit better?
+5) Accuracy, sensivity or specificity, which we need to be more focused on?
+6) Which model fits the data the best?

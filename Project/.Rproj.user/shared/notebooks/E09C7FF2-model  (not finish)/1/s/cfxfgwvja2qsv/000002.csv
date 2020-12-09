@@ -1,3 +1,0 @@
-"0",""
-"0","lda.pred <- predict(mod_lda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer"
-"0",""

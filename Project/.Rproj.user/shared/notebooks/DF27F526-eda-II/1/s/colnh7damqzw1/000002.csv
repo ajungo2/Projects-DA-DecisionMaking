@@ -1,3 +1,0 @@
-"0","data %<>% "
-"0","  mutate(SEX_MALE = ifelse((MALE_DIV | MALE_SINGLE | MALE_MAR_or_WID) == 1, 1, 0)) %>% "
-"0","  mutate(SEX_MALE = as.factor(SEX_MALE))"

@@ -1,2 +1,0 @@
-"0","ct.pred <- predict(ct.fit, newdata = TestData, type = ""class"")"
-"0","ct.prune.pred <- predict(ct.prune, newdata = TestData, type = ""class"")"

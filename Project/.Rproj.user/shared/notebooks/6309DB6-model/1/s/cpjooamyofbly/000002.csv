@@ -1,2 +1,0 @@
-"0","#obtain probability"
-"0","rf.pred <- predict(rf.fit, newdata = TestData, type = ""class"")"

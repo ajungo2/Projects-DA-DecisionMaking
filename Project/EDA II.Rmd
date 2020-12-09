@@ -18,16 +18,16 @@ output:
 
 We will consider how to correct the inconsistencies we have found in the previous chapter, which are on four different variables, namely:
 
-- EDUCATION: there was an error in the registration of the information and the -1 must be replaced by 1.
-- GUARANTOR: there was an error in the registration of the information and the 2 must be replaced by 1.
-- PRESENT_RESIDENT: Again, there was an error in the registration of the information and the register was made in years instead of the category.
-- AGE: Here it is clear that we have some outliers, we should limit the age to 75.
+- EDUCATION: there was an error in the registration of the information and the -1 must be replaced by a 1.
+- GUARANTOR: there was an error in the registration of the information and the 2 must be replaced by a 1.
+- PRESENT_RESIDENT: there was an error in the registration of the information and the value was considered in years instead of categories.
+- AGE: Here it is clear that we have an outlier, we should limit the age to 75.
 
 We have already decided how to correct them, hence we will move on to that direction. 
 
 ### Correct, remove or ignore noise 
 
-We will start by correcting the noises of `EDUCATION`, `GUARANTOR` and `PRESENT_RESIDENT`, by simply replacing the value -1 and 2 with value 1 for the first two and by changing the numbers of the categories for the latter by dimishing each value by 1, this is going to give us the true value corresponding to the data description that you can find in the appendix. 
+We will start by correcting the noises of `EDUCATION`, `GUARANTOR` and `PRESENT_RESIDENT`, by simply replacing the value -1 and 2 with value 1 for the first two and by changing the numbers of the categories for the latter by dimishing each value by 1, this is going to give us the true value corresponding to the data description that was given to us. 
 
 ```{r noise correction}
 
@@ -47,7 +47,7 @@ data %<>%
 
 ### Decide how to deal with special values and their meaning 
 
-This is specifically for the case of AGE. As previously said, we believe that the 125 age is an error, hence we will discard it by selecting only the observation with value lower then 76 (as 75 is the second highest value).
+This is specifically for the case of `AGE`. As previously said, we believe that the 125 age is an error, hence we will discard it by selecting only the observation with value lower then 76 (as 75 is the second highest value).
 
 ```{r age correction}
 
@@ -110,7 +110,7 @@ Moreover, thanks to the second graph, we can see a difference on the positive va
 
 ### Collide variables 
 
-We will now move on to the other variables aforementioned, so that instead of having multiple dummy variables, we have a factor variables with multiple levels. 
+We will now move on to the other variables aforementioned, so that instead of having multiple dummy variables, we have factor variables with multiple levels. 
 
 #### Purpose 
 
@@ -121,11 +121,11 @@ This variable will take the following values:
 2 = the purpose for the credit was a used car
 3 = the purpose for the credit was funriture
 4 = the purpose for the credit was a radio or a television 
-5 = the purpose for the credit was to increase eductation 
+5 = the purpose for the credit was to increase the level of eductation 
 6 = the purpose for the credit was a retraining 
 0 = the purpose for the credit was something else 
 
-It will be created by taking the respective value each time the dummy corresponding to one purpose takes value 1, if none of them has value 1, then the `PURPOSE`will take value 0.
+It will be created by taking the respective value each time the dummy corresponding to one purpose, hence if one of them takes value 1, so will its level, if none of them has value 1, then the `PURPOSE` will take value 0.
 
 ```{r purpose creation}
 
@@ -140,7 +140,7 @@ data %<>%
 
 ```
 
-Let's have a look at the new variable, in terms of number of observation per level and its link to the response variable. 
+Let's have a look at the new variable, in terms of number of observations per level and its link to the response variable. 
 
 ```{r EDA PURPOSE} 
 
@@ -169,7 +169,7 @@ In terms of output variable, shown in the second graph, the highest differences 
 
 #### Property 
 
-Now we will create the property variable. 
+Now, we will create the property variable. 
 
 We will start by looking at if the two variables that we want to use (namely, `REAL_ESTATE` and `PROP_UNKN_NONE`) are connected and hence it makes sense to put them together. 
 
@@ -183,7 +183,7 @@ chisq.test(data$REAL_ESTATE, data$PROP_UNKN_NONE)
 
 We can see that the two variables are statistically significantly associated, as the p-value is really low, almost equal to 0, and hence is lower than the considered significance level of alpha = 5%.
 
-We can conclude that it makes sense to merge the two variables into one factor variable, which will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
+We can conclude that it makes sense to merge the two variables into one factor, which will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
 
 ```{r property creation}
 
@@ -193,7 +193,7 @@ data %<>%
 
 ```
 
-Let's have a look also at this new variable, once again in terms of number of observations per level and if there is a difference of occurences given the output variables. 
+Let's have a look also at this new variable, once again in terms of number of observations per level and if there is a difference of occurences given the output variable. 
 
 ```{r EDA PROPERTY}
 
@@ -205,13 +205,13 @@ data %>%
 
 ```
 
-We can clearly see in the first graph that the majority of the observations does not have a clear value for the property, being equal to 0 (563 compared to the 282 of `REAL_ESTATE` and 154 of `PROP_UNKN_NONE`).
+We can clearly see in the first graph that the majority of the observations do not have a clear value for the property, being equal to 0 (563 compared to the 282 of `REAL_ESTATE` and 154 of `PROP_UNKN_NONE`).
 
 If we consider the response, hence the second graph, we cannot really see a difference from the person having a real estate or not having a property and having a credit rejected, while if they have a real estate it is more probable that they will get the credit compared to those who have not.
 
 #### Residence 
 
-Now let's look at the third variable that we wish to know if it is needed to be created. 
+Now let's look at the second variable that we wish to know if it is needed to be created. 
 
 This variable will be created using the `RENT` and `OWN_RES` variables to describe whether a person has a residence or not. 
 
@@ -235,7 +235,7 @@ data %<>%
 
 ```
 
-And let's explore the new variable a little bit, in terms of number of observations per level and if there is a difference in the possibility to get a credit given this variable. 
+And let's explore the new variable a little bit, in terms of number of observations per level and if there is a difference in the possibility to get a credit given this information. 
 
 ```{r RESIDENCE EDA}
 
@@ -261,7 +261,7 @@ Looking at the second graph, comparing it to the response variable, we can see t
 
 Here we integrate the variables we created in the dataset and we discard the ones we used to create them, so that we avoid the problem of multicollinearity. 
 
-We will need to drop also one of the variables we used to create the `SEX_MALE` variable, to avoid multicollinearity problems. The choice is on `MALE_DIV`.
+We will need to drop also one of the variables we used to create the `SEX_MALE` variable, for the same reason. The choice is on `MALE_DIV`.
 
 We will also drop the identifier variable (`OBS.`) as it is not needed in the modelling part. 
 
@@ -293,9 +293,9 @@ cor(data[2:30], data$RESPONSE) %>% as.data.frame() %>% dplyr::arrange(abs(V1))
 
 ```
 
-We can see that, in general, the correlation between the output variable and the explanatory variable is not particularly high, having a maximum of 0.35 with `CHCK_ACC` and a minimum of -0.00306 with `PRESENTE_RESIDENT`, in absolute terms. 
+We can see that, in general, the correlation between the output variable and the explanatory variable is not particularly high, having a maximum of 0.35 with `CHCK_ACC` and a minimum of -0.00306 with `PRESENTE_RESIDENT`. 
 
-We could decide to select only the variables having a correlation higher than a certain absolute value, however, as the difference among the correlations is not really high, we prefer not to make a selection here, and rather leave this decision to the modelling of a simple linear regression and a choice made on the AIC.
+We could decide to select only the variables having a correlation higher than a certain absolute value, however, as the difference among the correlations is not really high, and as we have used the basic dataset and not the one with the variables we have just created, we prefer not to make a selection here, and rather leave this decision to the modelling of a simple linear regression and a choice made on the AIC.
 
 > The Akaike information criterion (AIC) is a mathematical method for evaluating how well a model fits the data it was generated from. In statistics, AIC is used to compare different possible models and determine which one is the best fit for the data.
 source: https://www.scribbr.com/statistics/akaike-information-criterion/
@@ -345,6 +345,6 @@ str(data_sel)
 
 ```
 
-The selected dataset will hence have 999 observations of 16 different variables, 15 of which are the independent variables, 4 of which are continuous variable (i.e.: `DURATION`,`AMOUNT`,`INSTALL_RATE` and `NUN_CREDITS`) and the remaining are all categorical or dummy variables. The first variable is the output (i.e. `RESPONSE`), which is also a dummy.
+The selected dataset will hence have 999 observations of 16 different variables, 15 of which are the independent variables, 4 of which are continuous variable (i.e.: `DURATION`,`AMOUNT`,`INSTALL_RATE` and `NUM_CREDITS`) and the remaining are all categorical or dummy variables. The first variable is the output (i.e. `RESPONSE`), which is also a dummy.
 
 We are now ready to move on with the modelling part of our analysis. 

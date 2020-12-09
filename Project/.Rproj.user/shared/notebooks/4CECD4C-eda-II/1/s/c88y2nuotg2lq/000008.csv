@@ -1,3 +1,0 @@
-"0",""
-"0","data %>% "
-"0","  ggplot(aes(RESIDENCE)) + geom_bar(aes(fill = RESIDENCE)) + scale_fill_discrete(name = ""RESIDENCE"", labels = c(""OTHER"", ""RENT"", ""OWN_RES""))+ geom_label(stat = 'count', aes(label =..count..)) "

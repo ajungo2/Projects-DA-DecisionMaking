@@ -1,4 +1,0 @@
-"0",""
-"0","#probability given the model"
-"0","lg.pred.b <- predict(mod_lg_fitbalance, newdata = TestData)  "
-"0",""

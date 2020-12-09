@@ -1,4 +1,0 @@
-"0","#probability given the model"
-"0","glm.probs <- predict(glm.fit, newdata = TestData, type = ""response"")  #predict give me the probability i am looking for the the binomial answer"
-"0","#use a cut of 0.5 to give the prediction"
-"0","glm.pred <- ifelse(glm.probs > 0.5, 1, 0)"

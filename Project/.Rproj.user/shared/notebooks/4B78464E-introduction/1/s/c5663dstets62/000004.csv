@@ -1,7 +1,0 @@
-"0",""
-"0","library(here)"
-"0","library(knitr)"
-"0","#we take this picture from here: "
-"0","#https://medium.com/@akanesen/how-to-manage-machine-learning-deep-learning-project-51f9b0fe164f"
-"0",""
-"0","knitr::include_graphics(here::here(""data/CRISP-DM.png""))"

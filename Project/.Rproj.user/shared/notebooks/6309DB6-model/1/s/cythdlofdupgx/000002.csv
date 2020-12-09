@@ -1,7 +1,0 @@
-"0","#fitting random forest"
-"0","rf.fit <- randomForest(RESPONSE ~., "
-"0","                       TrainData, "
-"0","                       ntree = 500, "
-"0","                       mtry = 4, "
-"0","                       importance = TRUE, "
-"0","                       replace = FALSE)"

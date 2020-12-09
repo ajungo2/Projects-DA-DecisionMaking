@@ -1,7 +1,0 @@
-"0",""
-"0","x<-inspect_num(data[,-32])"
-"0","show_plot(x, text_labels = TRUE, "
-"0","          alpha = 0.05, high_cardinality = 0,"
-"0","          plot_layout = NULL,  col_palette=3, "
-"0","          plot_type = ""bar"", label_thresh = 0.1) + theme_bw()"
-"0",""

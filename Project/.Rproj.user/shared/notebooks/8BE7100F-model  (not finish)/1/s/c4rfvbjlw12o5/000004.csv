@@ -1,7 +1,0 @@
-"0","#############Parameters"
-"0","sens<- caret::sensitivity(table(as.factor(dt.pred), as.factor(TestData$RESPONSE)))"
-"0","sp<- caret::specificity(table(as.factor(dt.pred), as.factor(TestData$RESPONSE)))"
-"0","acc<- 0.739"
-"0","decision_tree<- c(sens , sp, acc)"
-"0","#############remove temporary element"
-"0","rm(cm, sens, sp, acc)"
