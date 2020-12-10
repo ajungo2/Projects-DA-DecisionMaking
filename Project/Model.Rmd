@@ -6,7 +6,7 @@ output:
 ---
 # Model 
 
-```{r confusion matrix draw function, include=FALSE}
+```{r, include=FALSE}
 
 ############# Function for draw the confussion matrix####################################
 
@@ -87,7 +87,7 @@ Where $n= (1,2,3,4,5,6)$ and it represents each listed model in the selection te
 
 To be able to generate the model, first, we need to standardize the data, as the variables have different scales. Nevertheless, we will normalize only the continuous variables, as the categorical and dummy variables have only few different levels.  
 
-```{r scaling, warning=FALSE, message=FALSE, echo=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
 #selecting only the continuous variables to scale them
 
@@ -163,7 +163,7 @@ rm(p1, p2)
 
 Now that the normalization is done, lets move on by creation of the training and test set based on the data.This will be done by dividing it in a randomly selection into the two subsets, with 75% of the data in the training set and the remaining 25% in the test set.
 
-```{r test and training sets, include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
+```{r, include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
 
 #so that we always have the same division
 set.seed(2311)
@@ -217,7 +217,7 @@ p3<- ggplot2::ggplot(data=TestData, aes(x= RESPONSE, fill=RESPONSE)) +
 
 ```
 
-```{r , warning=FALSE, message=FALSE, echo=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
 grid.arrange(p0, p1, p2, p3, ncol=2)
 
@@ -252,7 +252,7 @@ For the application of the algorithm we will apply the following steps:
 
 ##### 1) Fitting the model
 
-```{r glm-model, echo=TRUE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 #Same division
 set.seed(1234)
@@ -267,7 +267,7 @@ mod_lg_fit <- caret::train(RESPONSE ~ ., TrainData, method="glm",
 
 ```
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################
 summary(mod_lg_fit)
@@ -278,7 +278,7 @@ In this step, we can see that the variables that take the highest importance and
 
 ##### 2) Coefficients 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ##variable is significance--> high coefficient = bring high information
 
@@ -316,14 +316,14 @@ To be clear, if for example the purpose variable takes value 3, only the coeffic
 Now we will get the predictions using this model. To being able to do it, we will start by getting the probabilities of the output given the coefficients we have found by fitting the model, then we will use a cut point of 0.5 to decide whether the value will be equal to 1 (if the probability it higher than 0.5) or 0 (otherwise).
 The model basically fit the information of the new observation in the function that is given above, and then it finds a value *eta* that is then used to get the prediction of the probability of the output by doint p = 1 / (1 + eta), which we will use to determine the class predicted for the outcome.
 
-```{r predictions lg, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 lg.pred <- predict(mod_lg_fit, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 
@@ -351,7 +351,7 @@ The unbalance towards the positive value prediction is more than clear, in this 
 
 ##### 4) Diagnosis 
 
-```{r confusion matrix lg, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(lg.pred), as.factor(TestData$RESPONSE))
@@ -379,7 +379,7 @@ The sensitivity is quite low, at 52%, the specificity, though, is high, almost 9
 
 ##### 5) Fitting the model
 
-```{r glmb-model, echo=TRUE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 #Same division
 set.seed(1234)
@@ -397,19 +397,18 @@ mod_lg_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="glm",
 ################check outputs################################vv
 summary(mod_lg_fitbalance)
 
-
 ```
 
 ##### 6) Prediction
 
-```{r predictions lgb, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #probability given the model
 lg.pred.b <- predict(mod_lg_fitbalance, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(lg.pred.b))
@@ -436,7 +435,7 @@ Contrary to the output of the first model, we can see that the proportion of the
 
 ##### 7) Diagnosis
 
-```{r confusion matrix lgb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(lg.pred.b), as.factor(TestData$RESPONSE))
@@ -495,7 +494,7 @@ Confusion matrix |
 
 We will start by fitting the model on the data.
 
-```{r rpart ,echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -510,7 +509,7 @@ mod_dt_fit <- caret::train(RESPONSE ~ ., TrainData, method="rpart",
 
 ```
 
-```{r ,echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################vv
 summary(mod_dt_fit$finalModel$frame)
@@ -519,7 +518,7 @@ summary(mod_dt_fit$finalModel$frame)
 
 ##### 2) Plot 
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.asp=1.5}
 
 #######plot #########################
 suppressMessages(library(rattle))
@@ -529,14 +528,14 @@ rattle::fancyRpartPlot(mod_dt_fit$finalModel)
 
 ##### 3) Prediction 
 
-```{r predictions rpart, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 dt.pred <- predict(mod_dt_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(dt.pred))
@@ -563,7 +562,7 @@ The prediction is clearly biased to a positive answer.
 
 ##### 4) Diagnosis 
 
-```{r confusion matrix rpart, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(dt.pred), as.factor(TestData$RESPONSE))
@@ -592,7 +591,7 @@ We can see that here the sensitivity is really low, while the specificity is hig
 
 ##### 5) Fitting the model
 
-```{r rpart-model, echo=TRUE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 #Same division
 set.seed(1234)
@@ -609,7 +608,7 @@ mod_dt_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rpart",
 
 ```
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################
 summary(mod_dt_fitbalance$finalModel$frame)
@@ -618,7 +617,7 @@ summary(mod_dt_fitbalance$finalModel$frame)
 
 ##### 6) Plot
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #######plot option 1 #########################
 ##plot(mod_dt_fitbalance$finalModel, uniform=TRUE,
@@ -635,7 +634,7 @@ rattle::fancyRpartPlot(mod_dt_fitbalance$finalModel)
 
 ##### 7) Prediction
 
-```{r predictions rpartb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #probability given the model
 dt.pred.b <- predict(mod_dt_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
@@ -643,7 +642,7 @@ dt.pred.b <- predict(mod_dt_fitbalance, newdata = TestData)  #predict give me th
 ```
 
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(dt.pred.b))
@@ -670,7 +669,7 @@ We can see that it is a bit more balanced, even if the number of positive predic
 
 ##### 8) Diagnosis 
 
-```{r confusion matrix rpartb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(dt.pred.b), as.factor(TestData$RESPONSE))
@@ -733,7 +732,7 @@ Steps for the application of the algorithm:
 
 ##### 1) Fitting the model
 
-```{r lda-model ,echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -746,7 +745,7 @@ mod_lda_fit <- caret::train(RESPONSE ~ ., TrainData, method="lda",
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################vv
 summary(mod_lda_fit)
@@ -761,13 +760,13 @@ Each new observation will be evaluated thanks to this formula, with its informat
 
 ##### 2) Prediction (unbalance)
 
-```{r predictions lda, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 lda.pred <- predict(mod_lda_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(lda.pred))
@@ -796,7 +795,7 @@ With this graph we confirm what has been explained in the fit part, which is the
 
 ##### 3) Diagnosis (Unbalance)
 
-```{r confusion matrix lda, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(lda.pred), as.factor(TestData$RESPONSE))
@@ -812,7 +811,6 @@ lda<- c(sens , sp, acc)
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
-
 ```
 
 Here the sensitivity is higher with respect to the previous unbalance models (above 40%), but it is still quite low. If we look at the accuracy, is quite low, as it is only around 78%. What is important to note is that 36 times in which the model would have predicted a positive value for the output, it should have been negative, which is something that could cost quite a lot to the copmany. 
@@ -823,7 +821,7 @@ Here the sensitivity is higher with respect to the previous unbalance models (ab
 
 ##### 4) Fitting the model: balance
 
-```{r ldab-model, echo=TRUE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
@@ -836,10 +834,9 @@ mod_lda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="lda",
                            maximize = TRUE, #maximize the metric
                            trControl= train_params)
 
-
 ```
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################vv
 summary(mod_lda_fitbalance)
@@ -850,13 +847,13 @@ summary(mod_lda_fitbalance)
 
 ##### 5) Prediction
 
-```{r predictions ldab, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 lda.pred.b <- predict(mod_lda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(lda.pred.b))
@@ -883,7 +880,7 @@ We can see that the situation is more balanced.
 
 ##### 6) Diagnosis (balance)
 
-```{r confusion matrix ldab, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(lda.pred.b), as.factor(TestData$RESPONSE))
@@ -921,7 +918,7 @@ Steps for the aplication of the algorithm:
 
 ##### 1) Fitting the model
 
-```{r qda-model ,echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -933,24 +930,22 @@ mod_qda_fit <- caret::train(RESPONSE ~ ., TrainData, method="qda",
 
 ```
 
-```{r ,echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################
 summary(mod_qda_fit)
 
 ```
 
-
 ##### 2) Prediction (unbalance)
 
-```{r predictions qda, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 qda.pred <- predict(mod_qda_fit, newdata = TestData)
 
 ```
 
-
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(qda.pred))
@@ -977,7 +972,7 @@ Here, it seems still that the majority of the false prediction are in the positi
 
 ##### 3) Diagnosis (Unbalance)
 
-```{r confusion matrix qda, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(qda.pred), as.factor(TestData$RESPONSE))
@@ -1006,7 +1001,7 @@ As we predicted, the model performs a little bit worse than the LDA, but for the
 
 ##### 4) Fitting the model: balance
 
-```{r qdab-model, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
@@ -1023,13 +1018,13 @@ mod_qda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="qda",
 
 ##### 5) Prediction
 
-```{r predictions qdab, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 qda.pred.b <- predict(mod_qda_fitbalance, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(qda.pred.b))
@@ -1056,7 +1051,7 @@ We can see that there is still some unbalance towards the positive value.
 
 ##### 6) Diagnosis (balance)
 
-```{r confusion matrix qdab, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(qda.pred.b), as.factor(TestData$RESPONSE))
@@ -1092,7 +1087,7 @@ Steps for the application of the algorithm:
 
 ##### 1) Fitting the model
 
-```{r fda-model ,echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -1106,7 +1101,7 @@ mod_fda_fit <- caret::train(RESPONSE ~ ., TrainData, method="fda",
 
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################vv
 mod_fda_fit
@@ -1115,13 +1110,13 @@ mod_fda_fit
 
 ##### 2) Prediction (unbalance)
 
-```{r predictions fda, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 fda.pred <- predict(mod_fda_fit, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(fda.pred))
@@ -1148,7 +1143,7 @@ The unbalance towards the positive value is more than clear in this graph.
 
 ##### 3) Diagnosis (Unbalance)
 
-```{r confusion matrix fda, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(fda.pred), as.factor(TestData$RESPONSE))
@@ -1175,7 +1170,7 @@ This model has a sensitivity of almost 55%, among one of the highest up to now, 
 
 ##### 4) Fitting the model: balance
 
-```{r fdab-model, echo=TRUE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
@@ -1188,7 +1183,7 @@ mod_fda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="fda",
 
 ```
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################vv
 summary(mod_fda_fitbalance)
@@ -1199,13 +1194,13 @@ summary(mod_fda_fitbalance)
 
 Using the model we get the predictions for the `RESPONSE` variable and we can construct the confidence matrix for this case.
 
-```{r predictions fdab, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 fda.pred.b <- predict(mod_fda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(fda.pred.b))
@@ -1232,7 +1227,7 @@ We can see that the situation is more balanced.
 
 ##### 6) Diagnosis (balance)
 
-```{r confusion matrix fdab, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(fda.pred.b), as.factor(TestData$RESPONSE))
@@ -1270,7 +1265,7 @@ Steps for the application of the algorithm:
 
 ##### 1) Fitting the model
 
-```{r mda-model ,echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -1283,7 +1278,7 @@ mod_mda_fit <- caret::train(RESPONSE ~ ., TrainData, method="mda",
 ```
 
 
-```{r ,echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################vv
 summary(mod_mda_fit)
@@ -1292,13 +1287,13 @@ summary(mod_mda_fit)
 
 ##### 2) Prediction (unbalance)
 
-```{r predictions mda, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 mda.pred <- predict(mod_mda_fit, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(mda.pred))
@@ -1325,7 +1320,7 @@ The unbalance towards the positive value is more than clear in this graph.
 
 ##### 3) Diagnosis (Unbalance)
 
-```{r confusion matrix mda, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(mda.pred), as.factor(TestData$RESPONSE))
@@ -1351,7 +1346,7 @@ The sensitivity in this case is around 55%, while the specificity is higher, rea
 
 ##### 4) Fitting the model
 
-```{r mdab-model, echo=TRUE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 #########################model######################################
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
@@ -1365,7 +1360,7 @@ mod_mda_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="mda",
 
 ```
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################vv
 mod_mda_fitbalance
@@ -1374,13 +1369,13 @@ mod_mda_fitbalance
 
 ##### 5) Prediction
 
-```{r predictions mdab, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 mda.pred.b <- predict(mod_mda_fitbalance, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(mda.pred.b))
@@ -1407,7 +1402,7 @@ We have still some unbalance toward the positive value.
 
 ##### 6) Diagnosis 
 
-```{r confusion matrix mdab, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(mda.pred.b), as.factor(TestData$RESPONSE))
@@ -1444,7 +1439,7 @@ Steps for the application of the algorithm:
 
 ##### 1) Fitting the model
 
-```{r rf-model, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 #Same division
 set.seed(1234)
@@ -1456,7 +1451,7 @@ mod_rf_fit <- caret::train(RESPONSE ~ ., TrainData, method="rf",
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################vv
 print(mod_rf_fit)
@@ -1478,7 +1473,7 @@ source: https://en.wikipedia.org/wiki/Out-of-bag_error
 
 ##### 2) Checking Variables
 
-```{r , echo=FALSE, fig.asp=1.5}
+```{r, echo=FALSE, fig.asp=1.5}
 
 #Variable importance analysis
 rf.fit <- randomForest::randomForest(RESPONSE ~., 
@@ -1499,14 +1494,14 @@ The most important variables appear to be CHK_ACC, DURATION and HISTORY in terms
 
 ##### 3) Prediction (unbalance)
 
-```{r predictions rf, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 rf.pred <- predict(mod_rf_fit, newdata = TestData)  #predict give me the probability i am looking for the the binomial answer
 
 ```
 
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(rf.pred))
@@ -1533,7 +1528,7 @@ The predictions shows a clear preference towards the positive value.
 
 ##### 4) Diagnosis (Unbalance)
 
-```{r confusion matrix rf, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(rf.pred), as.factor(TestData$RESPONSE))
@@ -1559,7 +1554,7 @@ Here the sensitivity is around 46%, the specificity is high (more than 87%) and 
 
 ##### 5) Fitting the model: balance
 
-```{r rfb-model, echo=TRUE, warning=FALSE, message=FALSE}
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
                                     repeats=5, sampling = "down")
@@ -1573,7 +1568,7 @@ mod_rf_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rf",
 ```
 
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################vv
 print(mod_rf_fitbalance)
@@ -1582,13 +1577,13 @@ print(mod_rf_fitbalance)
 
 ##### 6) Prediction
 
-```{r predictions rfb, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 rf.pred.b <- predict(mod_rf_fitbalance, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(rf.pred.b))
@@ -1615,7 +1610,7 @@ We can see that the predictions are more balanced.
 
 ##### 7) Diagnosis
 
-```{r confusion matrix rfb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(rf.pred.b), as.factor(TestData$RESPONSE))
@@ -1651,7 +1646,7 @@ Steps for the application of the algorithm:
 
 ##### 1) Fitting the model
 
-```{r nn-model, echo=TRUE, message=FALSE, warning=FALSE, results="hide"}
+```{r, echo=TRUE, message=FALSE, warning=FALSE, results="hide"}
 
 #Same division
 set.seed(1234)
@@ -1663,7 +1658,7 @@ mod_nn_fit <- caret::train(RESPONSE ~ ., TrainData, method="nnet",
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################
 print(mod_nn_fit)
@@ -1672,7 +1667,7 @@ print(mod_nn_fit)
 
 ##### 2) Plot
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE, fig.asp=2}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.asp=2}
 
 NeuralNetTools::plotnet(mod_nn_fit$finalModel, y_names = "yes/no")
 title("Graphical Representation of our Neural Network")
@@ -1681,13 +1676,13 @@ title("Graphical Representation of our Neural Network")
 
 ##### 3) Prediction (unbalance)
 
-```{r predictions nn, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 nn.pred <- predict(mod_nn_fit, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(nn.pred))
@@ -1714,7 +1709,7 @@ We can see an unblanced result toward the positive value.
 
 ##### 4) Diagnosis (Unbalance)
 
-```{r confusion matrix nn, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(nn.pred), as.factor(TestData$RESPONSE))
@@ -1742,7 +1737,7 @@ Here, the sensitivity is 53%, but the specificity is almost 88%, with an accurac
 
 ##### 5) Fitting the model: balance
 
-```{r nnb-model, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
+```{r, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
                                     repeats=5, sampling = "down")
@@ -1755,7 +1750,7 @@ mod_nn_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="nnet",
 
 ```
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################
 print(mod_nn_fitbalance)
@@ -1764,13 +1759,13 @@ print(mod_nn_fitbalance)
 
 ##### 6) Prediction
 
-```{r predictions nnb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 nn.pred.b <- predict(mod_nn_fitbalance, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(nn.pred.b))
@@ -1795,7 +1790,7 @@ rm(plot_pred_balance, p)
 
 ##### 7) Diagnosis (balance)
 
-```{r confusion matrix nnb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(nn.pred.b), as.factor(TestData$RESPONSE))
@@ -1832,7 +1827,7 @@ Steps for the application of the algorithm:
 
 ##### 1) Fitting the model
 
-```{r xgb-model, echo=TRUE, message=FALSE, warning=FALSE, results="hide"}
+```{r, echo=TRUE, message=FALSE, warning=FALSE, results="hide"}
 
 ######################### transform data ############
 data_xgboost <- purrr::map_df(data_scale, function(columna) {
@@ -1872,7 +1867,7 @@ mod_xgb_fit <- caret::train(RESPONSE ~ ., TrainData,
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 ################check outputs################################
 print(mod_xgb_fit)
@@ -1881,7 +1876,7 @@ print(mod_xgb_fit)
 
 ##### 2) Plot
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 mod_xgb_fit$bestTune
 
@@ -1889,13 +1884,13 @@ mod_xgb_fit$bestTune
 
 ##### 3) Prediction (unbalance)
 
-```{r predictions xgb, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 xgb.pred <- predict(mod_xgb_fit, newdata = TestData)  
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_unbalance <- as.data.frame(as.vector(xgb.pred))
@@ -1922,7 +1917,7 @@ We can see that there is a higher probability of predicting a positive value.
 
 ##### 4)  Diagnosis (Unbalance)
 
-```{r confusion matrix xgb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(xgb.pred), as.factor(TestData$RESPONSE))
@@ -1950,7 +1945,7 @@ Here the sensitivity is quite low, 53%, the specificity is at 87% though and the
 
 ##### 5) Fitting the model: balance
 
-```{r xgbb-model, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
+```{r, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
 
 train_params <- caret::trainControl(method = "repeatedcv", number = 10, 
                                     repeats=5, sampling = "down")
@@ -1962,7 +1957,7 @@ mod_xgb_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="xgbTree",
 
 ```
 
-```{r , echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################
 print(mod_xgb_fitbalance)
@@ -1971,13 +1966,13 @@ print(mod_xgb_fitbalance)
 
 ##### 6) Prediction
 
-```{r predictions xgbb, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
 xgb.pred.b <- predict(mod_xgb_fitbalance, newdata = TestData) 
 
 ```
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #prediction given the model
 plot_pred_balance <- as.data.frame(as.vector(xgb.pred.b))
@@ -2004,7 +1999,7 @@ We can see that it is indeed a bit more balanced, however there is still a major
 
 ##### 7) Diagnosis (balance)
 
-```{r confusion matrix xgbb, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 #############confusion matrix 
 cm <- confusionMatrix(as.factor(xgb.pred.b), as.factor(TestData$RESPONSE))
@@ -2033,7 +2028,7 @@ The sensitivity is almost 67%, the specificity is at 70% and the accuracy is alm
 
 For this section we will measure the main parameters of the six analyzed models.
 
-```{r , echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 Details<- c("Sensitivity", "Specificity", "Accuracy")
 summary_table<- data.frame(Details, logistic, logistic_balance, 

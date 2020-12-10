@@ -14,7 +14,7 @@ In order to do it, we will have a look at the quantity of false positive that th
 
 The ones we will look at in the specific are the balanced versions of the neural network, random forest and the xgboot, as they were the ones having the highest performance in terms of all the parameters we are looking at: specificity, sensitivity, accuracy, the others had good values in one, but performed poorly in the other parameters.
 
-```{r false positive}
+```{r}
 
 RF <- confusionMatrix(as.factor(rf.pred.b), as.factor(TestData$RESPONSE))$table[2,1]
 
@@ -32,7 +32,7 @@ The table shows the number of false positive instances in the predictions given 
 
 However, the models are still quite satisfying, as the false positive are only a low percentage compared to the number of observations that are tested, you can find the values in the following tables.
 
-```{r percentage}
+```{r}
 
 FP %<>% dplyr::mutate(Model = c("RF", "NN", "XGB"), 
                      FP_Perc = (FP[,1]/nrow(TestData))) %>% dplyr::select("Model", everything())
@@ -44,7 +44,7 @@ We can see that the 3 models we have chosen have a percentage of false positive 
 
 We can calculate the maximum losses that could happen if all the people that belongs to the false positive group will not actually pay back the credit they have been granted.
 
-```{r losses}
+```{r}
 
 amount <- data_sel[-val_index,]$AMOUNT #get the amount from the unscaled data corresponding to the test set
 
@@ -69,7 +69,7 @@ As we can see, the amounts ranges from `r losses.xgb` to `r losses.rf`. The rand
 
 We want to determine whether these losses represent a high percentage of the total amount of credit that would be granted to the people belonging to the test set. 
 
-```{r losses percentage}
+```{r}
 
 sel <- data_sel[-val_index,] #getting the observations unscaled 
 pos <- sel %>% dplyr::filter(RESPONSE == 1) %>% dplyr::select(AMOUNT) #selecting only the amount of the credits that are granted
@@ -84,7 +84,7 @@ As we can see, the model that as the lowest percentage is the random forest and 
 However, we can also say that the percentage of the losses given by the neural network are exceeding the threshold by less than 1%, hence it could be discussed to also use one of these models if it would mean a lower cost for the company in terms of complexity and computation time. 
 This applies only for the neural network and not for the XGB, not only it performed worse, but also was taking quite some time to be fitted. What is more, the random forest allows for a higher degree of interpretation, while the neural network is more used as a *black box*. 
 
-```{r evaluation}
+```{r}
 
 cbind(FP, Losses[,-1])
 

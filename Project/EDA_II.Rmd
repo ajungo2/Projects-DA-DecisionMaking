@@ -77,7 +77,7 @@ We will start by the variable describing the sex of the considered person: this 
 
 More specifically, if either one of the variables used to construct the new one has value 1, so will the `SEX_MALE` variable, otherwise it will have value 0. 
 
-```{r male creation}
+```{r}
 
 data %<>% 
   mutate(SEX_MALE = ifelse((MALE_DIV | MALE_SINGLE | MALE_MAR_or_WID) == 1, 1, 0)) %>% 
@@ -87,7 +87,7 @@ data %<>%
 
 We will now explore a bit the new variable we have created, by looking at the number of instances for each category and how it is affected in terms of response variable. 
 
-```{r EDA SEX_MALE}
+```{r}
 
 #Respesentation of SEX_MALE per value
 data %>% 
@@ -127,7 +127,7 @@ This variable will take the following values:
 
 It will be created by taking the respective value each time the dummy corresponding to one purpose, hence if one of them takes value 1, so will its level, if none of them has value 1, then the `PURPOSE` will take value 0.
 
-```{r purpose creation}
+```{r}
 
 data %<>% 
   mutate(PURPOSE = ifelse(NEW_CAR == 1, 1, 
@@ -142,7 +142,7 @@ data %<>%
 
 Let's have a look at the new variable, in terms of number of observations per level and its link to the response variable. 
 
-```{r EDA PURPOSE} 
+```{r} 
 
 data %>% 
   ggplot(aes(PURPOSE)) + 
@@ -175,7 +175,7 @@ We will start by looking at if the two variables that we want to use (namely, `R
 
 In order to do so, as we previously mentioned, we will perform a chi-squared independence test. 
 
-```{r chi-square test property}
+```{r}
 
 chisq.test(data$REAL_ESTATE, data$PROP_UNKN_NONE)
 
@@ -185,7 +185,7 @@ We can see that the two variables are statistically significantly associated, as
 
 We can conclude that it makes sense to merge the two variables into one factor, which will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
 
-```{r property creation}
+```{r}
 
 data %<>% 
   mutate(PROPERTY = as.factor(ifelse(REAL_ESTATE == 1, 1, 
@@ -195,7 +195,7 @@ data %<>%
 
 Let's have a look also at this new variable, once again in terms of number of observations per level and if there is a difference of occurences given the output variable. 
 
-```{r EDA PROPERTY}
+```{r}
 
 data %>% 
 ggplot(aes(PROPERTY)) + geom_bar(aes(fill = PROPERTY)) + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE")) + geom_label(stat = 'count', aes(label =..count..))  
@@ -217,7 +217,7 @@ This variable will be created using the `RENT` and `OWN_RES` variables to descri
 
 Let's start once again by the chi-squared independence test. 
 
-```{r chi-square residence}
+```{r}
 
 chisq.test(data$RENT, data$OWN_RES)
 
@@ -227,7 +227,7 @@ Also here, we can conclude that the two variables are statistically significantl
 
 Hence, we will create the residence variable, which will take value 1 if the person is renting, value 2 if the person is owning their own residence and value 0 otherwise. 
 
-```{r residence creation}
+```{r}
 
 data %<>% 
   mutate(RESIDENCE = as.factor(ifelse(RENT == 1, 1, 
@@ -237,7 +237,7 @@ data %<>%
 
 And let's explore the new variable a little bit, in terms of number of observations per level and if there is a difference in the possibility to get a credit given this information. 
 
-```{r RESIDENCE EDA}
+```{r}
 
 data %>% 
   ggplot(aes(RESIDENCE)) + geom_bar(aes(fill = RESIDENCE)) + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))+ geom_label(stat = 'count', aes(label =..count..)) 
@@ -265,7 +265,7 @@ We will need to drop also one of the variables we used to create the `SEX_MALE` 
 
 We will also drop the identifier variable (`OBS.`) as it is not needed in the modelling part. 
 
-```{r selection}
+```{r}
 
 data_sel <- data %>%
                 dplyr::select(CHK_ACCT, DURATION, HISTORY, PURPOSE,
@@ -287,7 +287,7 @@ To further select the data we will use the correlation and we will run a simple 
 
 We start with the correlation and we use the basic dataset, because we cannot run a correlation on factor variables. 
 
-```{r correlation, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE}
 
 cor(data[2:30], data$RESPONSE) %>% as.data.frame() %>% dplyr::arrange(abs(V1))
 
@@ -304,7 +304,7 @@ The step function follows the idea that the variable that increases the AIC of t
 
 ### Perform significance and correlation tests to decide what to include 
 
-```{r linear model to select data}
+```{r}
 
 set.seed(2143)
 lm.sel <- glm(RESPONSE ~., data = data_sel)
