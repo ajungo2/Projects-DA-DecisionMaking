@@ -14,7 +14,7 @@ output:
 | Raise the data quality to the level required by the selected analysis techniques. This may involve selection of clean subsets of the data, the insertion of suitable defaults or more ambitious techniques such as the estimation of missing data by modeling.| Describe what decisions and actions were taken to address the data quality problems reported during the  verify data quality task of the data understanding phase. Transformations of the data for cleaning purposes and the possible impact on the analysis results should be considered. |
 
 
-### Reconsider how to deal with observed type of noise 
+### Deal with observed noise 
 
 We will consider how to correct the inconsistencies we have found in the previous chapter, which are on four different variables, namely:
 
@@ -25,7 +25,7 @@ We will consider how to correct the inconsistencies we have found in the previou
 
 We have already decided how to correct them, hence we will move on to that direction. 
 
-### Correct, remove or ignore noise 
+### Correct or ignore noise?
 
 We will start by correcting the noises of `EDUCATION`, `GUARANTOR` and `PRESENT_RESIDENT`, by simply replacing the value -1 and 2 with value 1 for the first two and by changing the numbers of the categories for the latter by dimishing each value by 1, this is going to give us the true value corresponding to the data description that was given to us. 
 
@@ -45,9 +45,9 @@ data %<>%
 
 ```
 
-### Decide how to deal with special values and their meaning 
+### Special values and their meaning 
 
-This is specifically for the case of `AGE`. As previously said, we believe that the 125 age is an error, hence we will discard it by selecting only the observation with value lower then 76 (as 75 is the second highest value).
+In this section we are going to decide how to deal with this inconvenient, this is specifically for the case of `AGE`. As previously said, we believe that the 125 age is an error, hence we will discard it by selecting only the observation with value lower then 76 (as 75 is the second highest value).
 
 ```{r}
 
@@ -63,15 +63,16 @@ data %<>%
 |:-------------------------------------------|:--------------------------------------------|
 | This task includes constructive data preparation operations such as the production of derived attributes, entire new records or transformed values for existing attributes.| Derived attributes are new attributes that are constructed from one or more existing attributes in the same record. Examples: <br /> area = length * width. Describe the creation of completely new records. <br /> Example: create records for customers who made no purchase during the past year. There was no reason to have such records in the raw data, but for modeling purposes it might make sense to explicitly represent the fact that certain customers made zero purchases.|
 
-### Check available constuction mechanisms 
+### Available constuction mechanisms 
 
 As we already mentioned in the previous chapter, we will be able to create 4 different variables: 
-1. A binary variable decribing the sex of the person (male vs. female)
-2. A categorical variable for the purpose of the credit 
-3. A categorical variable describing the real estate situation of the person (i.e. if someone owns a residence)
-4. A categorical variable describing the property situation of the person (i.e. it they own their residence, are renting or something else)
 
-#### Sex variable
+1) A binary variable decribing the sex of the person (male vs. female)
+2) A categorical variable for the purpose of the credit 
+3) A categorical variable describing the real estate situation of the person (i.e. if someone owns a residence)
+4) A categorical variable describing the property situation of the person (i.e. it they own their residence, are renting or something else)
+
+#### Sex variable {.tabset .tabset-fade .tabset-pills}
 
 We will start by the variable describing the sex of the considered person: this variable will be created thanks to the `MALE_DIV`, `MALE_SINGLE` and `MALE_MAR_WID` variables, and it will be a binary taking value 1 if the person is male, and value 0 if they are female. 
 
@@ -87,32 +88,53 @@ data %<>%
 
 We will now explore a bit the new variable we have created, by looking at the number of instances for each category and how it is affected in terms of response variable. 
 
-```{r}
+##### Sex Male variable 
+
+```{r, echo=FALSE}
 
 #Respesentation of SEX_MALE per value
 data %>% 
   ggplot(aes(SEX_MALE)) + 
   geom_bar(aes(fill = factor(SEX_MALE))) + 
-  theme(legend.position = "none")  + 
-  geom_label(stat = 'count', aes(label =..count..)) 
+  theme_bw()+
+  theme(legend.position = "bottom")  + 
+  geom_label(stat = 'count', aes(label =..count..)) +
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Sex_variable", fill="Gender[0=woman, 1=man]",  
+       title = "Proportion of the Sex_male variable",  
+       y = "Quantity [units]")
+
+```
+
+##### Sex_Male per Response 
+
+```{r, echo=FALSE}
 
 #Representation of output variable in terms of SEX_MALE
 data %>% 
   ggplot(aes(RESPONSE)) + 
   geom_bar(aes(fill = factor(SEX_MALE)), position = "dodge")+ 
-  labs(color = "", fill = "SEX_MALE", x = "RESPONSE", y = "count") 
+  labs(color = "", fill = "SEX_MALE", x = "RESPONSE", y = "count") +
+  theme_bw()+
+  theme(legend.position = "bottom")  + 
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Sex_variable", fill="Gender[0=woman, 1=man]",  
+       title = "Proportion of the Sex_male variable by Response",  
+       y = "Quantity [units]")
 
 ```
 
-We can see from the first graph that we have more observation with a positive value for the SEX_MALE variable (690 vs. 309), meaning that there are more men than women in the dataset. 
+#### {.toc-ignore}
+
+We can see from the first graph that we have more observation with a positive value for the **SEX_MALE** variable (690 vs. 309), meaning that there are more men than women in the dataset. 
 
 Moreover, thanks to the second graph, we can see a difference on the positive value for the response having a male rather than a female, but this could also be due to the fact that the presence of male is higher with respect to female. 
 
 ### Collide variables 
 
-We will now move on to the other variables aforementioned, so that instead of having multiple dummy variables, we have factor variables with multiple levels. 
+We will now move on to the other variables above mentioned, so that instead of having multiple dummy variables, we have factor variables with multiple levels. 
 
-#### Purpose 
+#### Purpose  {.tabset .tabset-fade .tabset-pills}
 
 Let's start with the purpose of credit. 
 
@@ -128,6 +150,7 @@ This variable will take the following values:
 It will be created by taking the respective value each time the dummy corresponding to one purpose, hence if one of them takes value 1, so will its level, if none of them has value 1, then the `PURPOSE` will take value 0.
 
 ```{r}
+#variable creation
 
 data %<>% 
   mutate(PURPOSE = ifelse(NEW_CAR == 1, 1, 
@@ -142,7 +165,10 @@ data %<>%
 
 Let's have a look at the new variable, in terms of number of observations per level and its link to the response variable. 
 
-```{r} 
+
+##### Types of purpose 
+
+```{r, echo=FALSE} 
 
 data %>% 
   ggplot(aes(PURPOSE)) + 
@@ -150,7 +176,21 @@ data %>%
   scale_fill_discrete(name = "PURPOSE", 
                       labels = c("OTHER", "NEW_CAR", "USED_CAR", "FURNITURE", 
                                  "RADIO/TV", "EDUCATION", "RETRAINING")) + 
-  geom_label(stat = 'count', aes(label =..count..)) 
+  geom_label(stat = 'count', aes(label =..count..)) +
+  theme_bw()+
+  theme(legend.position = "bottom")  + 
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Type of purpose", fill="Purpose",  
+       title = "Purpose Variable ranking by type",  
+       y = "Quantity [units]")
+
+
+```
+
+
+##### Types of purpose by response
+
+```{r, echo=FALSE} 
 
 data %>% 
   ggplot(aes(RESPONSE)) + 
@@ -159,21 +199,45 @@ data %>%
   scale_fill_discrete(name = "PURPOSE", 
                       labels = c("OTHER", "NEW_CAR", "USED_CAR", "FURNITURE", 
                                  "RADIO/TV", "EDUCATION", "RETRAINING")) + 
-  theme_bw()
+  theme_bw()+
+  theme(legend.position = "bottom")  + 
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Type of purpose by Response", fill="Purpose", 
+       subtitle = "On the left grouped by Response=0, on the right grouped by Response=1",
+       title = "Purpose Variable grouped by answer",  
+       y = "Quantity [units]") + 
+  theme(plot.subtitle = element_text(face = "italic"))
 
 ```
 
+#### {.toc-ignore}
+ 
 In the first graph, we can see that the majority of the observations are found in the purpose of getting a Radio or a TV, followed by a new car and then furniture, while the one that is the less present is the education purpose. 
 
 In terms of output variable, shown in the second graph, the highest differences can be found in the Radio/TV and new car, but this could be given by the fact that they are the purposes with the highest number of observations. 
 
-#### Property 
+#### Property {.tabset .tabset-fade .tabset-pills}
 
 Now, we will create the property variable. 
 
-We will start by looking at if the two variables that we want to use (namely, `REAL_ESTATE` and `PROP_UNKN_NONE`) are connected and hence it makes sense to put them together. 
+We will start by looking at if the two variables that we want to use (namely, `REAL_ESTATE` and `PROP_UNKN_NONE`) are connected and hence it could makes sense to put them together. 
 
-In order to do so, as we previously mentioned, we will perform a chi-squared independence test. 
+First, we establish the hypotheses:
+
+$H_0$: The `REAL_ESTATE` and `PROP_UNKN_NONE` are independent variables.
+
+against the bilateral alternative: 
+
+$H_1$: They are not independent.
+
+For the chi-squared test to be valid, the following conditions must be true:
+
+1) The sampling method is random
+2) The variables considered are categorical
+3) Size: all levels have more than 5 expected events.
+
+*Assuptions*: Significance level of **0.05**
+*Clarifications*: The p-value is the probability that a chi-square statistic having X degrees of freedom is more extreme than $X^2$. 
 
 ```{r}
 
@@ -181,11 +245,14 @@ chisq.test(data$REAL_ESTATE, data$PROP_UNKN_NONE)
 
 ```
 
-We can see that the two variables are statistically significantly associated, as the p-value is really low, almost equal to 0, and hence is lower than the considered significance level of alpha = 5%.
+Finally, we are going to accept or reject the hypotheses checking the p-value. If the p-value is less than the significance level that we have chosen,  we reject the null hypothesis. Thus, we conclude that there is a relationship between the variables.
+
+*Conclusion:* As, We can see that the two variables are statistically significantly associated, as the p-value is really low, almost equal to 0, and hence is lower than the considered significance level of alpha = 5%.
 
 We can conclude that it makes sense to merge the two variables into one factor, which will take value 1 if the person has a real estate, value 2 if the person is not known to have a property and value 0 otherwise. 
 
 ```{r}
+#Property variable creation
 
 data %<>% 
   mutate(PROPERTY = as.factor(ifelse(REAL_ESTATE == 1, 1, 
@@ -195,25 +262,61 @@ data %<>%
 
 Let's have a look also at this new variable, once again in terms of number of observations per level and if there is a difference of occurences given the output variable. 
 
-```{r}
+##### Types of Property
+
+```{r, echo=FALSE}
 
 data %>% 
-ggplot(aes(PROPERTY)) + geom_bar(aes(fill = PROPERTY)) + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE")) + geom_label(stat = 'count', aes(label =..count..))  
-
-data %>% 
-  ggplot(aes(RESPONSE)) + geom_bar(aes(fill = PROPERTY), position = "dodge") + scale_fill_discrete(name = "PROPERTY", labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE"))
+ggplot(aes(PROPERTY)) + geom_bar(aes(fill = PROPERTY)) + 
+  scale_fill_discrete(name = "PROPERTY", 
+                      labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE")) +
+  geom_label(stat = 'count', aes(label =..count..))  +
+  theme_bw()+
+  theme(legend.position = "bottom")  + 
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Type of Property", fill="Property", 
+       title = "Property Variable ranking by type",  
+       y = "Quantity [units]") 
 
 ```
+
+##### Types of Property by Response
+
+```{r, echo=FALSE}
+
+data %>% 
+  ggplot(aes(RESPONSE)) + 
+  geom_bar(aes(fill = PROPERTY), position = "dodge") + 
+  scale_fill_discrete(name = "PROPERTY", 
+                      labels = c("OTHER", "REAL_ESTATE", "PROP_UNKN_NONE"))+
+ theme_bw()+
+  theme(legend.position = "bottom")  + 
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Type of property by Response", fill="Property", 
+       subtitle = "On the left grouped by Response=0, on the right grouped by Response=1",
+       title = "Property Variable grouped by answer",  
+       y = "Quantity [units]") + 
+  theme(plot.subtitle = element_text(face = "italic"))
+
+```
+
+#### {.toc-ignore}
 
 We can clearly see in the first graph that the majority of the observations do not have a clear value for the property, being equal to 0 (563 compared to the 282 of `REAL_ESTATE` and 154 of `PROP_UNKN_NONE`).
 
 If we consider the response, hence the second graph, we cannot really see a difference from the person having a real estate or not having a property and having a credit rejected, while if they have a real estate it is more probable that they will get the credit compared to those who have not.
 
-#### Residence 
+#### Residence {.tabset .tabset-fade .tabset-pills}
 
-Now let's look at the second variable that we wish to know if it is needed to be created. 
+Now let's look at the second variable that we wish to know if it is needed to be created using the `RENT` and `OWN_RES` variables to describe whether a person has a residence or not. 
 
-This variable will be created using the `RENT` and `OWN_RES` variables to describe whether a person has a residence or not. 
+First, we stablish the hypotheses:
+
+$H_0$: The `RENT` and `OWN_RES` are independent variables.
+
+against the bilateral alternative: 
+
+$H_1$: They are not independent.
 
 Let's start once again by the chi-squared independence test. 
 
@@ -228,7 +331,7 @@ Also here, we can conclude that the two variables are statistically significantl
 Hence, we will create the residence variable, which will take value 1 if the person is renting, value 2 if the person is owning their own residence and value 0 otherwise. 
 
 ```{r}
-
+#Residence variable creation
 data %<>% 
   mutate(RESIDENCE = as.factor(ifelse(RENT == 1, 1, 
                                       ifelse(OWN_RES == 1, 2, 0))))
@@ -237,15 +340,45 @@ data %<>%
 
 And let's explore the new variable a little bit, in terms of number of observations per level and if there is a difference in the possibility to get a credit given this information. 
 
-```{r}
+##### Types of residence 
+
+```{r, echo=FALSE}
 
 data %>% 
-  ggplot(aes(RESIDENCE)) + geom_bar(aes(fill = RESIDENCE)) + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))+ geom_label(stat = 'count', aes(label =..count..)) 
-
-data %>% 
-  ggplot(aes(RESPONSE)) + geom_bar(aes(fill = RESIDENCE), position = "dodge") + scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))
+  ggplot(aes(RESIDENCE)) + 
+  geom_bar(aes(fill = RESIDENCE)) + 
+  scale_fill_discrete(name = "RESIDENCE", labels = c("OTHER", "RENT", "OWN_RES"))+ 
+  geom_label(stat = 'count', aes(label =..count..)) +
+  theme_bw()+
+  theme(legend.position = "bottom")  + 
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Type of Residence", fill="Residence", 
+       title = "Residence Variable ranking",  
+       y = "Quantity [units]")
 
 ```
+
+##### Types of residence by Response
+
+```{r, echo=FALSE}
+
+data %>% 
+  ggplot(aes(RESPONSE)) + 
+  geom_bar(aes(fill = RESIDENCE), position = "dodge") + 
+  scale_fill_discrete(name = "RESIDENCE", 
+                      labels = c("OTHER", "RENT", "OWN_RES"))+
+ theme_bw()+
+  theme(legend.position = "bottom")  + 
+  theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
+  labs(x = "Type of Residence by Response", fill="Residence", 
+       subtitle = "On the left grouped by Response=0, on the right grouped by Response=1",
+       title = "Residence Variable grouped by answer",  
+       y = "Quantity [units]") + 
+  theme(plot.subtitle = element_text(face = "italic"))
+
+```
+
+#### {.toc-ignore}
 
 In the first graph, we can see that the majority of the people in the sample do own their own residence (712 observations, compared to the 108 of other and 179 who are renting). 
 
@@ -266,6 +399,8 @@ We will need to drop also one of the variables we used to create the `SEX_MALE` 
 We will also drop the identifier variable (`OBS.`) as it is not needed in the modelling part. 
 
 ```{r}
+
+#selection of the variables to work with
 
 data_sel <- data %>%
                 dplyr::select(CHK_ACCT, DURATION, HISTORY, PURPOSE,
@@ -302,7 +437,9 @@ source: https://www.scribbr.com/statistics/akaike-information-criterion/
 
 The step function follows the idea that the variable that increases the AIC of the model the most will be discarder, up to the point in which it is not possible to decrease the AIC anymore. 
 
-### Perform significance and correlation tests to decide what to include 
+### Significance and correlation test
+
+In the next step we are going to perform significance and correlation tests to decide what to include.
 
 ```{r}
 
@@ -325,7 +462,7 @@ Moreover, we can see that there is coherence with the variables that had the hig
 
 We will change the variables to factors for the dummies and the categorical variables, to have them corresponding to the description that has been given to us.
 
-```{r}
+```{r, results="hide"}
 
 data_sel %<>% 
   mutate(

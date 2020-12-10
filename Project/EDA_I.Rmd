@@ -43,11 +43,11 @@ Overview of the dataset (1000 observations):
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE}
 
-#summarydata<- print(summarytools::dfSummary(data, valid.col = FALSE, 
-#                                    graph.magnif = 0.75),       
-#                                    max.tbl.height = 300, method = "render")
+summarydata<- print(summarytools::dfSummary(data, valid.col = FALSE, 
+                                    graph.magnif = 0.75),       
+                                    max.tbl.height = 300, method = "render")
 
-#summarydata
+summarydata
 
 ```
 
@@ -255,7 +255,7 @@ plot_missing_dataset
 
 ### By variable
 
-```{r, echo=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r, echo=FALSE,include=FALSE, fig.asp=1.2, message=FALSE, warning=FALSE, paged.print=FALSE}
 
 nrows<-nrow(data)
 n.missing<-rowSums(is.na(data))
@@ -296,39 +296,4 @@ Below you will find the answers of the 3 questions:
 | 2           | No, they contain some errors. They were found in data description and exploratory and are the following: <br /> 1) The variable EDUCATION shows an output that is not binary. <br /> 2) The variable PRESENT_RESIDENT have more categories than those that were mentioned in the description <br /> 3) the variable AGE is out of range. <br /> 4) AMOUNT, DURANTION, AGE are the variables with the highest quantity of outliers. | 
 | 3           | No, there is not any missing values in the data. | 
 
-In addition, we are going to anaylise if the aggregation mentioned in the boxplot for each variable is possible. To do it, we are going to apply the **Chi-Squared Test** to measure the independence between them. Next, we are going to explain the steps we will follow for each analysis: 
-
-**1) Variables: REAL_ESTATE and PROP_UNKN_NONE**
-
-First, we establish the hypotheses:
-
-$H_0$: The `REAL_ESTATE` and `PROP_UNKN_NONE` are independent variables.
-
-against the bilateral alternative: 
-
-$H_1$: They are not independent.
-
-For the chi-squared test to be valid, the following conditions must be true:
-
-1) The sampling method is random
-2) The variables considered are categorical
-3) Size: all levels have more than 5 expected events.
-
-*Assuptions*: Significance level of **0.05**
-*Clarifications*: The p-value is the probability that a chi-square statistic having X degrees of freedom is more extreme than $X^2$. 
-
-Finally, we are going to accept or reject the hypotheses checking the p-value. If the p-value is less than the significance level that we have chosen,  we reject the null hypothesis. Thus, we conclude that there is a relationship between the variables.
-
-**2) RENT and OWN_RES**
-
-First, we stablish the hypotheses:
-
-$H_0$: The `RENT` and `OWN_RES` are independent variables.
-
-against the bilateral alternative: 
-
-$H_1$: They are not independent.
-
-Then, we move on with the same process that we mentioned above.
-
-The analysis can be found in the next chapter.
+In addition, we are going to anaylise if the aggregation mentioned in the boxplot for each variable is possible. To do it, we are going to apply the **Chi-Squared Test** to measure the independence between them in the following section. 

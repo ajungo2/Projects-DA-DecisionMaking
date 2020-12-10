@@ -191,6 +191,7 @@ p0<- gridExtra::grid.arrange(tableGrob(data.frame(Data_set,Number_of_obs)))
 p1<- ggplot2::ggplot(data=data_scale, aes(x= RESPONSE, fill=RESPONSE)) +
         geom_bar(aes(y = (..count..)/sum(..count..)))+
         scale_y_continuous(labels=scales::percent) +
+        theme_bw()+
         ylab("Freq")+
         theme(legend.title = element_blank()) + 
         theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
@@ -200,6 +201,7 @@ p1<- ggplot2::ggplot(data=data_scale, aes(x= RESPONSE, fill=RESPONSE)) +
 p2<- ggplot2::ggplot(data=TrainData, aes(x= RESPONSE, fill=RESPONSE)) +
         geom_bar(aes(y = (..count..)/sum(..count..)))+
         scale_y_continuous(labels=scales::percent) +
+        theme_bw()+
         ylab("Freq")+
         theme(legend.title = element_blank()) + 
         theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
@@ -209,6 +211,7 @@ p2<- ggplot2::ggplot(data=TrainData, aes(x= RESPONSE, fill=RESPONSE)) +
 p3<- ggplot2::ggplot(data=TestData, aes(x= RESPONSE, fill=RESPONSE)) +
         geom_bar(aes(y = (..count..)/sum(..count..)))+
         scale_y_continuous(labels=scales::percent) +
+        theme_bw()+
         ylab("Freq")+
         theme(legend.title = element_blank()) + 
         theme(plot.title = element_text(face = "bold",  hjust = 0.5)) +
@@ -228,9 +231,9 @@ rm(p1, p0, p2, p3, Data_set, Number_of_obs) #delete variables
 
 As you can see above, the data have the same proportion in the dataset, the training and the test set. Specifically, in all of them the dependent variable is biased, since it shows a greater tendency for a positive response. For this reason we will evaluate two fits for each algorithm, one with the skewed data and the other with a balanced one. Finally, to be able to compare them we are going to compute the confusion matrix, which includes the following information: 
 
-- \[ Accuracy = \frac{TruePositive+TrueNegative} {TruePositive+TrueNegative+FalsePositive+FalseNegative}\] , 
+- \[ Accuracy = \frac{TruePositive+TrueNegative} {TruePositive+TrueNegative+FalsePositive+FalseNegative}\] 
 - \[ Sensitivity = \frac{TruePositive} {TruePositive+FalseNegative}\]
--\[ Specifity = \frac{TrueNegative} {TrueNegative+FalsePositive}\]
+- \[ Specifity = \frac{TrueNegative} {TrueNegative+FalsePositive}\]
 
 In synthesis, the sensitivity measures the true positive rate, which is key for this project, since a false positive has a negative impact on our main objective, as it would increase the risk of not being able to refund agreed payments. Meaning that in addition to balancing the data we will focus the second model on **maximizing sensitivity**.
 
@@ -307,7 +310,7 @@ If we look at the coeffiecients of the different variables we can conclude that,
 On the other hand, among the significant variables, `DURATION`, `PURPOSE` (all but level two and four), `AMOUNT` and `OTHER_INSTALL` have a negative effect on the output, meaning that if they increase their level or value, or if they have a positive value (for the dummies), the probability of having a positive response will decrease.
 
 The linear predictor is given by 
-$$ \eta  = - 0.9 + 0.3 * CHKACCT_1 + 1.2 * CHKACCT_2  + 1.7 * CHKACCT_3 - 0.3 * DURATION - 0.4 * HISTORY_1 + 0.5 * HISTORY_2 +  0.7 * HISTORY_3 + 1.4 * HISTORY_4 - 0.9 * PURPOSE_1 + 0.8 * PURPOSE_2 - 0.08 * PURPOSE_3 + 0.05 * PURPOSE_4 - 0.7 * PURPOSE_5 - 0.08 * PURPOSE_6 - 0.3 * AMOUNT - 0.5 * SAVACCT_1 + 0.2 * SAVACCT_2 + 0.7 * SAVACCT_3 + 1.3 * SAVACCT_4 + 0.25 * EMPLOYMENT_1 + * 0.6 EMPLOYMENT_2 + 1.1 * EMPLOYMENT_3 + 0.7 * EMPLOYMENT_4 - 0.4 * INSTALLRATE + 0.5 * MALESINGLE_1 + 0.9 * GUARANTOR_1 + 0.06 * PROPERTY_1 - 0.5 * PROPERTY_2 - 0.6 * OTHERINSTALL_1 - 0.8 * RESIDENCE_1 - 0.3 * RESIDENCE_2 - 0.1 * NUMCREDITS + 0.4426 * TELEPHONE_1 $$
+$$ \eta  = - 0.9 + 0.3 * CHKACCT_1 + 1.2 * CHKACCT_2  + 1.7 * CHKACCT_3 - 0.3 * DURATION - <br /> 0.4 * HISTORY_1 + 0.5 * HISTORY_2 +  0.7 * HISTORY_3 + 1.4 * HISTORY_4 - <br /> 0.9 * PURPOSE_1 + 0.8 * PURPOSE_2 - 0.08 * PURPOSE_3 + 0.05 * PURPOSE_4 - <br />0.7 * PURPOSE_5 - 0.08 * PURPOSE_6 - 0.3 * AMOUNT - 0.5 * SAVACCT_1 + 0.2 * SAVACCT_2 + <br /> 0.7 * SAVACCT_3 + 1.3 * SAVACCT_4 + 0.25 * EMPLOYMENT_1 + * 0.6 EMPLOYMENT_2 +<br /> 1.1 * EMPLOYMENT_3 + 0.7 * EMPLOYMENT_4 - 0.4 * INSTALLRATE + 0.5 * MALESINGLE_1 +<br /> 0.9 * GUARANTOR_1 + 0.06 * PROPERTY_1 - 0.5 * PROPERTY_2 - 0.6 * OTHERINSTALL_1 -<br /> 0.8 * RESIDENCE_1 - 0.3 * RESIDENCE_2 - 0.1 * NUMCREDITS + 0.4426 * TELEPHONE_1 $$
 
 To be clear, if for example the purpose variable takes value 3, only the coefficient of PURPOSE_3 will be added to the others. The same goes for each other categorical variable. For the dummies the coefficient is added only if the value is equal to 1 for the variable, otherwise no. While for the continuous variables the coefficient is multiplied by the value that is recorded in the observation.
 
@@ -365,6 +368,7 @@ sp<- caret::specificity(table(as.factor(lg.pred), as.factor(TestData$RESPONSE)))
 acc<- cm$overall["Accuracy"]
 
 logistic<- c(sens , sp, acc)
+logistic<-round(as.numeric(logistic),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
@@ -449,15 +453,17 @@ sp.b<- caret::specificity(table(as.factor(lg.pred.b), as.factor(TestData$RESPONS
 acc.b<- cm$overall["Accuracy"]
 
 logistic_balance<- c(sens.b , sp.b, acc.b)
+logistic_balance<-round(as.numeric(logistic_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-The sensitivity is 72%, the specificity is 64% and the accuracy only 66%. The number of false positive is equal to 21. 
+The sensitivity is 72%, the specificity is 64% and the accuracy only 66%.  
 
 #### {.toc-ignore}
+
 
 
 ### M2: Decision trees
@@ -576,6 +582,7 @@ sp<- caret::specificity(table(as.factor(dt.pred), as.factor(TestData$RESPONSE)))
 acc<- cm$overall["Accuracy"]
 
 decision_tree<- c(sens , sp, acc)
+decision_tree<-round(as.numeric(decision_tree),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
@@ -583,7 +590,7 @@ rm(cm, sens, sp, acc)
 
 ```
 
-We can see that here the sensitivity is really low, while the specificity is higher, reaching a value above 92%, which is in any case the one in which we are the most interested. The accuracy is around 74%. Here, in 52 cases in which the model should have given a negative value, it actually predicted a positive one, and it could cost quite a lot to the company.
+We can see that here the sensitivity is really low, while the specificity is higher, reaching a value above 92%, which is in any case the one in which we are the most interested. The accuracy is around 74%. Here, in 70 cases in which the model should have given a negative value, it actually predicted a positive one, and it could cost quite a lot to the company.
 
 #### {.toc-ignore}
 
@@ -682,6 +689,7 @@ sp.b<- caret::specificity(table(as.factor(dt.pred.b), as.factor(TestData$RESPONS
 acc.b<- cm$overall["Accuracy"]
 
 decision_tree_balance<- c(sens.b , sp.b, acc.b)
+decision_tree_balance<-round(as.numeric(decision_tree_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
@@ -689,7 +697,7 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-We can see that here the sensitivity has improved, however the specificity is lower, reaching a value above 63%, which is in any case the one in which we are the most interested. The accuracy is around 60%. 
+We can see that here the sensitivity has improved, however the specificity is lower, reaching a value above 70%, which is in any case the one in which we are the most interested. The accuracy is around 62%. 
 
 #### {.toc-ignore}
 
@@ -706,7 +714,7 @@ There are four types of discriminate analysis, we will explain them in the follo
 
 The next image illustrates better the way of working for each model.
 
-```{r, echo=FALSE,  paged.print=FALSE, out.width = '70%', warning=FALSE, message=FALSE}
+```{r, echo=FALSE,fig.cap="Principal difference between each model", paged.print=FALSE, out.width = '70%', warning=FALSE, message=FALSE}
 
 library(here)
 library(knitr)
@@ -758,7 +766,7 @@ $$ RESPONSE = -0.3265 * DURATION -0.2747 * HISTORY_1 + 0.8792 * HISTORY_2 + 1.18
 
 Each new observation will be evaluated thanks to this formula, with its information put inside of it. It follows the same principle described for the generalized linear model. 
 
-##### 2) Prediction (unbalance)
+##### 2) Prediction
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -793,7 +801,7 @@ rm(plot_pred_unbalance, p)
 
 With this graph we confirm what has been explained in the fit part, which is the prediction tending to give a positive response. 
 
-##### 3) Diagnosis (Unbalance)
+##### 3) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -807,19 +815,20 @@ sp<- caret::specificity(table(as.factor(lda.pred), as.factor(TestData$RESPONSE))
 acc<- cm$overall["Accuracy"]
 
 lda<- c(sens , sp, acc)
+lda<-round(as.numeric(lda),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
 ```
 
-Here the sensitivity is higher with respect to the previous unbalance models (above 40%), but it is still quite low. If we look at the accuracy, is quite low, as it is only around 78%. What is important to note is that 36 times in which the model would have predicted a positive value for the output, it should have been negative, which is something that could cost quite a lot to the copmany. 
+Here the sensitivity is higher with respect to the previous unbalance models (above 40%), but it is still quite low. If we look at the accuracy, is quite low, as it is only around 78%. What is important to note is that 48 times in which the model would have predicted a positive value for the output, it should have been negative, which is something that could cost quite a lot to the copmany. 
 
 #### {.toc-ignore}
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 4) Fitting the model: balance
+##### 4) Fitting the model
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
@@ -878,7 +887,7 @@ rm(plot_pred_balance, p)
 
 We can see that the situation is more balanced.
 
-##### 6) Diagnosis (balance)
+##### 6) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -894,13 +903,14 @@ sp.b<- caret::specificity(table(as.factor(lda.pred.b), as.factor(TestData$RESPON
 acc.b<- cm$overall["Accuracy"]
 
 lda_balance<- c(sens.b , sp.b, acc.b)
+lda_balance<-round(as.numeric(lda_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-The sensitivity is 73%, the specificity is only 65% and the accuracy is also low, at 67%. The number of false positive, though, is only 20. 
+The sensitivity is 73%, the specificity is only 69% and the accuracy is also low, at 67%. The number of false positive, though, is only 26 within 100 request. 
 
 #### {.toc-ignore}
 
@@ -937,7 +947,7 @@ summary(mod_qda_fit)
 
 ```
 
-##### 2) Prediction (unbalance)
+##### 2) Prediction
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -970,7 +980,7 @@ rm(plot_pred_unbalance, p)
 
 Here, it seems still that the majority of the false prediction are in the positive level, however they seem less than before.
 
-##### 3) Diagnosis (Unbalance)
+##### 3) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -985,13 +995,14 @@ sp<- caret::specificity(table(as.factor(qda.pred), as.factor(TestData$RESPONSE))
 acc<- cm$overall["Accuracy"]
 
 qda<- c(sens , sp, acc)
+qda<-round(as.numeric(qda),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
 ```
 
-The sensitivity is 54%, the specificity is high, reaching almost 84%, and the accuracy is 75%. The number of false positive, however, is 34. 
+The sensitivity is 54%, the specificity is high, reaching almost 84%, and the accuracy is 75%. The number of false positive, however, is around 46. 
 
 #### {.toc-ignore}
 
@@ -999,7 +1010,7 @@ As we predicted, the model performs a little bit worse than the LDA, but for the
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 4) Fitting the model: balance
+##### 4) Fitting the model
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -1049,7 +1060,7 @@ rm(plot_pred_balance, p)
 
 We can see that there is still some unbalance towards the positive value.
 
-##### 6) Diagnosis (balance)
+##### 6) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1064,13 +1075,14 @@ sp.b<- caret::specificity(table(as.factor(qda.pred.b), as.factor(TestData$RESPON
 acc.b<- cm$overall["Accuracy"]
 
 qda_balance<- c(sens.b , sp.b, acc.b)
+qda_balance<-round(as.numeric(qda_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-The sensitivity is 65%, the specificity is 71% and the accuracy almost 70&, while the false positive are 26. 
+The sensitivity is 65%, the specificity is 71% and the accuracy almost 70%, while the false positive will be around 34 withing 100 request. 
 
 #### {.toc-ignore}
 
@@ -1108,7 +1120,7 @@ mod_fda_fit
 
 ```
 
-##### 2) Prediction (unbalance)
+##### 2) Prediction
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -1141,7 +1153,7 @@ rm(plot_pred_unbalance, p)
 
 The unbalance towards the positive value is more than clear in this graph.
 
-##### 3) Diagnosis (Unbalance)
+##### 3) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1156,19 +1168,20 @@ sp<- caret::specificity(table(as.factor(fda.pred), as.factor(TestData$RESPONSE))
 acc<- cm$overall["Accuracy"]
 
 fda<- c(sens , sp, acc)
+fda<-round(as.numeric(fda),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
 ```
 
-This model has a sensitivity of almost 55%, among one of the highest up to now, and the specificity is higher than 85%. The accuracy is around 76%. The false positive observations are 34.
+This model has a sensitivity of almost 55%, among one of the highest up to now, and the specificity is higher than 85%. The accuracy is around 76%. The false positive observations are 46.
 
 #### {.toc-ignore}
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 4) Fitting the model: balance
+##### 4) Fitting the model
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
@@ -1225,7 +1238,7 @@ rm(plot_pred_balance, p)
 
 We can see that the situation is more balanced. 
 
-##### 6) Diagnosis (balance)
+##### 6) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1241,13 +1254,14 @@ sp.b<- caret::specificity(table(as.factor(fda.pred.b), as.factor(TestData$RESPON
 acc.b<- cm$overall["Accuracy"]
 
 fda_balance<- c(sens.b , sp.b, acc.b)
+fda_balance<-round(as.numeric(fda_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-Here, the sensitivity is almost 79%, while the specificity is 66%, with an accuracy of almost 70%. The false positive are really low, reaching 16 observations. 
+Here, the sensitivity is almost 79%, while the specificity is 66%, with an accuracy of almost 70%. The false positive are really low, reaching 22 observations within 100 request. 
 
 #### {.toc-ignore}
 
@@ -1285,7 +1299,7 @@ summary(mod_mda_fit)
 
 ```
 
-##### 2) Prediction (unbalance)
+##### 2) Prediction 
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -1318,7 +1332,7 @@ rm(plot_pred_unbalance, p)
 
 The unbalance towards the positive value is more than clear in this graph. 
 
-##### 3) Diagnosis (Unbalance)
+##### 3) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1332,13 +1346,14 @@ sp<- caret::specificity(table(as.factor(mda.pred), as.factor(TestData$RESPONSE))
 acc<- cm$overall["Accuracy"]
 
 mda<- c(sens , sp, acc)
+mda<-round(as.numeric(mda),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
 ```
 
-The sensitivity in this case is around 55%, while the specificity is higher, reaching 85%. The accurary is around 75% and there are 34 false positive.
+The sensitivity in this case is around 55%, while the specificity is higher, reaching 85%. The accurary is around 75% and there are 46 false positive (from 100 request).
 
 #### {.toc-ignore}
 
@@ -1416,13 +1431,14 @@ sp.b<- caret::specificity(table(as.factor(mda.pred.b), as.factor(TestData$RESPON
 acc.b<- cm$overall["Accuracy"]
 
 mda_balance<- c(sens.b , sp.b, acc.b)
+mda_balance<-round(as.numeric(mda_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-Here the sesntitivty is 72%, the specificity 74% and the accuracy 73%. The false positive are decreasing, with a value of 21. 
+Here the sesntitivty is 72%, the specificity 74% and the accuracy 73%. The false positive are decreasing, with a value of 28%. 
 
 #### {.toc-ignore}
 
@@ -1492,7 +1508,7 @@ randomForest::varImpPlot(rf.fit, main ='Variable Importance')
 
 The most important variables appear to be CHK_ACC, DURATION and HISTORY in terms of Accuracy and AMOUNT, CHK_ACC and DURATION in terms of gini index, which is consistent with what we have found up to now. 
 
-##### 3) Prediction (unbalance)
+##### 3) Prediction 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1540,19 +1556,20 @@ sp<- caret::specificity(table(as.factor(rf.pred), as.factor(TestData$RESPONSE)))
 acc<- cm$overall["Accuracy"]
 
 rf<- c(sens , sp, acc)
+rf<-round(as.numeric(rf),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
 ```
 
-Here the sensitivity is around 46%, the specificity is high (more than 87%) and the accuracy is around 75%, while the number of false positive is 40 observations.
+Here the sensitivity is around 46%, the specificity is high (more than 87%) and the accuracy is around 75%, while the number of false positive is 54 from 100 request. 
 
 #### {.toc-ignore}
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 5) Fitting the model: balance
+##### 5) Fitting the model
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
 
@@ -1623,13 +1640,14 @@ sp.b<- caret::specificity(table(as.factor(rf.pred.b), as.factor(TestData$RESPONS
 acc.b<- cm$overall["Accuracy"]
 
 rf_balance<- c(sens.b , sp.b, acc.b)
+rf_balance<-round(as.numeric(rf_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-Here the sensitivity is 78%, the specificity is 65% and the accuracy almost 70%. However the false positive are really low, being only 16 cases. 
+Here the sensitivity is 78%, the specificity is 65% and the accuracy almost 70%. However the false positive are really low, being only 22 cases from 100 request. 
 
 #### {.toc-ignore}
 
@@ -1674,7 +1692,7 @@ title("Graphical Representation of our Neural Network")
 
 ```
 
-##### 3) Prediction (unbalance)
+##### 3) Prediction
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -1707,7 +1725,7 @@ rm(plot_pred_unbalance, p)
 
 We can see an unblanced result toward the positive value.
 
-##### 4) Diagnosis (Unbalance)
+##### 4) Diagnosis 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1723,19 +1741,20 @@ sp<- caret::specificity(table(as.factor(nn.pred), as.factor(TestData$RESPONSE)))
 acc<- cm$overall["Accuracy"]
 
 nn<- c(sens , sp, acc)
+nn<-round(as.numeric(nn),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
 ```
 
-Here, the sensitivity is 53%, but the specificity is almost 88%, with an accuracy of 77%. The false positive, however, are still 35. 
+Here, the sensitivity is 53%, but the specificity is almost 88%, with an accuracy of 77%. The false positive, however, are still quite high around 47 of 100 requests that are accepted will be incorrect. 
 
 #### {.toc-ignore}
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 5) Fitting the model: balance
+##### 5) Fitting the model
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
 
@@ -1788,7 +1807,7 @@ rm(plot_pred_balance, p)
 
 ```
 
-##### 7) Diagnosis (balance)
+##### 7) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1804,13 +1823,14 @@ sp.b<- caret::specificity(table(as.factor(nn.pred.b), as.factor(TestData$RESPONS
 acc.b<- cm$overall["Accuracy"]
 
 nn_balance<- c(sens.b , sp.b, acc.b)
+nn_balance<-round(as.numeric(nn_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-Here we see a sesitivity of 77%, a really high specificity among the ones we have found (61%) and an accuracy of only 66%. However, the false positive are quite low, being only 17.
+Here we see a sesitivity of 77%, a really high specificity among the ones we have found (61%) and an accuracy of only 66%. Moreover, the false positive are quite low, being only 22 from 100 requested accepted.
 
 #### {.toc-ignore}
 
@@ -1867,14 +1887,7 @@ mod_xgb_fit <- caret::train(RESPONSE ~ ., TrainData,
 
 ```
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-
-################check outputs################################
-print(mod_xgb_fit)
-
-```
-
-##### 2) Plot
+##### 2) Best model parameters
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1882,7 +1895,7 @@ mod_xgb_fit$bestTune
 
 ```
 
-##### 3) Prediction (unbalance)
+##### 3) Prediction
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -1913,9 +1926,8 @@ rm(plot_pred_unbalance, p)
 
 ```
 
-We can see that there is a higher probability of predicting a positive value. 
 
-##### 4)  Diagnosis (Unbalance)
+##### 4)  Diagnosis 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -1931,19 +1943,20 @@ sp<- caret::specificity(table(as.factor(xgb.pred), as.factor(TestData$RESPONSE))
 acc<- cm$overall["Accuracy"]
 
 xgb<- c(sens , sp, acc)
+xgb<-round(as.numeric(xgb),2)
 
 #############remove temporary element
 rm(cm, sens, sp, acc)
 
 ```
 
-Here the sensitivity is quite low, 53%, the specificity is at 87% though and the accuracy at 77%. The number of false positive is high, being 35. 
+Here the sensitivity is quite low, 53%, the specificity is at 87% though and the accuracy at 77%. There is no significant improvement over the other models as we could expect. 
 
 #### {.toc-ignore}
 
 #### Balanced data {.tabset .tabset-fade .tabset-pills}
 
-##### 5) Fitting the model: balance
+##### 5) Fitting the model
 
 ```{r, echo=TRUE, warning=FALSE, message=FALSE, results="hide"}
 
@@ -1954,13 +1967,6 @@ mod_xgb_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="xgbTree",
                             metric = "Sens", #optimize sensitivity
                            maximize = TRUE,
                            trControl= train_params)
-
-```
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-
-################check outputs################################
-print(mod_xgb_fitbalance)
 
 ```
 
@@ -1997,7 +2003,7 @@ rm(plot_pred_balance, p)
 
 We can see that it is indeed a bit more balanced, however there is still a majoritiy of positive values predicted. 
 
-##### 7) Diagnosis (balance)
+##### 7) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -2013,6 +2019,7 @@ sp.b<- caret::specificity(table(as.factor(xgb.pred.b), as.factor(TestData$RESPON
 acc.b<- cm$overall["Accuracy"]
 
 xgb_balance<- c(sens.b , sp.b, acc.b)
+xgb_balance<-round(as.numeric(xgb_balance),2)
 
 #############remove temporary element
 rm(cm, sens.b, sp.b, acc.b)
@@ -2020,7 +2027,7 @@ rm(cm, sens.b, sp.b, acc.b)
 
 ```
 
-The sensitivity is almost 67%, the specificity is at 70% and the accuracy is almost 70%. The number of false positive is still at 25. 
+The sensitivity is almost 67%, the specificity is at 70% and the accuracy is almost 70%. The number of false positive is still at 34 from 100 accepted request.  
 
 #### {.toc-ignore}
 
