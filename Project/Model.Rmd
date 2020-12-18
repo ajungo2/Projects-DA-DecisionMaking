@@ -517,8 +517,8 @@ mod_dt_fit <- caret::train(RESPONSE ~ ., TrainData, method="rpart",
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
-################check outputs################################vv
-summary(mod_dt_fit$finalModel$frame)
+################check outputs################################
+print(mod_dt_fit)
 
 ```
 
@@ -618,7 +618,7 @@ mod_dt_fitbalance <- caret::train(RESPONSE ~ ., TrainData, method="rpart",
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 
 ################check outputs################################
-summary(mod_dt_fitbalance$finalModel$frame)
+print(mod_dt_fitbalance)
 
 ```
 
@@ -1542,7 +1542,7 @@ rm(plot_pred_unbalance, p)
 
 The predictions shows a clear preference towards the positive value.
 
-##### 4) Diagnosis (Unbalance)
+##### 4) Diagnosis
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -2052,8 +2052,30 @@ summary_table<- data.frame(Details, logistic, logistic_balance,
 summary_table<-data.frame(t(summary_table[-1]))                           
 names(summary_table) <- c("Sensitivity", "Specificity", "Accuracy")                          
                            
-kableExtra::kable(summary_table, caption = "Summary table for assess the model")%>%
-  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+kable(summary_table, 
+      caption = "Summary table for assess the model",
+                        align = "c")%>%
+kableExtra::kable_styling("striped") %>%
+  pack_rows("Logistic Regression", 1, 2 , 
+            label_row_css = "background-color: #666; color: #fff;") %>%
+  pack_rows("Decision Trees", 3, 4, 
+            label_row_css = "background-color: #666; color: #fff;")%>%
+  pack_rows("DA: Linear Discriminant", 5, 6,
+            label_row_css = "background-color: #666; color: #fff;")%>%
+  pack_rows("DA: Quadratic discriminant analysis", 7, 8,
+            label_row_css = "background-color: #666; color: #fff;")%>%
+  pack_rows("DA: Functional data analysis", 9, 10, 
+            label_row_css = "background-color: #666; color: #fff;") %>%
+  pack_rows("DA: Mixture discriminant analysis", 11, 12, 
+            label_row_css = "background-color: #666; color: #fff;") %>%
+  pack_rows("Random Forest", 13, 14, 
+            label_row_css = "background-color: #666; color: #fff;") %>%
+  pack_rows("Neural Networks", 15, 16, 
+            label_row_css = "background-color: #666; color: #fff;") %>%
+  pack_rows("XGboost", 17, 18, 
+            label_row_css = "background-color: #666; color: #fff;") %>%
+  row_spec(14, bold = T, color = "white", background = "#D7261E")
+
 
 ```
 
